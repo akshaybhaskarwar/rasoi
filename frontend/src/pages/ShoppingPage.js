@@ -272,9 +272,9 @@ const ShoppingPage = () => {
                           data-testid={`shopping-item-${item.id}`}
                         >
                           <div className="flex-1">
-                            <p className="font-medium text-gray-800">
+                            <p className="font-medium text-gray-800 bilingual-text">
                               {item.name_en}
-                              {item.name_gu && <span className="text-gray-600"> / {item.name_gu}</span>}
+                              {item.name_mr && <span className="text-gray-600"> <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.name_mr}</span></span>}
                             </p>
                             <p className="text-sm text-gray-600">{item.quantity}</p>
                           </div>
