@@ -255,10 +255,41 @@ async def fetch_video_details(video_id: str) -> Dict[str, Any]:
         logger.error(f"YouTube API error: {e}")
         return {}
 
-async def search_youtube_recipes(query: str, max_results: int = 10) -> List[Dict[str, Any]]:
-    """Search YouTube for recipe videos"""
+async def search_youtube_recipes(query: str, max_results: int = 10, favorite_channels: List[str] = []) -> List[Dict[str, Any]]:
+    """Search YouTube for recipe videos with priority for favorite channels"""
     try:
         youtube = get_youtube_service()
+        
+        all_results = []
+        
+        # First, search within favorite channels if any
+        if favorite_channels:
+            for channel in favorite_channels[:3]:  # Limit to top 3 channels for performance
+                try:
+                    request = youtube.search().list(
+                        part="snippet",
+                        q=f"{query} recipe",
+                        type="video",
+                        maxResults=5,
+                        channelId=channel if channel.startswith('UC') else None,
+                        regionCode="IN"
+                    )
+                    response = request.execute()
+                    
+                    for item in response.get('items', []):
+                        all_results.append({
+                            'video_id': item['id']['videoId'],
+                            'title': item['snippet']['title'],
+                            'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                            'channel': item['snippet']['channelTitle'],
+                            'channel_id': item['snippet']['channelId'],
+                            'is_favorite': True
+                        })
+                except Exception as e:
+                    logger.error(f"Error searching favorite channel {channel}: {e}")
+                    continue
+        
+        # Then, do general search
         request = youtube.search().list(
             part="snippet",
             q=f"{query} recipe",
@@ -268,15 +299,22 @@ async def search_youtube_recipes(query: str, max_results: int = 10) -> List[Dict
         )
         response = request.execute()
         
-        results = []
         for item in response.get('items', []):
-            results.append({
-                'video_id': item['id']['videoId'],
-                'title': item['snippet']['title'],
-                'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                'channel': item['snippet']['channelTitle']
-            })
-        return results
+            video_id = item['id']['videoId']
+            # Skip if already in results from favorite channels
+            if not any(r['video_id'] == video_id for r in all_results):
+                all_results.append({
+                    'video_id': video_id,
+                    'title': item['snippet']['title'],
+                    'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                    'channel': item['snippet']['channelTitle'],
+                    'channel_id': item['snippet']['channelId'],
+                    'is_favorite': item['snippet']['channelId'] in favorite_channels
+                })
+        
+        # Limit to max_results
+        return all_results[:max_results]
+        
     except HttpError as e:
         logger.error(f"YouTube search error: {e}")
         return []
