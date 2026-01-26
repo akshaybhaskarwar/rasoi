@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Check, ChefHat } from 'lucide-react';
+import { Check, ChefHat, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useInventory } from '@/hooks/useRasoiSync';
 
 const PANTRY_TEMPLATE = {
