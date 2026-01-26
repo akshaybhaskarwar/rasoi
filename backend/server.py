@@ -342,12 +342,16 @@ async def create_inventory_item(item: InventoryItemCreate, background_tasks: Bac
     item_dict = item.model_dump()
     inventory_item = InventoryItem(**item_dict)
     
-    # Translate to Gujarati and Marathi in background
-    name_gu = await translate_text(item.name_en, "gu")
-    name_mr = await translate_text(item.name_en, "mr")
+    # If Marathi name provided, use it; otherwise translate
+    if item.name_mr:
+        inventory_item.name_mr = item.name_mr
+    else:
+        name_mr = await translate_text(item.name_en, "mr")
+        inventory_item.name_mr = name_mr
     
+    # Translate to Gujarati
+    name_gu = await translate_text(item.name_en, "gu")
     inventory_item.name_gu = name_gu
-    inventory_item.name_mr = name_mr
     
     doc = inventory_item.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
