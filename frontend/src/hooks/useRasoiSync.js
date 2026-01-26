@@ -253,11 +253,31 @@ export const useRecipes = () => {
     }
   };
 
+  // New: Search local recipe database by ingredients
+  const searchLocalRecipes = async (ingredients = [], videosOnly = false, favoriteChannels = [], maxResults = 20) => {
+    try {
+      const ingredientNames = ingredients.join(',');
+      const channelNames = favoriteChannels.map(ch => ch.name).join(',');
+      const response = await axios.get(`${API}/recipes/search`, {
+        params: {
+          ingredients: ingredientNames,
+          videos_only: videosOnly,
+          favorite_channels: channelNames,
+          max_results: maxResults
+        }
+      });
+      return response.data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchRecipes();
   }, []);
 
-  return { recipes, loading, error, fetchRecipes, addRecipe, searchYouTube };
+  return { recipes, loading, error, fetchRecipes, addRecipe, searchYouTube, searchLocalRecipes };
 };
 
 export const useFestivalAlert = () => {
