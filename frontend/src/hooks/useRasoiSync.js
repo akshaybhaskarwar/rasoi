@@ -49,8 +49,14 @@ export const useInventory = () => {
   const deleteItem = async (itemId) => {
     try {
       await axios.delete(`${API}/inventory/${itemId}`);
-      setInventory(prev => prev.filter(item => item.id !== itemId));
+      // Immediately update local state
+      setInventory(prev => {
+        const updated = prev.filter(item => item.id !== itemId);
+        console.log(`Deleted item ${itemId}. Remaining items:`, updated.length);
+        return updated;
+      });
     } catch (err) {
+      console.error('Delete error:', err);
       setError(err.message);
       throw err;
     }
