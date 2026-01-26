@@ -1,0 +1,284 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+export const useInventory = () => {
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchInventory = async (category = null) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = category ? `${API}/inventory?category=${category}` : `${API}/inventory`;
+      const response = await axios.get(url);
+      setInventory(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addItem = async (itemData) => {
+    try {
+      const response = await axios.post(`${API}/inventory`, itemData);
+      setInventory(prev => [...prev, response.data]);
+      return response.data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const updateItem = async (itemId, updates) => {
+    try {
+      await axios.put(`${API}/inventory/${itemId}`, updates);
+      setInventory(prev => prev.map(item => 
+        item.id === itemId ? { ...item, ...updates } : item
+      ));
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const deleteItem = async (itemId) => {
+    try {
+      await axios.delete(`${API}/inventory/${itemId}`);
+      setInventory(prev => prev.filter(item => item.id !== itemId));
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  return { inventory, loading, error, fetchInventory, addItem, updateItem, deleteItem };
+};
+
+export const useShoppingList = () => {
+  const [shoppingList, setShoppingList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchShoppingList = async (storeType = null) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = storeType ? `${API}/shopping?store_type=${storeType}` : `${API}/shopping`;
+      const response = await axios.get(url);
+      setShoppingList(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addItem = async (itemData) => {
+    try {
+      const response = await axios.post(`${API}/shopping`, itemData);
+      setShoppingList(prev => [...prev, response.data]);
+      return response.data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const deleteItem = async (itemId) => {
+    try {
+      await axios.delete(`${API}/shopping/${itemId}`);
+      setShoppingList(prev => prev.filter(item => item.id !== itemId));
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const clearList = async () => {
+    try {
+      await axios.delete(`${API}/shopping`);
+      setShoppingList([]);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchShoppingList();
+  }, []);
+
+  return { shoppingList, loading, error, fetchShoppingList, addItem, deleteItem, clearList };
+};
+
+export const useMealPlanner = () => {
+  const [mealPlans, setMealPlans] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchMealPlans = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API}/meal-plans`);
+      setMealPlans(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addMealPlan = async (planData) => {
+    try {
+      const response = await axios.post(`${API}/meal-plans`, planData);
+      setMealPlans(prev => [...prev, response.data]);
+      return response.data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const deleteMealPlan = async (planId) => {
+    try {
+      await axios.delete(`${API}/meal-plans/${planId}`);
+      setMealPlans(prev => prev.filter(plan => plan.id !== planId));
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchMealPlans();
+  }, []);
+
+  return { mealPlans, loading, error, fetchMealPlans, addMealPlan, deleteMealPlan };
+};
+
+export const useRecipes = () => {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchRecipes = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API}/recipes`);
+      setRecipes(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addRecipe = async (recipeData) => {
+    try {
+      const response = await axios.post(`${API}/recipes`, recipeData);
+      setRecipes(prev => [...prev, response.data]);
+      return response.data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const searchYouTube = async (query, maxResults = 10) => {
+    try {
+      const response = await axios.get(`${API}/youtube/search`, {
+        params: { query, max_results: maxResults }
+      });
+      return response.data.results;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  return { recipes, loading, error, fetchRecipes, addRecipe, searchYouTube };
+};
+
+export const useFestivalAlert = () => {
+  const [alert, setAlert] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchAlert = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/festival-alert`);
+      setAlert(response.data);
+    } catch (err) {
+      console.error('Festival alert error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlert();
+  }, []);
+
+  return { alert, loading, fetchAlert };
+};
+
+export const useGapAnalysis = () => {
+  const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchAnalysis = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/gap-analysis`);
+      setAnalysis(response.data);
+    } catch (err) {
+      console.error('Gap analysis error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalysis();
+  }, []);
+
+  return { analysis, loading, fetchAnalysis };
+};
+
+export const useTranslation = () => {
+  const [loading, setLoading] = useState(false);
+
+  const translate = async (text, targetLanguages = ['gu', 'mr'], sourceLanguage = 'en') => {
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/translate`, {
+        text,
+        source_language: sourceLanguage,
+        target_languages: targetLanguages
+      });
+      return response.data;
+    } catch (err) {
+      console.error('Translation error:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { translate, loading };
+};
