@@ -92,12 +92,17 @@ const InventoryPage = () => {
     }
   };
 
-  const handleDelete = async (itemId) => {
-    if (window.confirm('Delete this item?')) {
+  const handleDelete = async (itemId, itemName) => {
+    if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
       try {
         await deleteItem(itemId);
+        // Force a small delay to ensure state updates
+        setTimeout(() => {
+          console.log('Item deleted successfully');
+        }, 100);
       } catch (error) {
         console.error('Error deleting item:', error);
+        alert('Failed to delete item. Please try again.');
       }
     }
   };
