@@ -239,83 +239,107 @@ const InventoryPage = () => {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card 
-          className={`cursor-pointer transition-all hover:scale-105 ${
-            selectedStockLevel === 'full' 
-              ? 'bg-gradient-to-br from-[#77DD77] to-[#66CC66] text-white ring-4 ring-[#77DD77]/50' 
-              : 'bg-gradient-to-br from-[#77DD77] to-[#66CC66] text-white hover:shadow-lg'
-          }`}
-          onClick={() => handleStockFilterClick('full')}
-          data-testid="stat-full-stock"
-        >
-          <CardContent className="p-6">
-            <div className="text-3xl font-bold">
-              {inventory.filter(i => i.stock_level === 'full').length}
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card 
+            className={`cursor-pointer transition-all hover:scale-105 ${
+              selectedStockLevel === 'full' 
+                ? 'bg-gradient-to-br from-[#77DD77] to-[#66CC66] text-white ring-4 ring-[#77DD77]/50' 
+                : 'bg-gradient-to-br from-[#77DD77] to-[#66CC66] text-white hover:shadow-lg'
+            }`}
+            onClick={() => handleStockFilterClick('full')}
+            data-testid="stat-full-stock"
+          >
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold">
+                {inventory.filter(i => i.stock_level === 'full').length}
+              </div>
+              <div className="text-sm opacity-90">Full Stock</div>
+              {selectedStockLevel === 'full' && (
+                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+              )}
+            </CardContent>
+          </Card>
+          <Card 
+            className={`cursor-pointer transition-all hover:scale-105 ${
+              selectedStockLevel === 'half' 
+                ? 'bg-gradient-to-br from-[#FFCC00] to-[#E6B800] text-gray-800 ring-4 ring-[#FFCC00]/50' 
+                : 'bg-gradient-to-br from-[#FFCC00] to-[#E6B800] text-gray-800 hover:shadow-lg'
+            }`}
+            onClick={() => handleStockFilterClick('half')}
+            data-testid="stat-half-stock"
+          >
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold">
+                {inventory.filter(i => i.stock_level === 'half').length}
+              </div>
+              <div className="text-sm opacity-90">Half Stock</div>
+              {selectedStockLevel === 'half' && (
+                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+              )}
+            </CardContent>
+          </Card>
+          <Card 
+            className={`cursor-pointer transition-all hover:scale-105 ${
+              selectedStockLevel === 'low' 
+                ? 'bg-gradient-to-br from-[#FF9933] to-[#E68A2E] text-white ring-4 ring-[#FF9933]/50' 
+                : 'bg-gradient-to-br from-[#FF9933] to-[#E68A2E] text-white hover:shadow-lg'
+            }`}
+            onClick={() => handleStockFilterClick('low')}
+            data-testid="stat-low-stock"
+          >
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold">
+                {inventory.filter(i => i.stock_level === 'low').length}
+              </div>
+              <div className="text-sm opacity-90">Low Stock</div>
+              {selectedStockLevel === 'low' && (
+                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+              )}
+            </CardContent>
+          </Card>
+          <Card 
+            className={`cursor-pointer transition-all hover:scale-105 ${
+              selectedStockLevel === 'empty' 
+                ? 'bg-gradient-to-br from-gray-400 to-gray-500 text-white ring-4 ring-gray-400/50' 
+                : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white hover:shadow-lg'
+            }`}
+            onClick={() => handleStockFilterClick('empty')}
+            data-testid="stat-empty-stock"
+          >
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold">
+                {inventory.filter(i => i.stock_level === 'empty').length}
+              </div>
+              <div className="text-sm opacity-90">Empty</div>
+              {selectedStockLevel === 'empty' && (
+                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Active Filter Indicator */}
+        {selectedStockLevel !== 'all' && (
+          <div className="flex items-center justify-between bg-[#FFFBF0] border border-[#FFCC00] rounded-xl p-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                Showing only <span className="font-bold text-[#FF9933]">
+                  {selectedStockLevel.charAt(0).toUpperCase() + selectedStockLevel.slice(1)} Stock
+                </span> items ({filteredInventory.length} items)
+              </span>
             </div>
-            <div className="text-sm opacity-90">Full Stock</div>
-            {selectedStockLevel === 'full' && (
-              <div className="text-xs mt-2 font-medium">✓ Filtered</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card 
-          className={`cursor-pointer transition-all hover:scale-105 ${
-            selectedStockLevel === 'half' 
-              ? 'bg-gradient-to-br from-[#FFCC00] to-[#E6B800] text-gray-800 ring-4 ring-[#FFCC00]/50' 
-              : 'bg-gradient-to-br from-[#FFCC00] to-[#E6B800] text-gray-800 hover:shadow-lg'
-          }`}
-          onClick={() => handleStockFilterClick('half')}
-          data-testid="stat-half-stock"
-        >
-          <CardContent className="p-6">
-            <div className="text-3xl font-bold">
-              {inventory.filter(i => i.stock_level === 'half').length}
-            </div>
-            <div className="text-sm opacity-90">Half Stock</div>
-            {selectedStockLevel === 'half' && (
-              <div className="text-xs mt-2 font-medium">✓ Filtered</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card 
-          className={`cursor-pointer transition-all hover:scale-105 ${
-            selectedStockLevel === 'low' 
-              ? 'bg-gradient-to-br from-[#FF9933] to-[#E68A2E] text-white ring-4 ring-[#FF9933]/50' 
-              : 'bg-gradient-to-br from-[#FF9933] to-[#E68A2E] text-white hover:shadow-lg'
-          }`}
-          onClick={() => handleStockFilterClick('low')}
-          data-testid="stat-low-stock"
-        >
-          <CardContent className="p-6">
-            <div className="text-3xl font-bold">
-              {inventory.filter(i => i.stock_level === 'low').length}
-            </div>
-            <div className="text-sm opacity-90">Low Stock</div>
-            {selectedStockLevel === 'low' && (
-              <div className="text-xs mt-2 font-medium">✓ Filtered</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card 
-          className={`cursor-pointer transition-all hover:scale-105 ${
-            selectedStockLevel === 'empty' 
-              ? 'bg-gradient-to-br from-gray-400 to-gray-500 text-white ring-4 ring-gray-400/50' 
-              : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white hover:shadow-lg'
-          }`}
-          onClick={() => handleStockFilterClick('empty')}
-          data-testid="stat-empty-stock"
-        >
-          <CardContent className="p-6">
-            <div className="text-3xl font-bold">
-              {inventory.filter(i => i.stock_level === 'empty').length}
-            </div>
-            <div className="text-sm opacity-90">Empty</div>
-            {selectedStockLevel === 'empty' && (
-              <div className="text-xs mt-2 font-medium">✓ Filtered</div>
-            )}
-          </CardContent>
-        </Card>
+            <Button
+              onClick={() => setSelectedStockLevel('all')}
+              variant="outline"
+              size="sm"
+              className="border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933] hover:text-white"
+              data-testid="clear-stock-filter-btn"
+            >
+              Clear Filter
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Grouped Inventory Display */}
