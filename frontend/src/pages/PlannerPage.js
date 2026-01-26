@@ -182,11 +182,24 @@ const PlannerPage = () => {
                               data-testid={`meal-${meal.id}`}
                             >
                               {meal.youtube_thumbnail && (
-                                <img 
-                                  src={meal.youtube_thumbnail}
-                                  alt={meal.meal_name}
-                                  className="w-full h-24 object-cover rounded mb-2"
-                                />
+                                <div className="relative mb-2">
+                                  <img 
+                                    src={meal.youtube_thumbnail}
+                                    alt={meal.meal_name}
+                                    className="w-full h-24 object-cover rounded"
+                                  />
+                                  {meal.youtube_video_id && (
+                                    <button
+                                      onClick={() => window.open(`https://www.youtube.com/watch?v=${meal.youtube_video_id}`, '_blank')}
+                                      className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center group"
+                                      data-testid={`play-meal-${meal.id}`}
+                                    >
+                                      <div className="w-12 h-12 bg-[#FF9933] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                                      </div>
+                                    </button>
+                                  )}
+                                </div>
                               )}
                               <p className="font-medium text-xs text-gray-800 mb-2 line-clamp-2">
                                 {meal.meal_name}
