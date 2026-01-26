@@ -177,7 +177,7 @@ const ShoppingPage = () => {
                 </Card>
               ))}
 
-              <div className="fixed bottom-20 md:bottom-6 right-6 flex flex-col gap-2">
+              <div className="fixed bottom-20 md:bottom-6 right-6 flex flex-col gap-2 z-50">
                 <Button
                   onClick={handleCopyToClipboard}
                   className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-lg"
