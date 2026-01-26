@@ -261,58 +261,76 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
         youtube = get_youtube_service()
         
         all_results = []
+        seen_video_ids = set()
         
-        # First, search within favorite channels if any
+        # First, search within favorite channels by including channel name in query
         if favorite_channels:
-            for channel in favorite_channels[:3]:  # Limit to top 3 channels for performance
+            for channel_name in favorite_channels[:3]:  # Limit to top 3 channels for performance
                 try:
+                    # Search for recipes from this specific channel by including channel name
                     request = youtube.search().list(
                         part="snippet",
-                        q=f"{query} recipe",
+                        q=f"{channel_name} {query} recipe",
                         type="video",
-                        maxResults=5,
-                        channelId=channel if channel.startswith('UC') else None,
+                        maxResults=3,
                         regionCode="IN"
                     )
                     response = request.execute()
                     
                     for item in response.get('items', []):
-                        all_results.append({
-                            'video_id': item['id']['videoId'],
-                            'title': item['snippet']['title'],
-                            'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                            'channel': item['snippet']['channelTitle'],
-                            'channel_id': item['snippet']['channelId'],
-                            'is_favorite': True
-                        })
+                        video_id = item['id']['videoId']
+                        channel_title = item['snippet']['channelTitle'].lower()
+                        
+                        # Only include if the channel name matches (case-insensitive)
+                        if channel_name.lower() in channel_title or channel_title in channel_name.lower():
+                            if video_id not in seen_video_ids:
+                                seen_video_ids.add(video_id)
+                                all_results.append({
+                                    'video_id': video_id,
+                                    'title': item['snippet']['title'],
+                                    'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                                    'channel': item['snippet']['channelTitle'],
+                                    'channel_id': item['snippet']['channelId'],
+                                    'is_favorite': True
+                                })
                 except Exception as e:
-                    logger.error(f"Error searching favorite channel {channel}: {e}")
+                    logger.error(f"Error searching favorite channel {channel_name}: {e}")
                     continue
         
-        # Then, do general search
-        request = youtube.search().list(
-            part="snippet",
-            q=f"{query} recipe",
-            type="video",
-            maxResults=max_results,
-            regionCode="IN"
-        )
-        response = request.execute()
+        # Then, do general search to fill remaining slots
+        remaining_slots = max_results - len(all_results)
+        if remaining_slots > 0:
+            request = youtube.search().list(
+                part="snippet",
+                q=f"{query} recipe",
+                type="video",
+                maxResults=remaining_slots + 5,  # Get extra to account for duplicates
+                regionCode="IN"
+            )
+            response = request.execute()
+            
+            # Normalize favorite channel names for comparison
+            favorite_names_lower = [ch.lower() for ch in favorite_channels]
+            
+            for item in response.get('items', []):
+                video_id = item['id']['videoId']
+                if video_id not in seen_video_ids:
+                    seen_video_ids.add(video_id)
+                    channel_title = item['snippet']['channelTitle']
+                    # Check if this channel matches any favorite
+                    is_fav = any(fav in channel_title.lower() or channel_title.lower() in fav for fav in favorite_names_lower)
+                    all_results.append({
+                        'video_id': video_id,
+                        'title': item['snippet']['title'],
+                        'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                        'channel': channel_title,
+                        'channel_id': item['snippet']['channelId'],
+                        'is_favorite': is_fav
+                    })
+                    
+                    if len(all_results) >= max_results:
+                        break
         
-        for item in response.get('items', []):
-            video_id = item['id']['videoId']
-            # Skip if already in results from favorite channels
-            if not any(r['video_id'] == video_id for r in all_results):
-                all_results.append({
-                    'video_id': video_id,
-                    'title': item['snippet']['title'],
-                    'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                    'channel': item['snippet']['channelTitle'],
-                    'channel_id': item['snippet']['channelId'],
-                    'is_favorite': item['snippet']['channelId'] in favorite_channels
-                })
-        
-        # Limit to max_results
         return all_results[:max_results]
         
     except HttpError as e:
