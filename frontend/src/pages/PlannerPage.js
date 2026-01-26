@@ -69,7 +69,7 @@ const PlannerPage = () => {
     );
   };
 
-  // Search recipes based on selected ingredients
+  // Search recipes based on selected ingredients (using local database)
   const handleSearchRecipes = async () => {
     if (selectedIngredients.length === 0) {
       alert('Please select at least one ingredient');
@@ -78,17 +78,14 @@ const PlannerPage = () => {
 
     setSearching(true);
     try {
-      const query = selectedIngredients.join(' ');
-      const results = await searchYouTube(query, 8, favoriteChannels);
-      setSearchResults(results || []);
+      const response = await searchLocalRecipes(selectedIngredients, videosOnly, favoriteChannels, 20);
+      setSearchResults(response.results || []);
+      setTotalFound(response.total_found || 0);
     } catch (error) {
       console.error('Search error:', error);
-      if (error.response?.status === 429 || error.message?.includes('quota')) {
-        alert('YouTube API quota exceeded. Please try again later or reduce the number of searches.');
-      } else {
-        alert('Failed to search recipes. Please try again.');
-      }
+      alert('Failed to search recipes. Please try again.');
       setSearchResults([]);
+      setTotalFound(0);
     } finally {
       setSearching(false);
     }
