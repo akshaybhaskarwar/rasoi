@@ -201,6 +201,458 @@ TRANSLATIONS = {
     }
 }
 
+# ============ LOCAL RECIPE DATABASE ============
+# Pre-built Indian recipes for ingredient-based search (no API dependency)
+
+RECIPE_DATABASE = [
+    {
+        "id": "veg-pulao-1",
+        "title": "Vegetable Pulao",
+        "title_mr": "भाजी पुलाव",
+        "source": "Madhura's Recipe Marathi",
+        "type": "video",
+        "video_id": "dQw4w9WgXcQ",
+        "thumbnail": "https://i.ytimg.com/vi/1IszT_guI08/hqdefault.jpg",
+        "ingredients": ["Basmati Rice", "Onion", "Potato", "Peas", "Carrot", "Garam Masala", "Ghee"],
+        "prep_time": "15 min",
+        "cook_time": "25 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "dal-tadka-1",
+        "title": "Dal Tadka",
+        "title_mr": "दाल तडका",
+        "source": "Ranveer Brar",
+        "type": "video",
+        "video_id": "xyz123",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Toor Dal", "Onion", "Tomato", "Garlic", "Cumin", "Turmeric", "Red Chili", "Ghee"],
+        "prep_time": "10 min",
+        "cook_time": "30 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "aloo-gobi-1",
+        "title": "Aloo Gobi",
+        "title_mr": "आलू गोबी",
+        "source": "Kabita's Kitchen",
+        "type": "video",
+        "video_id": "abc456",
+        "thumbnail": "https://i.ytimg.com/vi/JbOymPOMFbU/hqdefault.jpg",
+        "ingredients": ["Potato", "Cauliflower", "Onion", "Tomato", "Turmeric", "Cumin", "Coriander"],
+        "prep_time": "15 min",
+        "cook_time": "20 min",
+        "servings": 3,
+        "category": "Main Course"
+    },
+    {
+        "id": "palak-paneer-1",
+        "title": "Palak Paneer",
+        "title_mr": "पालक पनीर",
+        "source": "Sanjeev Kapoor",
+        "type": "video",
+        "video_id": "def789",
+        "thumbnail": "https://i.ytimg.com/vi/lgjPPJfCjpo/hqdefault.jpg",
+        "ingredients": ["Paneer", "Spinach", "Onion", "Tomato", "Garlic", "Ginger", "Cream", "Garam Masala"],
+        "prep_time": "20 min",
+        "cook_time": "25 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "chole-1",
+        "title": "Punjabi Chole",
+        "title_mr": "पंजाबी छोले",
+        "source": "Hebbars Kitchen",
+        "type": "video",
+        "video_id": "ghi012",
+        "thumbnail": "https://i.ytimg.com/vi/7DYVHPj4AdY/hqdefault.jpg",
+        "ingredients": ["Chickpeas", "Onion", "Tomato", "Ginger", "Garlic", "Chole Masala", "Tea Bags"],
+        "prep_time": "8 hours",
+        "cook_time": "40 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "jeera-rice-1",
+        "title": "Jeera Rice",
+        "title_mr": "जीरा राइस",
+        "source": "Ranveer Brar",
+        "type": "video",
+        "video_id": "jkl345",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Basmati Rice", "Cumin", "Ghee", "Bay Leaf", "Salt"],
+        "prep_time": "5 min",
+        "cook_time": "20 min",
+        "servings": 4,
+        "category": "Rice"
+    },
+    {
+        "id": "poha-1",
+        "title": "Kanda Poha",
+        "title_mr": "कांदा पोहा",
+        "source": "Madhura's Recipe Marathi",
+        "type": "video",
+        "video_id": "mno678",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Poha", "Onion", "Potato", "Peanuts", "Curry Leaves", "Mustard Seeds", "Turmeric"],
+        "prep_time": "10 min",
+        "cook_time": "15 min",
+        "servings": 2,
+        "category": "Breakfast"
+    },
+    {
+        "id": "upma-1",
+        "title": "Rava Upma",
+        "title_mr": "रवा उपमा",
+        "source": "Kabita's Kitchen",
+        "type": "video",
+        "video_id": "pqr901",
+        "thumbnail": "https://i.ytimg.com/vi/JbOymPOMFbU/hqdefault.jpg",
+        "ingredients": ["Semolina", "Onion", "Carrot", "Peas", "Curry Leaves", "Mustard Seeds", "Cashews"],
+        "prep_time": "5 min",
+        "cook_time": "15 min",
+        "servings": 2,
+        "category": "Breakfast"
+    },
+    {
+        "id": "sambar-1",
+        "title": "South Indian Sambar",
+        "title_mr": "सांबर",
+        "source": "Hebbars Kitchen",
+        "type": "video",
+        "video_id": "stu234",
+        "thumbnail": "https://i.ytimg.com/vi/7DYVHPj4AdY/hqdefault.jpg",
+        "ingredients": ["Toor Dal", "Drumstick", "Carrot", "Onion", "Tomato", "Sambar Powder", "Tamarind"],
+        "prep_time": "15 min",
+        "cook_time": "30 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "bhindi-1",
+        "title": "Bhindi Masala",
+        "title_mr": "भिंडी मसाला",
+        "source": "Ranveer Brar",
+        "type": "video",
+        "video_id": "vwx567",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Okra", "Onion", "Tomato", "Turmeric", "Red Chili", "Coriander", "Cumin"],
+        "prep_time": "15 min",
+        "cook_time": "20 min",
+        "servings": 3,
+        "category": "Main Course"
+    },
+    {
+        "id": "paneer-butter-1",
+        "title": "Paneer Butter Masala",
+        "title_mr": "पनीर बटर मसाला",
+        "source": "Ranveer Brar",
+        "type": "video",
+        "video_id": "yza890",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Paneer", "Tomato", "Butter", "Cream", "Cashews", "Garam Masala", "Kasuri Methi"],
+        "prep_time": "15 min",
+        "cook_time": "25 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "rajma-1",
+        "title": "Rajma Chawal",
+        "title_mr": "राजमा चावल",
+        "source": "Kabita's Kitchen",
+        "type": "video",
+        "video_id": "bcd123",
+        "thumbnail": "https://i.ytimg.com/vi/JbOymPOMFbU/hqdefault.jpg",
+        "ingredients": ["Kidney Beans", "Basmati Rice", "Onion", "Tomato", "Ginger", "Garlic", "Garam Masala"],
+        "prep_time": "8 hours",
+        "cook_time": "45 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "khichdi-1",
+        "title": "Moong Dal Khichdi",
+        "title_mr": "मूग डाळ खिचडी",
+        "source": "Madhura's Recipe Marathi",
+        "type": "video",
+        "video_id": "efg456",
+        "thumbnail": "https://i.ytimg.com/vi/1IszT_guI08/hqdefault.jpg",
+        "ingredients": ["Rice", "Moong Dal", "Ghee", "Cumin", "Turmeric", "Ginger", "Salt"],
+        "prep_time": "10 min",
+        "cook_time": "25 min",
+        "servings": 3,
+        "category": "Main Course"
+    },
+    {
+        "id": "masala-dosa-1",
+        "title": "Masala Dosa",
+        "title_mr": "मसाला डोसा",
+        "source": "Hebbars Kitchen",
+        "type": "video",
+        "video_id": "hij789",
+        "thumbnail": "https://i.ytimg.com/vi/7DYVHPj4AdY/hqdefault.jpg",
+        "ingredients": ["Rice", "Urad Dal", "Potato", "Onion", "Mustard Seeds", "Curry Leaves", "Turmeric"],
+        "prep_time": "8 hours",
+        "cook_time": "30 min",
+        "servings": 4,
+        "category": "Breakfast"
+    },
+    {
+        "id": "idli-1",
+        "title": "Soft Idli",
+        "title_mr": "इडली",
+        "source": "Hebbars Kitchen",
+        "type": "video",
+        "video_id": "klm012",
+        "thumbnail": "https://i.ytimg.com/vi/7DYVHPj4AdY/hqdefault.jpg",
+        "ingredients": ["Rice", "Urad Dal", "Fenugreek Seeds", "Salt"],
+        "prep_time": "8 hours",
+        "cook_time": "15 min",
+        "servings": 4,
+        "category": "Breakfast"
+    },
+    {
+        "id": "aloo-paratha-1",
+        "title": "Aloo Paratha",
+        "title_mr": "आलू पराठा",
+        "source": "Kabita's Kitchen",
+        "type": "video",
+        "video_id": "nop345",
+        "thumbnail": "https://i.ytimg.com/vi/JbOymPOMFbU/hqdefault.jpg",
+        "ingredients": ["Wheat Flour", "Potato", "Onion", "Green Chili", "Coriander", "Cumin", "Ghee"],
+        "prep_time": "20 min",
+        "cook_time": "20 min",
+        "servings": 4,
+        "category": "Breakfast"
+    },
+    {
+        "id": "egg-curry-1",
+        "title": "Egg Curry",
+        "title_mr": "अंडा करी",
+        "source": "Ranveer Brar",
+        "type": "video",
+        "video_id": "qrs678",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Eggs", "Onion", "Tomato", "Ginger", "Garlic", "Garam Masala", "Turmeric"],
+        "prep_time": "10 min",
+        "cook_time": "25 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "gajar-halwa-1",
+        "title": "Gajar Ka Halwa",
+        "title_mr": "गाजर हलवा",
+        "source": "Sanjeev Kapoor",
+        "type": "video",
+        "video_id": "tuv901",
+        "thumbnail": "https://i.ytimg.com/vi/lgjPPJfCjpo/hqdefault.jpg",
+        "ingredients": ["Carrot", "Milk", "Sugar", "Ghee", "Cardamom", "Cashews", "Raisins"],
+        "prep_time": "15 min",
+        "cook_time": "45 min",
+        "servings": 6,
+        "category": "Dessert"
+    },
+    {
+        "id": "gulab-jamun-1",
+        "title": "Gulab Jamun",
+        "title_mr": "गुलाब जामुन",
+        "source": "Madhura's Recipe Marathi",
+        "type": "video",
+        "video_id": "wxy234",
+        "thumbnail": "https://i.ytimg.com/vi/1IszT_guI08/hqdefault.jpg",
+        "ingredients": ["Milk Powder", "Maida", "Ghee", "Sugar", "Cardamom", "Rose Water"],
+        "prep_time": "20 min",
+        "cook_time": "30 min",
+        "servings": 8,
+        "category": "Dessert"
+    },
+    {
+        "id": "matar-paneer-1",
+        "title": "Matar Paneer",
+        "title_mr": "मटर पनीर",
+        "source": "Kabita's Kitchen",
+        "type": "video",
+        "video_id": "zab567",
+        "thumbnail": "https://i.ytimg.com/vi/JbOymPOMFbU/hqdefault.jpg",
+        "ingredients": ["Paneer", "Peas", "Onion", "Tomato", "Ginger", "Garlic", "Garam Masala", "Cream"],
+        "prep_time": "15 min",
+        "cook_time": "25 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "chana-masala-1",
+        "title": "Chana Masala",
+        "title_mr": "चणा मसाला",
+        "source": "Ranveer Brar",
+        "type": "text",
+        "video_id": None,
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Chickpeas", "Onion", "Tomato", "Ginger", "Garlic", "Chana Masala", "Coriander"],
+        "prep_time": "8 hours",
+        "cook_time": "35 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "baingan-bharta-1",
+        "title": "Baingan Bharta",
+        "title_mr": "बैंगन भर्ता",
+        "source": "Sanjeev Kapoor",
+        "type": "video",
+        "video_id": "cde890",
+        "thumbnail": "https://i.ytimg.com/vi/lgjPPJfCjpo/hqdefault.jpg",
+        "ingredients": ["Eggplant", "Onion", "Tomato", "Green Chili", "Garlic", "Coriander", "Mustard Oil"],
+        "prep_time": "15 min",
+        "cook_time": "30 min",
+        "servings": 4,
+        "category": "Main Course"
+    },
+    {
+        "id": "dal-makhani-1",
+        "title": "Dal Makhani",
+        "title_mr": "दाल मखनी",
+        "source": "Ranveer Brar",
+        "type": "video",
+        "video_id": "fgh123",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "ingredients": ["Black Lentils", "Kidney Beans", "Butter", "Cream", "Tomato", "Ginger", "Garlic", "Garam Masala"],
+        "prep_time": "8 hours",
+        "cook_time": "60 min",
+        "servings": 6,
+        "category": "Main Course"
+    },
+    {
+        "id": "vada-pav-1",
+        "title": "Vada Pav",
+        "title_mr": "वडा पाव",
+        "source": "Madhura's Recipe Marathi",
+        "type": "video",
+        "video_id": "ijk456",
+        "thumbnail": "https://i.ytimg.com/vi/1IszT_guI08/hqdefault.jpg",
+        "ingredients": ["Potato", "Gram Flour", "Pav", "Garlic", "Green Chili", "Mustard Seeds", "Turmeric"],
+        "prep_time": "20 min",
+        "cook_time": "25 min",
+        "servings": 4,
+        "category": "Snacks"
+    },
+    {
+        "id": "samosa-1",
+        "title": "Punjabi Samosa",
+        "title_mr": "समोसा",
+        "source": "Hebbars Kitchen",
+        "type": "video",
+        "video_id": "lmn789",
+        "thumbnail": "https://i.ytimg.com/vi/7DYVHPj4AdY/hqdefault.jpg",
+        "ingredients": ["Maida", "Potato", "Peas", "Cumin", "Coriander", "Green Chili", "Garam Masala"],
+        "prep_time": "30 min",
+        "cook_time": "30 min",
+        "servings": 8,
+        "category": "Snacks"
+    },
+    {
+        "id": "pav-bhaji-1",
+        "title": "Pav Bhaji",
+        "title_mr": "पाव भाजी",
+        "source": "Kabita's Kitchen",
+        "type": "video",
+        "video_id": "opq012",
+        "thumbnail": "https://i.ytimg.com/vi/JbOymPOMFbU/hqdefault.jpg",
+        "ingredients": ["Potato", "Cauliflower", "Peas", "Carrot", "Tomato", "Onion", "Pav Bhaji Masala", "Butter", "Pav"],
+        "prep_time": "20 min",
+        "cook_time": "30 min",
+        "servings": 4,
+        "category": "Snacks"
+    },
+    {
+        "id": "misal-pav-1",
+        "title": "Misal Pav",
+        "title_mr": "मिसळ पाव",
+        "source": "Madhura's Recipe Marathi",
+        "type": "video",
+        "video_id": "rst345",
+        "thumbnail": "https://i.ytimg.com/vi/1IszT_guI08/hqdefault.jpg",
+        "ingredients": ["Moth Beans", "Onion", "Tomato", "Coconut", "Pav", "Farsan", "Coriander"],
+        "prep_time": "8 hours",
+        "cook_time": "40 min",
+        "servings": 4,
+        "category": "Breakfast"
+    },
+    {
+        "id": "biryani-1",
+        "title": "Vegetable Biryani",
+        "title_mr": "व्हेज बिर्याणी",
+        "source": "Sanjeev Kapoor",
+        "type": "video",
+        "video_id": "uvw678",
+        "thumbnail": "https://i.ytimg.com/vi/lgjPPJfCjpo/hqdefault.jpg",
+        "ingredients": ["Basmati Rice", "Onion", "Tomato", "Potato", "Carrot", "Peas", "Biryani Masala", "Ghee", "Saffron"],
+        "prep_time": "30 min",
+        "cook_time": "45 min",
+        "servings": 6,
+        "category": "Main Course"
+    },
+    {
+        "id": "coconut-chutney-1",
+        "title": "Coconut Chutney",
+        "title_mr": "नारळ चटणी",
+        "source": "Hebbars Kitchen",
+        "type": "text",
+        "video_id": None,
+        "thumbnail": "https://i.ytimg.com/vi/7DYVHPj4AdY/hqdefault.jpg",
+        "ingredients": ["Coconut", "Green Chili", "Ginger", "Curry Leaves", "Mustard Seeds", "Urad Dal"],
+        "prep_time": "10 min",
+        "cook_time": "5 min",
+        "servings": 4,
+        "category": "Chutney"
+    }
+]
+
+def search_local_recipes(ingredients: List[str], videos_only: bool = False, favorite_channels: List[str] = []) -> List[Dict[str, Any]]:
+    """Search local recipe database by matching ingredients"""
+    results = []
+    ingredients_lower = [ing.lower() for ing in ingredients]
+    favorite_channels_lower = [ch.lower() for ch in favorite_channels]
+    
+    for recipe in RECIPE_DATABASE:
+        # Skip non-video recipes if videos_only filter is set
+        if videos_only and recipe.get('type') != 'video':
+            continue
+            
+        # If favorite channels are set, only include recipes from those channels
+        if favorite_channels:
+            source_lower = recipe.get('source', '').lower()
+            if not any(fav in source_lower or source_lower in fav for fav in favorite_channels_lower):
+                continue
+        
+        # Count matching ingredients
+        recipe_ingredients_lower = [ing.lower() for ing in recipe.get('ingredients', [])]
+        matches = sum(1 for ing in ingredients_lower if any(ing in r_ing or r_ing in ing for r_ing in recipe_ingredients_lower))
+        
+        if matches > 0:
+            # Calculate match score (percentage of selected ingredients found in recipe)
+            match_score = matches / len(ingredients_lower) if ingredients_lower else 0
+            
+            results.append({
+                **recipe,
+                'match_count': matches,
+                'match_score': match_score,
+                'is_favorite': bool(favorite_channels and any(
+                    fav in recipe.get('source', '').lower() or recipe.get('source', '').lower() in fav 
+                    for fav in favorite_channels_lower
+                ))
+            })
+    
+    # Sort by match score (descending), then by favorite status
+    results.sort(key=lambda x: (x['match_score'], x['is_favorite']), reverse=True)
+    
+    return results
+
 async def translate_text(text: str, target_lang: str) -> str:
     """Translate text using static dictionary"""
     try:
