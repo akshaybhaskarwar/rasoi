@@ -403,12 +403,16 @@ async def create_shopping_item(item: ShoppingItemCreate):
     item_dict = item.model_dump()
     shopping_item = ShoppingItem(**item_dict)
     
-    # Auto-translate
-    name_gu = await translate_text(item.name_en, "gu")
-    name_mr = await translate_text(item.name_en, "mr")
+    # If Marathi name provided, use it; otherwise translate
+    if item.name_mr:
+        shopping_item.name_mr = item.name_mr
+    else:
+        name_mr = await translate_text(item.name_en, "mr")
+        shopping_item.name_mr = name_mr
     
+    # Auto-translate to Gujarati
+    name_gu = await translate_text(item.name_en, "gu")
     shopping_item.name_gu = name_gu
-    shopping_item.name_mr = name_mr
     
     doc = shopping_item.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
