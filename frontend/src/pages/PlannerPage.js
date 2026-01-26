@@ -29,6 +29,7 @@ const PlannerPage = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [previewVideo, setPreviewVideo] = useState(null);
 
   // Get dates for next 7 days
   const getWeekDates = () => {
