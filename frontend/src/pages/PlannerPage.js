@@ -169,6 +169,154 @@ const PlannerPage = () => {
         </div>
       </div>
 
+      {/* Favorite Channels Section - Inline */}
+      <Card className="shadow-sm border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50" data-testid="favorite-channels-section">
+        <CardContent className="p-4">
+          {/* Collapsed View */}
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setIsFavoritesExpanded(!isFavoritesExpanded)}
+            data-testid="favorite-channels-toggle"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                <Youtube className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
+                  Favorite Channels
+                </h3>
+                <p className="text-xs text-gray-500">Recipes from these channels appear first</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {/* Channel Pills Preview */}
+              {!isFavoritesExpanded && favoriteChannels.length > 0 && (
+                <div className="hidden md:flex items-center gap-2">
+                  {favoriteChannels.slice(0, 3).map((channel) => (
+                    <Badge 
+                      key={channel.id} 
+                      className="bg-white text-gray-700 border border-gray-200 text-xs"
+                    >
+                      {channel.name}
+                    </Badge>
+                  ))}
+                  {favoriteChannels.length > 3 && (
+                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
+                      +{favoriteChannels.length - 3} more
+                    </Badge>
+                  )}
+                </div>
+              )}
+              {!isFavoritesExpanded && favoriteChannels.length === 0 && (
+                <Badge className="bg-gray-100 text-gray-500 text-xs">
+                  No favorites yet
+                </Badge>
+              )}
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-600"
+              >
+                {isFavoritesExpanded ? (
+                  <ChevronUp className="w-5 h-5" />
+                ) : (
+                  <ChevronDown className="w-5 h-5" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Expanded View */}
+          {isFavoritesExpanded && (
+            <div className="mt-4 pt-4 border-t border-amber-200 space-y-4" data-testid="favorite-channels-expanded">
+              {/* Add Channel Input */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter channel name (e.g., Ranveer Brar, Kabita's Kitchen)"
+                  value={newChannelInput}
+                  onChange={(e) => setNewChannelInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddFavoriteChannel()}
+                  className="flex-1 bg-white"
+                  data-testid="add-channel-input"
+                />
+                <Button
+                  onClick={handleAddFavoriteChannel}
+                  disabled={!newChannelInput.trim()}
+                  className="bg-red-500 hover:bg-red-600 text-white px-6"
+                  data-testid="add-channel-btn"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              
+              {/* Current Favorites */}
+              {favoriteChannels.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {favoriteChannels.map((channel) => (
+                    <div
+                      key={channel.id}
+                      className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm group hover:border-red-300 transition-colors"
+                      data-testid={`favorite-channel-${channel.id}`}
+                    >
+                      <Youtube className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-medium text-gray-700">{channel.name}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFavoriteChannel(channel.id);
+                        }}
+                        className="w-5 h-5 rounded-full bg-gray-100 hover:bg-red-100 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+                        data-testid={`remove-channel-${channel.id}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <Youtube className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">No favorite channels yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Add your favorite cooking channels above</p>
+                </div>
+              )}
+              
+              {/* Popular Suggestions */}
+              <div className="pt-2">
+                <p className="text-xs text-gray-500 mb-2">Popular Indian cooking channels:</p>
+                <div className="flex flex-wrap gap-2">
+                  {['Ranveer Brar', 'Kabita\'s Kitchen', 'Hebbars Kitchen', 'Sanjeev Kapoor', 'Vahchef'].map((name) => {
+                    const isAdded = favoriteChannels.some(ch => ch.name.toLowerCase() === name.toLowerCase());
+                    return (
+                      <button
+                        key={name}
+                        disabled={isAdded}
+                        onClick={() => {
+                          setNewChannelInput(name);
+                        }}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                          isAdded 
+                            ? 'bg-green-50 border-green-200 text-green-600 cursor-not-allowed' 
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-amber-400 hover:text-amber-600'
+                        }`}
+                        data-testid={`suggest-channel-${name.replace(/\s/g, '-')}`}
+                      >
+                        {isAdded ? '✓ ' : '+ '}{name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Weekly Calendar Grid */}
       <div className="space-y-4">
         {weekDates.map((dateInfo) => (
