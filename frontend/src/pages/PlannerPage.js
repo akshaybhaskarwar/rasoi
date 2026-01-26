@@ -555,9 +555,11 @@ const PlannerPage = () => {
                     <div
                       key={video.video_id}
                       className={`bg-white border-2 rounded-xl overflow-hidden transition-all ${
-                        previewVideo?.video_id === video.video_id 
-                          ? 'border-[#FF9933] ring-2 ring-[#FF9933]/30' 
-                          : 'border-gray-200 hover:border-[#FF9933]'
+                        video.is_favorite
+                          ? 'border-amber-400 ring-2 ring-amber-200'
+                          : previewVideo?.video_id === video.video_id 
+                            ? 'border-[#FF9933] ring-2 ring-[#FF9933]/30' 
+                            : 'border-gray-200 hover:border-[#FF9933]'
                       }`}
                       data-testid={`recipe-result-${video.video_id}`}
                     >
@@ -567,6 +569,12 @@ const PlannerPage = () => {
                           alt={video.title}
                           className="w-full h-32 object-cover"
                         />
+                        {video.is_favorite && (
+                          <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                            <Star className="w-3 h-3" fill="currentColor" />
+                            Favorite
+                          </div>
+                        )}
                         <button
                           onClick={() => setPreviewVideo(video)}
                           className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center group"
@@ -581,7 +589,10 @@ const PlannerPage = () => {
                         <p className="font-medium text-sm text-gray-800 mb-2 line-clamp-2">
                           {video.title}
                         </p>
-                        <p className="text-xs text-gray-600 mb-3">{video.channel}</p>
+                        <p className={`text-xs mb-3 ${video.is_favorite ? 'text-amber-600 font-medium' : 'text-gray-600'}`}>
+                          {video.is_favorite && <Star className="w-3 h-3 inline mr-1" fill="currentColor" />}
+                          {video.channel}
+                        </p>
                         <div className="flex gap-2">
                           <Button
                             onClick={() => handleAddRecipe(video)}
