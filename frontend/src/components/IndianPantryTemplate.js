@@ -279,6 +279,55 @@ export const IndianPantryTemplate = ({ isOpen, onClose }) => {
     return Object.values(selectedItems).reduce((sum, items) => sum + items.length, 0);
   };
 
+  // Search filter logic
+  const filterItemsBySearch = (items, mainCategory, subCategory) => {
+    if (!searchQuery.trim()) return items;
+    
+    const query = searchQuery.toLowerCase();
+    
+    // Check if search matches category names
+    const matchesMainCategory = mainCategory.toLowerCase().includes(query);
+    const matchesSubCategory = subCategory.toLowerCase().includes(query);
+    
+    if (matchesMainCategory || matchesSubCategory) {
+      return items; // Show all items if category matches
+    }
+    
+    // Filter items by name (English or Marathi)
+    return items.filter(item => 
+      item.en.toLowerCase().includes(query) || 
+      item.mr.includes(query)
+    );
+  };
+
+  // Check if category should be visible
+  const shouldShowCategory = (mainCategory, subCategory, items) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    const matchesMainCategory = mainCategory.toLowerCase().includes(query);
+    const matchesSubCategory = subCategory.toLowerCase().includes(query);
+    
+    if (matchesMainCategory || matchesSubCategory) return true;
+    
+    // Check if any items match
+    const filteredItems = filterItemsBySearch(items, mainCategory, subCategory);
+    return filteredItems.length > 0;
+  };
+
+  const getSearchResultsCount = () => {
+    if (!searchQuery.trim()) return null;
+    
+    let count = 0;
+    Object.entries(PANTRY_TEMPLATE).forEach(([mainCategory, subCategories]) => {
+      Object.entries(subCategories).forEach(([subCategory, { items }]) => {
+        const filtered = filterItemsBySearch(items, mainCategory, subCategory);
+        count += filtered.length;
+      });
+    });
+    return count;
+  };
+
   const handleAddToInventory = async () => {
     setLoading(true);
     try {
