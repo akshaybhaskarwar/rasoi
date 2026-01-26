@@ -288,6 +288,7 @@ export const IndianPantryTemplate = ({ isOpen, onClose }) => {
         items.forEach(item => {
           allSelectedItems.push({
             name_en: item.en,
+            name_mr: item.mr,  // Include Marathi translation
             category: mainCategory.includes('GROCERY') ? 'grocery' : 
                      mainCategory.includes('MANDI') ? 'mandi' : 'bakery',
             stock_level: 'empty',
