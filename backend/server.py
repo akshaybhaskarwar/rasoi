@@ -127,8 +127,72 @@ class FestivalAlert(BaseModel):
 
 # ============ TRANSLATION SERVICE ============
 
+# Static translations for common ingredients (for demo purposes)
+TRANSLATIONS = {
+    "gu": {
+        "turmeric": "હળદી",
+        "turmeric powder": "હળદી પાવડર",
+        "rice": "ચોખા",
+        "wheat": "ઘઉં",
+        "dal": "દાળ",
+        "tuvar dal": "તુવેર દાળ",
+        "moong dal": "મગ દાળ",
+        "chana dal": "ચણા દાળ",
+        "salt": "મીઠું",
+        "sugar": "સાકર",
+        "jaggery": "ગોળ",
+        "oil": "તેલ",
+        "ghee": "ઘી",
+        "milk": "દૂધ",
+        "curd": "દહીં",
+        "paneer": "પનીર",
+        "onion": "ડુંગળી",
+        "garlic": "લસણ",
+        "ginger": "આદુ",
+        "tomato": "ટામેટા",
+        "potato": "બટાટા",
+        "carrot": "ગાજર",
+        "cumin": "જીરું",
+        "coriander": "ધાણા",
+        "chili": "મરચું",
+        "sesame": "તલ",
+        "til": "તલ",
+        "peanuts": "મગફળી"
+    },
+    "mr": {
+        "turmeric": "हळद",
+        "turmeric powder": "हळद पावडर",
+        "rice": "तांदूळ",
+        "wheat": "गहू",
+        "dal": "डाळ",
+        "tuvar dal": "तूर डाळ",
+        "moong dal": "मूग डाळ",
+        "chana dal": "चणा डाळ",
+        "salt": "मीठ",
+        "sugar": "साखर",
+        "jaggery": "गूळ",
+        "oil": "तेल",
+        "ghee": "तूप",
+        "milk": "दूध",
+        "curd": "दही",
+        "paneer": "पनीर",
+        "onion": "कांदा",
+        "garlic": "लसूण",
+        "ginger": "आले",
+        "tomato": "टोमॅटो",
+        "potato": "बटाटा",
+        "carrot": "गाजर",
+        "cumin": "जिरे",
+        "coriander": "धणे",
+        "chili": "मिरची",
+        "sesame": "तीळ",
+        "til": "तीळ",
+        "peanuts": "शेंगदाणे"
+    }
+}
+
 async def translate_text(text: str, target_lang: str) -> str:
-    """Translate text using Emergent API key for Google Translate"""
+    """Translate text using static dictionary"""
     try:
         # Check cache first
         cached = await db.translation_cache.find_one({
@@ -139,35 +203,19 @@ async def translate_text(text: str, target_lang: str) -> str:
         if cached:
             return cached['translated_text']
         
-        # Use Google Cloud Translation API with Emergent key
-        import requests
+        # Use static translations
+        text_lower = text.lower().strip()
+        translated = TRANSLATIONS.get(target_lang, {}).get(text_lower, text)
         
-        url = f"https://translation.googleapis.com/language/translate/v2?key={EMERGENT_API_KEY}"
-        payload = {
-            'q': text,
-            'target': target_lang,
-            'source': 'en',
-            'format': 'text'
-        }
+        # Cache the translation
+        await db.translation_cache.insert_one({
+            "source_text": text,
+            "target_language": target_lang,
+            "translated_text": translated,
+            "created_at": datetime.now(timezone.utc)
+        })
         
-        response = requests.post(url, json=payload)
-        
-        if response.status_code == 200:
-            data = response.json()
-            translated = data['data']['translations'][0]['translatedText']
-            
-            # Cache the translation
-            await db.translation_cache.insert_one({
-                "source_text": text,
-                "target_language": target_lang,
-                "translated_text": translated,
-                "created_at": datetime.now(timezone.utc)
-            })
-            
-            return translated
-        else:
-            logger.error(f"Translation API error: {response.text}")
-            return text
+        return translated
             
     except Exception as e:
         logger.error(f"Translation error: {e}")
