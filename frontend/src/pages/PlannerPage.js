@@ -315,31 +315,89 @@ const PlannerPage = () => {
                 <Label className="text-base font-bold mb-3 block">
                   Recipe Results ({searchResults.length})
                 </Label>
+                
+                {/* Video Preview Player */}
+                {previewVideo && (
+                  <div className="mb-6 bg-black rounded-xl overflow-hidden" data-testid="video-preview">
+                    <div className="relative" style={{ paddingTop: '56.25%' }}>
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${previewVideo.video_id}?autoplay=1`}
+                        title={previewVideo.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                    <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm mb-1">{previewVideo.title}</p>
+                        <p className="text-xs text-gray-400">{previewVideo.channel}</p>
+                      </div>
+                      <Button
+                        onClick={() => setPreviewVideo(null)}
+                        size="sm"
+                        variant="outline"
+                        className="ml-4"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {searchResults.map((video) => (
                     <div
                       key={video.video_id}
-                      className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-[#FF9933] transition-all cursor-pointer"
+                      className={`bg-white border-2 rounded-xl overflow-hidden transition-all ${
+                        previewVideo?.video_id === video.video_id 
+                          ? 'border-[#FF9933] ring-2 ring-[#FF9933]/30' 
+                          : 'border-gray-200 hover:border-[#FF9933]'
+                      }`}
                       data-testid={`recipe-result-${video.video_id}`}
                     >
-                      <img 
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-32 object-cover"
-                      />
+                      <div className="relative">
+                        <img 
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-32 object-cover"
+                        />
+                        <button
+                          onClick={() => setPreviewVideo(video)}
+                          className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center group"
+                          data-testid={`play-video-${video.video_id}`}
+                        >
+                          <div className="w-16 h-16 bg-[#FF9933] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Play className="w-8 h-8 text-white ml-1" fill="white" />
+                          </div>
+                        </button>
+                      </div>
                       <div className="p-3">
                         <p className="font-medium text-sm text-gray-800 mb-2 line-clamp-2">
                           {video.title}
                         </p>
                         <p className="text-xs text-gray-600 mb-3">{video.channel}</p>
-                        <Button
-                          onClick={() => handleAddRecipe(video)}
-                          size="sm"
-                          className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
-                          data-testid={`add-recipe-${video.video_id}`}
-                        >
-                          Add to Meal Plan
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleAddRecipe(video)}
+                            size="sm"
+                            className="flex-1 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
+                            data-testid={`add-recipe-${video.video_id}`}
+                          >
+                            Add to Plan
+                          </Button>
+                          <Button
+                            onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, '_blank')}
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            data-testid={`open-youtube-${video.video_id}`}
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
