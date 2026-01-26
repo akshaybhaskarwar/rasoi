@@ -580,7 +580,7 @@ const PlannerPage = () => {
                     <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
                       <div className="flex-1">
                         <p className="font-medium text-sm mb-1">{previewVideo.title}</p>
-                        <p className="text-xs text-gray-400">{previewVideo.channel}</p>
+                        <p className="text-xs text-gray-400">{previewVideo.source}</p>
                       </div>
                       <Button
                         onClick={() => setPreviewVideo(null)}
@@ -595,59 +595,107 @@ const PlannerPage = () => {
                   </div>
                 )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {searchResults.map((video) => (
+                {/* Recipe Cards - New Design */}
+                <div className="space-y-4">
+                  {searchResults.map((recipe) => (
                     <div
-                      key={video.video_id}
-                      className={`bg-white border-2 rounded-xl overflow-hidden transition-all ${
-                        video.is_favorite
-                          ? 'border-amber-400 ring-2 ring-amber-200'
-                          : previewVideo?.video_id === video.video_id 
-                            ? 'border-[#FF9933] ring-2 ring-[#FF9933]/30' 
-                            : 'border-gray-200 hover:border-[#FF9933]'
+                      key={recipe.id}
+                      className={`bg-white border rounded-xl p-4 transition-all ${
+                        recipe.is_favorite
+                          ? 'border-amber-300 bg-amber-50/30'
+                          : 'border-gray-200 hover:border-[#138808]'
                       }`}
-                      data-testid={`recipe-result-${video.video_id}`}
+                      data-testid={`recipe-result-${recipe.id}`}
                     >
-                      <div className="relative">
-                        <img 
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className="w-full h-32 object-cover"
-                        />
-                        {video.is_favorite && (
-                          <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                            <Star className="w-3 h-3" fill="currentColor" />
-                            Favorite
-                          </div>
+                      {/* Recipe Type Label */}
+                      <div className="flex items-center gap-2 mb-2">
+                        {recipe.type === 'video' ? (
+                          <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                            <Play className="w-4 h-4" fill="currentColor" />
+                            VIDEO
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-gray-500 text-xs font-medium">
+                            <FileText className="w-4 h-4" />
+                            RECIPE
+                          </span>
                         )}
-                        <button
-                          onClick={() => setPreviewVideo(video)}
-                          className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center group"
-                          data-testid={`play-video-${video.video_id}`}
-                        >
-                          <div className="w-16 h-16 bg-[#FF9933] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Play className="w-8 h-8 text-white ml-1" fill="white" />
-                          </div>
-                        </button>
+                        {recipe.is_favorite && (
+                          <span className="flex items-center gap-1 text-amber-500 text-xs font-medium ml-auto">
+                            <Star className="w-3 h-3" fill="currentColor" />
+                            Favorite Channel
+                          </span>
+                        )}
                       </div>
-                      <div className="p-3">
-                        <p className="font-medium text-sm text-gray-800 mb-2 line-clamp-2">
-                          {video.title}
-                        </p>
-                        <p className={`text-xs mb-3 ${video.is_favorite ? 'text-amber-600 font-medium' : 'text-gray-600'}`}>
-                          {video.is_favorite && <Star className="w-3 h-3 inline mr-1" fill="currentColor" />}
-                          {video.channel}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => handleAddRecipe(video)}
-                            size="sm"
-                            className="flex-1 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
-                            data-testid={`add-recipe-${video.video_id}`}
+                      
+                      {/* Recipe Title */}
+                      <h3 className="font-bold text-lg text-gray-900 mb-1">
+                        {recipe.title}
+                      </h3>
+                      
+                      {/* Source */}
+                      <p className={`text-sm mb-3 ${recipe.is_favorite ? 'text-amber-600 font-medium' : 'text-gray-600'}`}>
+                        {recipe.source}
+                      </p>
+                      
+                      {/* Ingredients Tags */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {recipe.ingredients?.slice(0, 6).map((ing, idx) => (
+                          <span 
+                            key={idx}
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              selectedIngredients.some(sel => 
+                                sel.toLowerCase().includes(ing.toLowerCase()) || 
+                                ing.toLowerCase().includes(sel.toLowerCase())
+                              )
+                                ? 'bg-[#138808]/10 text-[#138808] border border-[#138808]/30'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
                           >
-                            Add to Plan
-                          </Button>
+                            {ing}
+                          </span>
+                        ))}
+                        {recipe.ingredients?.length > 6 && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+                            +{recipe.ingredients.length - 6} more
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Match Info */}
+                      <div className="flex items-center gap-2 mb-4 text-xs text-gray-500">
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                          {recipe.match_count} ingredient{recipe.match_count > 1 ? 's' : ''} matched
+                        </span>
+                        {recipe.prep_time && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {recipe.prep_time} + {recipe.cook_time}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 border-t pt-4">
+                        {recipe.type === 'video' && recipe.video_id && (
                           <Button
+                            onClick={() => setPreviewVideo(recipe)}
+                            variant="outline"
+                            className="flex-1 text-sm"
+                            data-testid={`view-recipe-${recipe.id}`}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            View Recipe
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => handleAddRecipe(recipe)}
+                          className="flex-1 bg-[#138808] hover:bg-[#0d6606] text-white text-sm"
+                          data-testid={`add-recipe-${recipe.id}`}
+                        >
+                          <CalendarIcon className="w-4 h-4 mr-2" />
+                          Add to Plan
+                        </Button>
                             onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, '_blank')}
                             size="sm"
                             variant="outline"
