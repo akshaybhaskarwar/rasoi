@@ -110,6 +110,14 @@ const InventoryPage = () => {
     return STOCK_LEVELS.find(s => s.value === level) || STOCK_LEVELS[0];
   };
 
+  const handleStockFilterClick = (stockLevel) => {
+    if (selectedStockLevel === stockLevel) {
+      setSelectedStockLevel('all'); // Clear filter if clicking same level
+    } else {
+      setSelectedStockLevel(stockLevel); // Set new filter
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="inventory-page">
       {/* Header */}
