@@ -274,6 +274,12 @@ const InventoryPage = () => {
           <p className="text-gray-600">No items found in inventory</p>
         </div>
       )}
+
+      {/* Indian Pantry Template Dialog */}
+      <IndianPantryTemplate 
+        isOpen={isPantryTemplateOpen}
+        onClose={() => setIsPantryTemplateOpen(false)}
+      />
     </div>
   );
 };
