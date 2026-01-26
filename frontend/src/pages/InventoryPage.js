@@ -259,7 +259,7 @@ const InventoryPage = () => {
 
       {filteredInventory.length === 0 && (
         <div className="text-center py-12">
-          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <Package2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600">No items found in inventory</p>
         </div>
       )}
