@@ -1,0 +1,196 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Rasoi-Sync",
+      "persona": "Modern Masala",
+      "description": "A sophisticated, mobile-first Indian Kitchen Manager blending tradition with tech.",
+      "emotional_tone": "Warm, Intelligent, Organized, Culturally Aware",
+      "target_audience": "Gujarati home cooks in Pune, MH"
+    },
+    "typography": {
+      "font_family": {
+        "primary": "Noto Sans, sans-serif",
+        "headings": "Hind, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "weights": {
+        "light": 300,
+        "regular": 400,
+        "medium": 500,
+        "bold": 700
+      },
+      "sizes": {
+        "h1": "text-4xl md:text-5xl tracking-tight",
+        "h2": "text-3xl md:text-4xl tracking-tight",
+        "h3": "text-2xl md:text-3xl",
+        "body": "text-base leading-relaxed",
+        "small": "text-sm leading-snug",
+        "bilingual_adjustment": "Increase line-height by 1.5x for Gujarati/Marathi scripts"
+      }
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "default": "#FF9933",
+          "hover": "#E68A2E",
+          "foreground": "#FFFFFF",
+          "name": "Deep Saffron"
+        },
+        "secondary": {
+          "default": "#77DD77",
+          "hover": "#66CC66",
+          "foreground": "#0F172A",
+          "name": "Cardamom Green"
+        },
+        "accent": {
+          "default": "#FFCC00",
+          "hover": "#E6B800",
+          "foreground": "#0F172A",
+          "name": "Turmeric Gold"
+        },
+        "background": {
+          "default": "#FFFFFF",
+          "subtle": "#F9FAFB",
+          "paper": "#FFFBF0"
+        },
+        "text": {
+          "primary": "#1F2937",
+          "secondary": "#4B5563",
+          "muted": "#9CA3AF"
+        },
+        "status": {
+          "success": "#10B981",
+          "warning": "#F59E0B",
+          "error": "#EF4444",
+          "info": "#3B82F6"
+        }
+      },
+      "gradients": {
+        "masala_mix": "linear-gradient(135deg, #FF9933 0%, #FFCC00 100%)",
+        "fresh_greens": "linear-gradient(135deg, #77DD77 0%, #A3E635 100%)"
+      }
+    },
+    "layout": {
+      "grid_system": {
+        "mobile": "grid-cols-1 gap-4",
+        "tablet": "grid-cols-2 gap-6",
+        "desktop": "grid-cols-12 gap-8"
+      },
+      "spacing": {
+        "container_padding": "p-4 md:p-8",
+        "section_gap": "gap-8 md:gap-12",
+        "card_padding": "p-6"
+      },
+      "radius": {
+        "default": "rounded-xl",
+        "card": "rounded-2xl",
+        "button": "rounded-full"
+      },
+      "shadows": {
+        "soft": "shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)]",
+        "hover": "shadow-[0_8px_30px_-4px_rgba(0,0,0,0.15)]",
+        "inner": "shadow-inner"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-[#FF9933] text-white hover:bg-[#E68A2E] rounded-full px-6 py-3 font-medium transition-all shadow-md hover:shadow-lg",
+        "secondary": "bg-[#77DD77] text-gray-900 hover:bg-[#66CC66] rounded-full px-6 py-3 font-medium transition-all",
+        "outline": "border-2 border-[#FF9933] text-[#FF9933] hover:bg-[#FFFBF0] rounded-full px-6 py-3 font-medium transition-all",
+        "ghost": "text-gray-600 hover:bg-gray-100 rounded-lg px-4 py-2 transition-all"
+      },
+      "cards": {
+        "default": "bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all",
+        "highlight": "bg-[#FFFBF0] border border-[#FFCC00]/30 rounded-2xl shadow-sm",
+        "interactive": "cursor-pointer hover:-translate-y-1 transition-transform duration-300"
+      },
+      "inputs": {
+        "default": "bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF9933] focus:border-transparent outline-none transition-all",
+        "search": "pl-10 bg-white shadow-sm"
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": "bg-white/80 backdrop-blur-md border border-white/20 shadow-sm",
+      "textures": "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5",
+      "animations": {
+        "hover_lift": "hover:-translate-y-1 transition-transform duration-200",
+        "fade_in": "animate-in fade-in duration-500",
+        "slide_up": "animate-in slide-in-from-bottom-4 duration-500"
+      }
+    }
+  },
+  "assets": {
+    "images": {
+      "hero": {
+        "url": "https://images.unsplash.com/photo-1612192666309-f2da37265a8a?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Indian spices flatlay",
+        "category": "background"
+      },
+      "digital_dadi": {
+        "url": "https://images.unsplash.com/photo-1590905775253-a4f0f3c426ff?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Smiling Indian Grandmother",
+        "category": "persona"
+      },
+      "ingredients": [
+        {
+          "name": "Tuvar Dal",
+          "url": "https://images.unsplash.com/photo-1710896208536-230eaf7615a7?crop=entropy&cs=srgb&fm=jpg&q=85",
+          "category": "inventory"
+        },
+        {
+          "name": "Jaggery",
+          "url": "https://images.pexels.com/photos/301920/pexels-photo-301920.jpeg",
+          "category": "inventory"
+        }
+      ],
+      "empty_state": {
+        "url": "https://images.unsplash.com/photo-1633414654227-2b5ea828b3ef?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Grocery Bag",
+        "category": "illustration"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width-2 rounded-stroke"
+    }
+  },
+  "page_specs": {
+    "home": {
+      "layout": "vertical-stack",
+      "components": ["DualContextHeader", "DigitalDadiWidget", "QuickStats", "FestivalIntelligence"]
+    },
+    "inventory": {
+      "layout": "grid-matrix",
+      "components": ["BilingualInventoryList", "FreshnessBar", "StockToggles"]
+    },
+    "shopping": {
+      "layout": "tabs-view",
+      "components": ["KiranaConnectTabs", "WhatsAppExportModal", "CategoryGroupedList"]
+    },
+    "planner": {
+      "layout": "horizontal-scroll",
+      "components": ["WeeklyCalendar", "YouTubeRecipeCard", "IngredientConsumption"]
+    }
+  },
+  "instructions_to_main_agent": [
+    "Use 'Noto Sans' for all body text to ensure Gujarati/Marathi legibility.",
+    "Implement the 'Digital Dadi' widget as a marquee component with a warm, conversational tone.",
+    "Ensure the 'Dual-Context Header' is sticky and uses glassmorphism.",
+    "Use the defined color palette strictly: Saffron (#FF9933) for primary actions, Green (#77DD77) for success/freshness.",
+    "For the 'Bilingual Inventory', display the English name first, followed by the regional name in a slightly smaller, muted font.",
+    "The 'WhatsApp Export' button must be prominent and green.",
+    "Use the provided image URLs for the respective sections. Do not use placeholders.",
+    "Ensure all interactive elements have 'data-testid' attributes.",
+    "Follow the 'Modern Masala' aesthetic: rounded corners, soft shadows, and generous white space."
+  ],
+  "universal_guidelines": [
+    "Do not use generic centered layouts.",
+    "Create depth through layered design elements.",
+    "Use glassmorphism effects with backdrop filters.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Prioritize using pre-existing components from src/components/ui.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports."
+  ]
+}
