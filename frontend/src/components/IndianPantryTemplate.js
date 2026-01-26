@@ -475,9 +475,16 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }
                         <div>
                           <h3 className="text-lg font-bold text-gray-800">{subCategory}</h3>
                           <p className="text-sm text-gray-600">
-                            {selectedCount}/{items.length} Selected
+                            {selectedCount > 0 && (
+                              <span className="text-[#FF9933] font-medium">{selectedCount} new selected</span>
+                            )}
+                            {getAlreadyAddedCount(items) > 0 && (
+                              <span className="text-green-600 ml-2">
+                                • {getAlreadyAddedCount(items)} already in inventory
+                              </span>
+                            )}
                             {searchQuery && filteredItems.length < items.length && (
-                              <span className="text-[#FF9933] ml-2">
+                              <span className="text-gray-500 ml-2">
                                 • {filteredItems.length} matching
                               </span>
                             )}
