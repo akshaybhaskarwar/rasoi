@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
-import { Plus, Search, Lock, Trash2 } from 'lucide-react';
+import { Plus, Search, Lock, Trash2, Package2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
