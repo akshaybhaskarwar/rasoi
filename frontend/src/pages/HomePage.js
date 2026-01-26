@@ -11,7 +11,7 @@ const HomePage = () => {
 
   const stats = [
     {
-      icon: Package,
+      icon: Package2,
       label: 'Items in Stock',
       value: inventory.filter(i => i.stock_level === 'full' || i.stock_level === 'half').length,
       color: 'text-[#77DD77]',
