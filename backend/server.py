@@ -85,7 +85,7 @@ class MealPlan(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     date: str
-    meal_type: str  # breakfast, lunch, snacks, dinner
+    meal_type: str = "lunch"  # breakfast, lunch, snacks, dinner - default for legacy data
     meal_name: str
     youtube_video_id: Optional[str] = None
     youtube_thumbnail: Optional[str] = None
