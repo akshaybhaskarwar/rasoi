@@ -156,6 +156,7 @@ const InventoryPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Search & Filter */}
