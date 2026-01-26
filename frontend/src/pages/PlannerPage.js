@@ -92,7 +92,8 @@ const PlannerPage = () => {
   };
 
   // Add recipe to meal plan
-  const handleAddRecipe = async (video) => {
+  // Add recipe to meal plan
+  const handleAddRecipe = async (recipe) => {
     if (!selectedDate || !selectedMealType) {
       alert('Please select date and meal type first');
       return;
@@ -102,17 +103,20 @@ const PlannerPage = () => {
       await addMealPlan({
         date: selectedDate,
         meal_type: selectedMealType,
-        meal_name: video.title,
-        youtube_video_id: video.video_id,
-        ingredients_needed: selectedIngredients
+        meal_name: recipe.title,
+        youtube_video_id: recipe.video_id || null,
+        youtube_thumbnail: recipe.thumbnail,
+        ingredients_needed: recipe.ingredients || selectedIngredients
       });
 
       // Reset selections
       setSelectedIngredients([]);
       setSearchResults([]);
+      setTotalFound(0);
       setIsRecipeDialogOpen(false);
       setSelectedDate('');
       setSelectedMealType('');
+      setVideosOnly(false);
     } catch (error) {
       console.error('Error adding recipe:', error);
       alert('Failed to add recipe to meal plan');
