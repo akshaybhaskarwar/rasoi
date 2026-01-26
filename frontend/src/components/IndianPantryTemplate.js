@@ -377,6 +377,34 @@ export const IndianPantryTemplate = ({ isOpen, onClose }) => {
           </p>
         </DialogHeader>
 
+        {/* Search Bar */}
+        <div className="sticky top-0 bg-white z-20 py-4 border-b">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search items or categories... (e.g., Bakery, Bread, Rice, बासमती)"
+              className="pl-10 pr-10 h-12 text-base border-2 border-gray-300 focus:border-[#FF9933]"
+              data-testid="template-search-input"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                data-testid="clear-search-btn"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <div className="mt-2 text-sm text-gray-600">
+              Found <span className="font-bold text-[#FF9933]">{getSearchResultsCount()}</span> items matching "{searchQuery}"
+            </div>
+          )}
+        </div>
+
         <div className="space-y-6 mt-4">
           {Object.entries(PANTRY_TEMPLATE).map(([mainCategory, subCategories]) => (
             <div key={mainCategory} className="space-y-3">
