@@ -461,7 +461,7 @@ const InventoryPage = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => handleDelete(item.id, item.name_en)}
                             className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
                             data-testid={`delete-${item.id}`}
                           >
