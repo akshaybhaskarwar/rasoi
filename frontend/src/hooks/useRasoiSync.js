@@ -323,3 +323,63 @@ export const useTranslation = () => {
 
   return { translate, loading };
 };
+
+export const useFavoriteChannels = () => {
+  const [favoriteChannels, setFavoriteChannels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchFavoriteChannels = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API}/preferences/favorite-channels`);
+      setFavoriteChannels(response.data.favorite_channels || []);
+    } catch (err) {
+      console.error('Fetch favorite channels error:', err);
+      setError(err.message);
+      setFavoriteChannels([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addFavoriteChannel = async (channelId, channelName) => {
+    try {
+      await axios.post(`${API}/preferences/favorite-channels`, {
+        channel_id: channelId,
+        channel_name: channelName
+      });
+      // Refresh the list
+      await fetchFavoriteChannels();
+    } catch (err) {
+      console.error('Add favorite channel error:', err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const removeFavoriteChannel = async (channelId) => {
+    try {
+      await axios.delete(`${API}/preferences/favorite-channels/${channelId}`);
+      setFavoriteChannels(prev => prev.filter(ch => ch.id !== channelId));
+    } catch (err) {
+      console.error('Remove favorite channel error:', err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchFavoriteChannels();
+  }, []);
+
+  return { 
+    favoriteChannels, 
+    loading, 
+    error, 
+    fetchFavoriteChannels, 
+    addFavoriteChannel, 
+    removeFavoriteChannel 
+  };
+};
