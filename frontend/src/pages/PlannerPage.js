@@ -22,6 +22,7 @@ const PlannerPage = () => {
   const { mealPlans, addMealPlan, deleteMealPlan } = useMealPlanner();
   const { searchYouTube } = useRecipes();
   const { inventory } = useInventory();
+  const { favoriteChannels, addFavoriteChannel, removeFavoriteChannel } = useFavoriteChannels();
   
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMealType, setSelectedMealType] = useState('');
@@ -30,6 +31,10 @@ const PlannerPage = () => {
   const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const [previewVideo, setPreviewVideo] = useState(null);
+  
+  // Favorite channels state
+  const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(false);
+  const [newChannelInput, setNewChannelInput] = useState('');
 
   // Get dates for next 7 days
   const getWeekDates = () => {
