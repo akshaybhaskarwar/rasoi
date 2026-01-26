@@ -696,15 +696,6 @@ const PlannerPage = () => {
                           <CalendarIcon className="w-4 h-4 mr-2" />
                           Add to Plan
                         </Button>
-                            onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, '_blank')}
-                            size="sm"
-                            variant="outline"
-                            className="text-xs"
-                            data-testid={`open-youtube-${video.video_id}`}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   ))}
