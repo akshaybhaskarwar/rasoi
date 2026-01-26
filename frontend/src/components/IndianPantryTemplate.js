@@ -241,14 +241,27 @@ const PANTRY_TEMPLATE = {
   }
 };
 
-export const IndianPantryTemplate = ({ isOpen, onClose }) => {
+export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }) => {
   const [selectedItems, setSelectedItems] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const { addItem } = useInventory();
   const [loading, setLoading] = useState(false);
 
+  // Create a set of existing item names (normalized) for quick lookup
+  const existingItemNames = new Set(
+    existingInventory.map(item => item.name_en?.toLowerCase().trim())
+  );
+
+  // Check if an item already exists in inventory
+  const isItemInInventory = (itemName) => {
+    return existingItemNames.has(itemName.toLowerCase().trim());
+  };
+
   const toggleItemSelection = (mainCategory, subCategory, item) => {
+    // Don't allow selection if item already exists in inventory
+    if (isItemInInventory(item.en)) return;
+    
     const key = `${mainCategory}::${subCategory}`;
     setSelectedItems(prev => {
       const categoryItems = prev[key] || [];
