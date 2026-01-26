@@ -29,8 +29,10 @@ const CATEGORY_TO_STORE = {
 
 const ShoppingPage = () => {
   const { shoppingList, addItem, deleteItem, clearList } = useShoppingList();
+  const { inventory } = useInventory();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('grocery');
+  const [syncing, setSyncing] = useState(false);
   const [newItem, setNewItem] = useState({
     name_en: '',
     category: 'grains',
