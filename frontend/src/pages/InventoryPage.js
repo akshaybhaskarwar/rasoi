@@ -18,6 +18,7 @@ const InventoryPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isPantryTemplateOpen, setIsPantryTemplateOpen] = useState(false);
   
   const [newItem, setNewItem] = useState({
     name_en: '',
