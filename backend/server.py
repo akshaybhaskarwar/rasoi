@@ -56,6 +56,7 @@ class InventoryItem(BaseModel):
 
 class InventoryItemCreate(BaseModel):
     name_en: str
+    name_mr: Optional[str] = None  # Accept Marathi name directly
     category: str
     stock_level: str = "empty"
     freshness: Optional[int] = None
