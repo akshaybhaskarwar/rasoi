@@ -128,7 +128,7 @@ class FestivalAlert(BaseModel):
 # ============ TRANSLATION SERVICE ============
 
 async def translate_text(text: str, target_lang: str) -> str:
-    """Translate text using Emergent Gemini"""
+    """Translate text using Emergent API key for Google Translate"""
     try:
         # Check cache first
         cached = await db.translation_cache.find_one({
@@ -139,26 +139,36 @@ async def translate_text(text: str, target_lang: str) -> str:
         if cached:
             return cached['translated_text']
         
-        # Translate using Emergent Gemini
-        if target_lang == "gu":
-            prompt = f"Translate the following food/kitchen term to Gujarati language. Only provide the translation, nothing else: {text}"
-        elif target_lang == "mr":
-            prompt = f"Translate the following food/kitchen term to Marathi language. Only provide the translation, nothing else: {text}"
+        # Use Google Cloud Translation API with Emergent key
+        import requests
+        
+        url = f"https://translation.googleapis.com/language/translate/v2?key={EMERGENT_API_KEY}"
+        payload = {
+            'q': text,
+            'target': target_lang,
+            'source': 'en',
+            'format': 'text'
+        }
+        
+        response = requests.post(url, json=payload)
+        
+        if response.status_code == 200:
+            data = response.json()
+            translated = data['data']['translations'][0]['translatedText']
+            
+            # Cache the translation
+            await db.translation_cache.insert_one({
+                "source_text": text,
+                "target_language": target_lang,
+                "translated_text": translated,
+                "created_at": datetime.now(timezone.utc)
+            })
+            
+            return translated
         else:
+            logger.error(f"Translation API error: {response.text}")
             return text
             
-        response = translation_client.generate_content(prompt)
-        translated = response.text.strip()
-        
-        # Cache the translation
-        await db.translation_cache.insert_one({
-            "source_text": text,
-            "target_language": target_lang,
-            "translated_text": translated,
-            "created_at": datetime.now(timezone.utc)
-        })
-        
-        return translated
     except Exception as e:
         logger.error(f"Translation error: {e}")
         return text
