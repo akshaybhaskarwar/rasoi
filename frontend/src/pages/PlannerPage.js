@@ -493,12 +493,19 @@ const PlannerPage = () => {
             </div>
 
             {/* Search Button */}
-            <Button
-              onClick={handleSearchRecipes}
-              disabled={selectedIngredients.length === 0 || searching}
-              className="w-full bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full"
-              data-testid="search-recipes-btn"
-            >
+            <div className="space-y-2">
+              {favoriteChannels.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                  <Star className="w-4 h-4" fill="currentColor" />
+                  <span>Prioritizing recipes from: {favoriteChannels.map(ch => ch.name).join(', ')}</span>
+                </div>
+              )}
+              <Button
+                onClick={handleSearchRecipes}
+                disabled={selectedIngredients.length === 0 || searching}
+                className="w-full bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full"
+                data-testid="search-recipes-btn"
+              >
               {searching ? (
                 <>
                   <Search className="w-5 h-5 mr-2 animate-spin" />
