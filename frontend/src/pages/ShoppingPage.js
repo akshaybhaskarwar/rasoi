@@ -48,6 +48,70 @@ const ShoppingPage = () => {
     return acc;
   }, {});
 
+  // Get low stock and empty items from inventory
+  const getLowStockItems = () => {
+    return inventory.filter(item => 
+      item.stock_level === 'low' || item.stock_level === 'empty'
+    );
+  };
+
+  // Sync low stock items to shopping list
+  const syncFromInventory = async () => {
+    setSyncing(true);
+    try {
+      const lowStockItems = getLowStockItems();
+      let addedCount = 0;
+
+      for (const item of lowStockItems) {
+        // Check if item already in shopping list
+        const alreadyInList = shoppingList.some(
+          shopItem => shopItem.name_en === item.name_en
+        );
+
+        if (!alreadyInList) {
+          const storeType = CATEGORY_TO_STORE[item.category] || 'grocery';
+          await addItem({
+            name_en: item.name_en,
+            name_mr: item.name_mr,
+            category: item.category,
+            quantity: `1 ${item.unit}`,
+            store_type: storeType
+          });
+          addedCount++;
+        }
+      }
+
+      if (addedCount > 0) {
+        alert(`Added ${addedCount} low/empty stock items to shopping list!`);
+      } else {
+        alert('All low stock items are already in shopping list.');
+      }
+    } catch (error) {
+      console.error('Error syncing from inventory:', error);
+      alert('Failed to sync items from inventory');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Count low stock items not in shopping list
+  const getLowStockCount = () => {
+    const lowStockItems = getLowStockItems();
+    const notInList = lowStockItems.filter(item => 
+      !shoppingList.some(shopItem => shopItem.name_en === item.name_en)
+    );
+    return notInList.length;
+  };
+
+  // Auto-sync on mount if there are low stock items
+  useEffect(() => {
+    const lowStockCount = getLowStockCount();
+    if (lowStockCount > 0 && shoppingList.length === 0) {
+      // Auto-sync only if shopping list is empty
+      syncFromInventory();
+    }
+  }, []); // Only run on mount
+
   const handleAddItem = async () => {
     try {
       await addItem({ ...newItem, store_type: activeTab });
