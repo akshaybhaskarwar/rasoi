@@ -288,10 +288,15 @@ async def search_youtube_recipes(query: str, max_results: int = 10) -> List[Dict
 # ============ FESTIVAL INTELLIGENCE ============
 
 FESTIVAL_CALENDAR = {
-    "2026-01-14": {
-        "name": "Makar Sankranti",
-        "ingredients": ["til", "jaggery", "peanuts", "sesame"],
-        "message": "It's Sankranti! Perfect time for Til-Gul laddoos. Check your sesame and jaggery stock!"
+    "2026-01-26": {
+        "name": "Republic Day Special",
+        "ingredients": ["saffron", "milk", "sugar", "cardamom"],
+        "message": "Republic Day! Time to prepare tricolor sweets with saffron, milk, and pistachios. Check your pantry!"
+    },
+    "2026-01-28": {
+        "name": "Upcoming Cooking Session",
+        "ingredients": ["til", "jaggery", "peanuts"],
+        "message": "Planning a special cooking session! Stock up on til (sesame) and jaggery for traditional sweets."
     },
     "2026-03-14": {
         "name": "Holi",
