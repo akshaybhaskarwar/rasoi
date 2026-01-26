@@ -236,10 +236,15 @@ export const useRecipes = () => {
     }
   };
 
-  const searchYouTube = async (query, maxResults = 10) => {
+  const searchYouTube = async (query, maxResults = 10, favoriteChannels = []) => {
     try {
+      const channelNames = favoriteChannels.map(ch => ch.name).join(',');
       const response = await axios.get(`${API}/youtube/search`, {
-        params: { query, max_results: maxResults }
+        params: { 
+          query, 
+          max_results: maxResults,
+          favorite_channels: channelNames
+        }
       });
       return response.data.results;
     } catch (err) {
