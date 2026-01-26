@@ -479,23 +479,34 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }
                         <div className="flex flex-wrap gap-2">
                           {displayItems.map((item, idx) => {
                             const isSelected = (selectedItems[key] || []).some(i => i.en === item.en);
+                            const alreadyInInventory = isItemInInventory(item.en);
                             
                             return (
                               <button
                                 key={idx}
                                 onClick={() => toggleItemSelection(mainCategory, subCategory, item)}
-                                className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all hover-lift ${
-                                  isSelected
-                                    ? 'bg-white border-2 border-[#77DD77] text-gray-800 shadow-md'
-                                    : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-sm'
+                                disabled={alreadyInInventory}
+                                className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                                  alreadyInInventory
+                                    ? 'bg-green-100 border-2 border-green-400 text-green-700 cursor-not-allowed opacity-80'
+                                    : isSelected
+                                      ? 'bg-white border-2 border-[#77DD77] text-gray-800 shadow-md hover-lift'
+                                      : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-sm hover-lift'
                                 }`}
                                 data-testid={`item-${item.en.toLowerCase().replace(/\s+/g, '-')}`}
                               >
                                 <span className="flex items-center gap-2">
-                                  {isSelected && <Check className="w-4 h-4 text-[#77DD77] flex-shrink-0" />}
+                                  {alreadyInInventory ? (
+                                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                  ) : isSelected ? (
+                                    <Check className="w-4 h-4 text-[#77DD77] flex-shrink-0" />
+                                  ) : null}
                                   <span className="bilingual-text">
                                     {item.en} <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.mr}</span>
                                   </span>
+                                  {alreadyInInventory && (
+                                    <span className="text-xs text-green-600 ml-1">(Added)</span>
+                                  )}
                                 </span>
                               </button>
                             );
