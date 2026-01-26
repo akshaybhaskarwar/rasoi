@@ -148,6 +148,16 @@ const ShoppingPage = () => {
     alert('Copied to clipboard! You can now paste it in WhatsApp.');
   };
 
+  const handleDeleteItem = async (itemId, itemName) => {
+    try {
+      await deleteItem(itemId);
+      console.log(`Successfully deleted: ${itemName}`);
+    } catch (error) {
+      console.error('Error deleting shopping item:', error);
+      alert(`Failed to delete "${itemName}". Please try again.`);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="shopping-page">
       <div className="flex items-center justify-between">
