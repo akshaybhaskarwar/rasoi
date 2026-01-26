@@ -122,6 +122,43 @@ const PlannerPage = () => {
     setIsRecipeDialogOpen(true);
   };
 
+  // Handle adding a favorite channel
+  const handleAddFavoriteChannel = async () => {
+    if (!newChannelInput.trim()) return;
+    
+    try {
+      // Extract channel name/ID from input (could be URL or name)
+      let channelId = newChannelInput.trim();
+      let channelName = newChannelInput.trim();
+      
+      // If it's a YouTube URL, try to extract channel info
+      if (channelId.includes('youtube.com')) {
+        // Simple extraction - use the last part of URL as ID
+        const parts = channelId.split('/');
+        channelId = parts[parts.length - 1] || parts[parts.length - 2];
+        channelName = channelId.replace('@', '');
+      }
+      
+      // Generate a unique ID if we're just using a name
+      const uniqueId = channelId.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      
+      await addFavoriteChannel(uniqueId, channelName);
+      setNewChannelInput('');
+    } catch (error) {
+      console.error('Failed to add favorite channel:', error);
+      alert('Failed to add channel. Please try again.');
+    }
+  };
+
+  // Handle removing a favorite channel
+  const handleRemoveFavoriteChannel = async (channelId) => {
+    try {
+      await removeFavoriteChannel(channelId);
+    } catch (error) {
+      console.error('Failed to remove favorite channel:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="planner-page">
       {/* Header */}
