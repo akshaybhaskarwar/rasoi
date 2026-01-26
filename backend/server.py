@@ -613,21 +613,35 @@ RECIPE_DATABASE = [
     }
 ]
 
+def normalize_string(s: str) -> str:
+    """Normalize string for flexible matching - remove special chars, lowercase"""
+    import re
+    return re.sub(r'[^a-z0-9]', '', s.lower())
+
 def search_local_recipes(ingredients: List[str], videos_only: bool = False, favorite_channels: List[str] = []) -> List[Dict[str, Any]]:
     """Search local recipe database by matching ingredients"""
     results = []
     ingredients_lower = [ing.lower() for ing in ingredients]
-    favorite_channels_lower = [ch.lower() for ch in favorite_channels]
+    
+    # Normalize favorite channel names for flexible matching
+    favorite_channels_normalized = [normalize_string(ch) for ch in favorite_channels]
     
     for recipe in RECIPE_DATABASE:
         # Skip non-video recipes if videos_only filter is set
         if videos_only and recipe.get('type') != 'video':
             continue
-            
+        
+        # Normalize source for comparison
+        source_normalized = normalize_string(recipe.get('source', ''))
+        
         # If favorite channels are set, only include recipes from those channels
         if favorite_channels:
-            source_lower = recipe.get('source', '').lower()
-            if not any(fav in source_lower or source_lower in fav for fav in favorite_channels_lower):
+            # Check if source matches any favorite (flexible matching)
+            matches_favorite = any(
+                fav in source_normalized or source_normalized in fav 
+                for fav in favorite_channels_normalized
+            )
+            if not matches_favorite:
                 continue
         
         # Count matching ingredients
@@ -643,8 +657,8 @@ def search_local_recipes(ingredients: List[str], videos_only: bool = False, favo
                 'match_count': matches,
                 'match_score': match_score,
                 'is_favorite': bool(favorite_channels and any(
-                    fav in recipe.get('source', '').lower() or recipe.get('source', '').lower() in fav 
-                    for fav in favorite_channels_lower
+                    fav in source_normalized or source_normalized in fav 
+                    for fav in favorite_channels_normalized
                 ))
             })
     
