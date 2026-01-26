@@ -78,10 +78,15 @@ const PlannerPage = () => {
     try {
       const query = selectedIngredients.join(' ');
       const results = await searchYouTube(query, 8, favoriteChannels);
-      setSearchResults(results);
+      setSearchResults(results || []);
     } catch (error) {
       console.error('Search error:', error);
-      alert('Failed to search recipes');
+      if (error.response?.status === 429 || error.message?.includes('quota')) {
+        alert('YouTube API quota exceeded. Please try again later or reduce the number of searches.');
+      } else {
+        alert('Failed to search recipes. Please try again.');
+      }
+      setSearchResults([]);
     } finally {
       setSearching(false);
     }
