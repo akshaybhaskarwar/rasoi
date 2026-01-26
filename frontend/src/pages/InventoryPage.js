@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
-import { Plus, Search, Lock, Trash2, Package2 } from 'lucide-react';
+import { Plus, Search, Lock, Trash2, Package2, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
 
 const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks'];
 const STOCK_LEVELS = ['empty', 'low', 'half', 'full'];
