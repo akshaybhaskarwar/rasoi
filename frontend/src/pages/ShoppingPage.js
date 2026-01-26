@@ -151,17 +151,41 @@ const ShoppingPage = () => {
   return (
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="shopping-page">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Kirana-Connect</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full"
-              data-testid="add-shopping-item-btn"
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Kirana-Connect</h1>
+          <p className="text-gray-600 text-sm mt-1">Your smart shopping assistant</p>
+        </div>
+        <div className="flex gap-2">
+          {getLowStockCount() > 0 && (
+            <Button
+              onClick={syncFromInventory}
+              disabled={syncing}
+              className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-md"
+              data-testid="sync-inventory-btn"
             >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Item
+              {syncing ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Sync {getLowStockCount()} Low Stock Items
+                </>
+              )}
             </Button>
-          </DialogTrigger>
+          )}
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full shadow-md"
+                data-testid="add-shopping-item-btn"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Item
+              </Button>
+            </DialogTrigger>
           <DialogContent data-testid="add-shopping-dialog">
             <DialogHeader>
               <DialogTitle>Add Shopping Item</DialogTitle>
