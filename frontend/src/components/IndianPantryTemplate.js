@@ -289,8 +289,24 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }
     return (selectedItems[key] || []).length;
   };
 
+  // Count items already in inventory for a category
+  const getAlreadyAddedCount = (items) => {
+    return items.filter(item => isItemInInventory(item.en)).length;
+  };
+
   const getTotalSelected = () => {
     return Object.values(selectedItems).reduce((sum, items) => sum + items.length, 0);
+  };
+
+  // Get total items already in inventory
+  const getTotalAlreadyAdded = () => {
+    let count = 0;
+    Object.values(PANTRY_TEMPLATE).forEach(subCategories => {
+      Object.values(subCategories).forEach(({ items }) => {
+        count += items.filter(item => isItemInInventory(item.en)).length;
+      });
+    });
+    return count;
   };
 
   // Search filter logic
