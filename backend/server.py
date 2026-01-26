@@ -570,10 +570,77 @@ async def get_recipes():
 # ============ YOUTUBE SEARCH ENDPOINT ============
 
 @api_router.get("/youtube/search")
-async def search_recipes(query: str, max_results: int = 10):
-    """Search YouTube for recipes"""
-    results = await search_youtube_recipes(query, max_results)
+async def search_recipes(query: str, max_results: int = 10, favorite_channels: str = ""):
+    """Search YouTube for recipes with favorite channel priority"""
+    channels_list = [ch.strip() for ch in favorite_channels.split(',') if ch.strip()] if favorite_channels else []
+    results = await search_youtube_recipes(query, max_results, channels_list)
     return {"results": results}
+
+# ============ USER PREFERENCES ENDPOINTS ============
+
+@api_router.get("/preferences")
+async def get_preferences():
+    """Get user preferences"""
+    prefs = await db.preferences.find_one({}, {"_id": 0})
+    if not prefs:
+        # Return default preferences
+        return {"favorite_channels": []}
+    return prefs
+
+@api_router.put("/preferences")
+async def update_preferences(preferences: dict):
+    """Update user preferences"""
+    preferences['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Upsert preferences
+    await db.preferences.update_one(
+        {},
+        {"$set": preferences},
+        upsert=True
+    )
+    
+    return {"message": "Preferences updated successfully"}
+
+@api_router.post("/preferences/favorite-channels")
+async def add_favorite_channel(channel_data: dict):
+    """Add a favorite channel"""
+    channel_id = channel_data.get('channel_id')
+    channel_name = channel_data.get('channel_name')
+    
+    if not channel_id or not channel_name:
+        raise HTTPException(status_code=400, detail="Channel ID and name required")
+    
+    # Get current preferences
+    prefs = await db.preferences.find_one({})
+    if not prefs:
+        prefs = {"favorite_channels": []}
+    
+    # Add channel if not already in list
+    channel_entry = {"id": channel_id, "name": channel_name}
+    if not any(ch.get('id') == channel_id for ch in prefs.get('favorite_channels', [])):
+        prefs['favorite_channels'].append(channel_entry)
+        prefs['updated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        await db.preferences.update_one(
+            {},
+            {"$set": prefs},
+            upsert=True
+        )
+    
+    return {"message": "Channel added to favorites"}
+
+@api_router.delete("/preferences/favorite-channels/{channel_id}")
+async def remove_favorite_channel(channel_id: str):
+    """Remove a favorite channel"""
+    result = await db.preferences.update_one(
+        {},
+        {"$pull": {"favorite_channels": {"id": channel_id}}}
+    )
+    
+    if result.modified_count > 0:
+        return {"message": "Channel removed from favorites"}
+    else:
+        raise HTTPException(status_code=404, detail="Channel not found in favorites")
 
 # ============ TRANSLATION ENDPOINT ============
 
