@@ -429,7 +429,7 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }
           </div>
           {searchQuery && (
             <div className="mt-2 text-sm text-gray-600">
-              Found <span className="font-bold text-[#FF9933]">{getSearchResultsCount()}</span> items matching "{searchQuery}"
+              Found <span className="font-bold text-[#FF9933]">{getSearchResultsCount()}</span> items matching &quot;{searchQuery}&quot;
             </div>
           )}
         </div>
