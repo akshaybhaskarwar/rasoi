@@ -77,16 +77,25 @@ const InventoryPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Bilingual Inventory</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full"
-              data-testid="add-item-btn"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Item
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setIsPantryTemplateOpen(true)}
+            className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full"
+            data-testid="pantry-template-btn"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Indian Pantry Template
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full"
+                data-testid="add-item-btn"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Item
+              </Button>
+            </DialogTrigger>
           <DialogContent data-testid="add-item-dialog">
             <DialogHeader>
               <DialogTitle>Add New Item</DialogTitle>
