@@ -37,6 +37,7 @@ const InventoryPage = () => {
   const { inventory, loading, addItem, updateItem, deleteItem } = useInventory();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStockLevel, setSelectedStockLevel] = useState('all'); // New state for stock filtering
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPantryTemplateOpen, setIsPantryTemplateOpen] = useState(false);
   
