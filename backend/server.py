@@ -1061,6 +1061,33 @@ async def search_recipes(query: str, max_results: int = 10, favorite_channels: s
     results = await search_youtube_recipes(query, max_results, channels_list)
     return {"results": results}
 
+# ============ LOCAL RECIPE SEARCH ENDPOINT ============
+
+@api_router.get("/recipes/search")
+async def search_local_recipes_endpoint(ingredients: str = "", videos_only: bool = False, favorite_channels: str = "", max_results: int = 20):
+    """Search local recipe database by ingredients with favorite channel priority"""
+    # Parse ingredients from comma-separated string
+    ingredients_list = [ing.strip() for ing in ingredients.split(',') if ing.strip()] if ingredients else []
+    
+    # Parse favorite channels
+    channels_list = [ch.strip() for ch in favorite_channels.split(',') if ch.strip()] if favorite_channels else []
+    
+    # Search local database
+    results = search_local_recipes(ingredients_list, videos_only, channels_list)
+    
+    # Limit results
+    limited_results = results[:max_results]
+    
+    return {
+        "results": limited_results,
+        "total_found": len(results),
+        "search_criteria": {
+            "ingredients": ingredients_list,
+            "videos_only": videos_only,
+            "favorite_channels": channels_list
+        }
+    }
+
 # ============ USER PREFERENCES ENDPOINTS ============
 
 @api_router.get("/preferences")
