@@ -679,7 +679,7 @@ const PlannerPage = () => {
                       <div className="flex gap-2 border-t pt-4">
                         {recipe.type === 'video' && recipe.video_id && (
                           <Button
-                            onClick={() => setPreviewVideo(recipe)}
+                            onClick={() => window.open(`https://www.youtube.com/watch?v=${recipe.video_id}`, '_blank')}
                             variant="outline"
                             className="flex-1 text-sm"
                             data-testid={`view-recipe-${recipe.id}`}
