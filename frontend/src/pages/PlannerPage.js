@@ -500,18 +500,45 @@ const PlannerPage = () => {
               )}
             </div>
 
+            {/* Filter Tabs */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setVideosOnly(false)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                  !videosOnly 
+                    ? 'bg-[#138808] text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                data-testid="filter-all"
+              >
+                All
+              </button>
+              <button
+                onClick={() => setVideosOnly(true)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors ${
+                  videosOnly 
+                    ? 'bg-[#138808] text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                data-testid="filter-videos"
+              >
+                <Video className="w-4 h-4" />
+                Videos Only
+              </button>
+            </div>
+
             {/* Search Button */}
             <div className="space-y-2">
               {favoriteChannels.length > 0 && (
                 <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
                   <Star className="w-4 h-4" fill="currentColor" />
-                  <span>Prioritizing recipes from: {favoriteChannels.map(ch => ch.name).join(', ')}</span>
+                  <span>Showing recipes from: {favoriteChannels.map(ch => ch.name).join(', ')}</span>
                 </div>
               )}
               <Button
                 onClick={handleSearchRecipes}
                 disabled={selectedIngredients.length === 0 || searching}
-                className="w-full bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full"
+                className="w-full bg-[#138808] hover:bg-[#0d6606] text-white rounded-lg"
                 data-testid="search-recipes-btn"
               >
               {searching ? (
@@ -530,13 +557,15 @@ const PlannerPage = () => {
 
             {/* Search Results */}
             {searchResults.length > 0 && (
-              <div>
-                <Label className="text-base font-bold mb-3 block">
-                  Recipe Results ({searchResults.length})
-                </Label>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-bold">
+                    Recipe Results ({searchResults.length}{totalFound > searchResults.length ? ` of ${totalFound}` : ''})
+                  </Label>
+                </div>
                 
                 {/* Video Preview Player */}
-                {previewVideo && (
+                {previewVideo && previewVideo.video_id && (
                   <div className="mb-6 bg-black rounded-xl overflow-hidden" data-testid="video-preview">
                     <div className="relative" style={{ paddingTop: '56.25%' }}>
                       <iframe
