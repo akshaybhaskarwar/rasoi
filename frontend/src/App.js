@@ -1,51 +1,49 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+import { Toaster } from "@/components/ui/sonner";
+import { DualContextHeader } from "@/components/DualContextHeader";
+import { BottomNavigation } from "@/components/BottomNavigation";
+import { GapAnalysisSidebar } from "@/components/GapAnalysisSidebar";
+import HomePage from "@/pages/HomePage";
+import InventoryPage from "@/pages/InventoryPage";
+import ShoppingPage from "@/pages/ShoppingPage";
+import PlannerPage from "@/pages/PlannerPage";
+import CommunityPage from "@/pages/CommunityPage";
 
 function App() {
+  const [language, setLanguage] = useState('en');
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    // You can add translation logic here if needed
+  };
+
   return (
-    <div className="App">
+    <div className="App bg-gray-50 min-h-screen">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <DualContextHeader onLanguageChange={handleLanguageChange} />
+        
+        <div className="flex">
+          {/* Main Content */}
+          <div className="flex-1">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/shopping" element={<ShoppingPage />} />
+              <Route path="/planner" element={<PlannerPage />} />
+              <Route path="/community" element={<CommunityPage />} />
+            </Routes>
+          </div>
+
+          {/* Gap Analysis Sidebar (Desktop Only) */}
+          <aside className="hidden xl:block w-80 p-4 sticky top-24 h-screen overflow-y-auto">
+            <GapAnalysisSidebar />
+          </aside>
+        </div>
+
+        <BottomNavigation />
+        <Toaster />
       </BrowserRouter>
     </div>
   );
