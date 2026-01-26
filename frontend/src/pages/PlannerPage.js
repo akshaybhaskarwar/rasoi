@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMealPlanner, useRecipes, useInventory, useFavoriteChannels } from '@/hooks/useRasoiSync';
-import { Plus, Calendar as CalendarIcon, Trash2, Search, ChefHat, X, Play, ExternalLink, Star, ChevronDown, ChevronUp, Youtube } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Trash2, Search, ChefHat, X, Play, ExternalLink, Star, ChevronDown, ChevronUp, Youtube, Video, FileText, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,7 +20,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 const PlannerPage = () => {
   const { mealPlans, addMealPlan, deleteMealPlan } = useMealPlanner();
-  const { searchYouTube } = useRecipes();
+  const { searchLocalRecipes } = useRecipes();
   const { inventory } = useInventory();
   const { favoriteChannels, addFavoriteChannel, removeFavoriteChannel } = useFavoriteChannels();
   
@@ -31,6 +31,8 @@ const PlannerPage = () => {
   const [isRecipeDialogOpen, setIsRecipeDialogOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const [previewVideo, setPreviewVideo] = useState(null);
+  const [videosOnly, setVideosOnly] = useState(false);
+  const [totalFound, setTotalFound] = useState(0);
   
   // Favorite channels state
   const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(false);
