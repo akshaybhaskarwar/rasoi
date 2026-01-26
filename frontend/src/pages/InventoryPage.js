@@ -483,6 +483,7 @@ const InventoryPage = () => {
       <IndianPantryTemplate 
         isOpen={isPantryTemplateOpen}
         onClose={() => setIsPantryTemplateOpen(false)}
+        existingInventory={inventory}
       />
     </div>
   );
