@@ -281,7 +281,7 @@ const ShoppingPage = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => deleteItem(item.id)}
+                            onClick={() => handleDeleteItem(item.id, item.name_en)}
                             className="text-red-600 hover:text-red-700"
                             data-testid={`delete-shopping-${item.id}`}
                           >
