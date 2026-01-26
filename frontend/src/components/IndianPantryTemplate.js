@@ -406,88 +406,123 @@ export const IndianPantryTemplate = ({ isOpen, onClose }) => {
         </div>
 
         <div className="space-y-6 mt-4">
-          {Object.entries(PANTRY_TEMPLATE).map(([mainCategory, subCategories]) => (
-            <div key={mainCategory} className="space-y-3">
-              <h2 className="text-xl font-bold text-gray-800 sticky top-0 bg-white py-2 z-10 border-b-2 border-[#FF9933]">
-                {mainCategory}
-              </h2>
-              
-              {Object.entries(subCategories).map(([subCategory, { color, items }]) => {
-                const key = `${mainCategory}::${subCategory}`;
-                const selectedCount = getSelectedCount(mainCategory, subCategory);
-                const isExpanded = expandedCategories[key] ?? true;
-                const displayItems = isExpanded ? items : items.slice(0, 8);
-                const hasMore = items.length > 8;
+          {Object.entries(PANTRY_TEMPLATE).map(([mainCategory, subCategories]) => {
+            // Filter subcategories based on search
+            const visibleSubCategories = Object.entries(subCategories).filter(([subCategory, { items }]) => 
+              shouldShowCategory(mainCategory, subCategory, items)
+            );
+            
+            if (visibleSubCategories.length === 0) return null;
+            
+            return (
+              <div key={mainCategory} className="space-y-3">
+                <h2 className="text-xl font-bold text-gray-800 sticky top-20 bg-white py-2 z-10 border-b-2 border-[#FF9933]">
+                  {mainCategory}
+                </h2>
+                
+                {visibleSubCategories.map(([subCategory, { color, items }]) => {
+                  const key = `${mainCategory}::${subCategory}`;
+                  const selectedCount = getSelectedCount(mainCategory, subCategory);
+                  const isExpanded = expandedCategories[key] ?? true;
+                  
+                  // Filter items based on search
+                  const filteredItems = filterItemsBySearch(items, mainCategory, subCategory);
+                  const displayItems = isExpanded ? filteredItems : filteredItems.slice(0, 8);
+                  const hasMore = filteredItems.length > 8;
 
-                return (
-                  <div 
-                    key={subCategory}
-                    className={`${color} rounded-2xl p-5 border border-gray-200 transition-all`}
-                    data-testid={`category-${subCategory.replace(/\s+/g, '-')}`}
-                  >
-                    {/* Subcategory Header */}
+                  if (filteredItems.length === 0) return null;
+
+                  return (
                     <div 
-                      className="flex items-center justify-between mb-4 cursor-pointer"
-                      onClick={() => toggleCategory(mainCategory, subCategory)}
+                      key={subCategory}
+                      className={`${color} rounded-2xl p-5 border border-gray-200 transition-all`}
+                      data-testid={`category-${subCategory.replace(/\s+/g, '-')}`}
                     >
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">{subCategory}</h3>
-                        <p className="text-sm text-gray-600">
-                          {selectedCount}/{items.length} Selected
-                        </p>
-                      </div>
-                      <button className="text-gray-600 hover:text-gray-800">
-                        <span className={`text-xl transform ${isExpanded ? 'rotate-180' : ''} inline-block transition-transform`}>
-                          ∨
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Items Grid - Bilingual Display */}
-                    {isExpanded && (
-                      <div className="flex flex-wrap gap-2">
-                        {displayItems.map((item, idx) => {
-                          const isSelected = (selectedItems[key] || []).some(i => i.en === item.en);
-                          
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => toggleItemSelection(mainCategory, subCategory, item)}
-                              className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all hover-lift ${
-                                isSelected
-                                  ? 'bg-white border-2 border-[#77DD77] text-gray-800 shadow-md'
-                                  : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-sm'
-                              }`}
-                              data-testid={`item-${item.en.toLowerCase().replace(/\s+/g, '-')}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                {isSelected && <Check className="w-4 h-4 text-[#77DD77] flex-shrink-0" />}
-                                <span className="bilingual-text">
-                                  {item.en} <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.mr}</span>
-                                </span>
+                      {/* Subcategory Header */}
+                      <div 
+                        className="flex items-center justify-between mb-4 cursor-pointer"
+                        onClick={() => toggleCategory(mainCategory, subCategory)}
+                      >
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800">{subCategory}</h3>
+                          <p className="text-sm text-gray-600">
+                            {selectedCount}/{items.length} Selected
+                            {searchQuery && filteredItems.length < items.length && (
+                              <span className="text-[#FF9933] ml-2">
+                                • {filteredItems.length} matching
                               </span>
-                            </button>
-                          );
-                        })}
-                        
-                        {hasMore && !isExpanded && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleCategory(mainCategory, subCategory);
-                            }}
-                            className="px-4 py-2.5 rounded-full text-sm font-medium bg-white border border-gray-400 text-gray-700 hover:border-gray-500 hover:shadow-sm"
-                          >
-                            +{items.length - 8} More
-                          </button>
-                        )}
+                            )}
+                          </p>
+                        </div>
+                        <button className="text-gray-600 hover:text-gray-800">
+                          <span className={`text-xl transform ${isExpanded ? 'rotate-180' : ''} inline-block transition-transform`}>
+                            ∨
+                          </span>
+                        </button>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                      {/* Items Grid - Bilingual Display */}
+                      {isExpanded && (
+                        <div className="flex flex-wrap gap-2">
+                          {displayItems.map((item, idx) => {
+                            const isSelected = (selectedItems[key] || []).some(i => i.en === item.en);
+                            
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => toggleItemSelection(mainCategory, subCategory, item)}
+                                className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all hover-lift ${
+                                  isSelected
+                                    ? 'bg-white border-2 border-[#77DD77] text-gray-800 shadow-md'
+                                    : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-sm'
+                                }`}
+                                data-testid={`item-${item.en.toLowerCase().replace(/\s+/g, '-')}`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  {isSelected && <Check className="w-4 h-4 text-[#77DD77] flex-shrink-0" />}
+                                  <span className="bilingual-text">
+                                    {item.en} <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.mr}</span>
+                                  </span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                          
+                          {hasMore && !isExpanded && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCategory(mainCategory, subCategory);
+                              }}
+                              className="px-4 py-2.5 rounded-full text-sm font-medium bg-white border border-gray-400 text-gray-700 hover:border-gray-500 hover:shadow-sm"
+                            >
+                              +{filteredItems.length - 8} More
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+          
+          {/* No Results Message */}
+          {searchQuery && getSearchResultsCount() === 0 && (
+            <div className="text-center py-12">
+              <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600 text-lg mb-2">No items found</p>
+              <p className="text-gray-500 text-sm">Try searching with different keywords</p>
+              <Button
+                onClick={() => setSearchQuery('')}
+                variant="outline"
+                className="mt-4"
+              >
+                Clear Search
+              </Button>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Footer Actions */}
