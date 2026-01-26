@@ -117,6 +117,12 @@ class RecipeCreate(BaseModel):
     ingredients: List[str] = []
     author: str = "Anonymous"
 
+class UserPreferences(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    favorite_channels: List[str] = []  # List of channel names/IDs
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class TranslationRequest(BaseModel):
     text: str
     source_language: str = "en"
