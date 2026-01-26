@@ -11,7 +11,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from emergentintegrations import EmergentGemini
+from google.cloud import translate_v2 as translate
+import google.auth
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -25,8 +26,10 @@ db = client[os.environ['DB_NAME']]
 YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 EMERGENT_API_KEY = os.environ.get('EMERGENT_API_KEY')
 
-# Initialize translation client
-translation_client = EmergentGemini(api_key=EMERGENT_API_KEY)
+# Initialize translation client using Emergent API key
+# Create credentials from API key for Google Cloud Translate
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ''  # Not needed with API key
+translation_client = None  # We'll use direct API calls with the key
 
 # Create the main app
 app = FastAPI(title="Rasoi-Sync API")
