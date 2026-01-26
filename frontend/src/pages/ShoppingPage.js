@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useShoppingList } from '@/hooks/useRasoiSync';
-import { Plus, Trash2, ShoppingBag, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
+import { Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +10,22 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks'];
+
+// Map inventory categories to store types
+const CATEGORY_TO_STORE = {
+  'grains': 'grocery',
+  'pulses': 'grocery',
+  'spices': 'grocery',
+  'dairy': 'grocery',
+  'oils': 'grocery',
+  'bakery': 'grocery',
+  'fasting': 'grocery',
+  'snacks': 'grocery',
+  'beverages': 'grocery',
+  'vegetables': 'mandi',
+  'fruits': 'mandi',
+  'other': 'grocery'
+};
 
 const ShoppingPage = () => {
   const { shoppingList, addItem, deleteItem, clearList } = useShoppingList();
