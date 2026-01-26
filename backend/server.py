@@ -601,6 +601,14 @@ async def update_preferences(preferences: dict):
     
     return {"message": "Preferences updated successfully"}
 
+@api_router.get("/preferences/favorite-channels")
+async def get_favorite_channels():
+    """Get favorite channels"""
+    prefs = await db.preferences.find_one({}, {"_id": 0})
+    if not prefs:
+        return {"favorite_channels": []}
+    return {"favorite_channels": prefs.get('favorite_channels', [])}
+
 @api_router.post("/preferences/favorite-channels")
 async def add_favorite_channel(channel_data: dict):
     """Add a favorite channel"""
