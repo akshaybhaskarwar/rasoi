@@ -1,0 +1,171 @@
+{
+  "summary": {
+    "tests_run": 27,
+    "tests_passed": 27,
+    "success_rate": 100.0
+  },
+  "results": [
+    {
+      "test_name": "API Root",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"message\": \"Rasoi-Sync API is running!\"\n}...",
+      "timestamp": "2026-01-26T01:42:26.525486"
+    },
+    {
+      "test_name": "Health Check",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"status\": \"healthy\"\n}...",
+      "timestamp": "2026-01-26T01:42:26.604237"
+    },
+    {
+      "test_name": "Get Empty Inventory",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: []...",
+      "timestamp": "2026-01-26T01:42:26.643481"
+    },
+    {
+      "test_name": "Create Inventory Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"id\": \"e1171e7a-d812-4418-a44e-4f8f3a1faba7\",\n  \"name_en\": \"Test Turmeric\",\n  \"name_gu\": \"Test Turmeric\",\n  \"name_mr\": \"Test Turmeric\",\n  \"category\": \"spices\",\n  \"stock_level\": \"half\",\n  \"freshnes...",
+      "timestamp": "2026-01-26T01:42:26.791882"
+    },
+    {
+      "test_name": "Get Inventory with Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: [\n  {\n    \"id\": \"e1171e7a-d812-4418-a44e-4f8f3a1faba7\",\n    \"name_en\": \"Test Turmeric\",\n    \"name_gu\": \"Test Turmeric\",\n    \"name_mr\": \"Test Turmeric\",\n    \"category\": \"spices\",\n    \"stock_level\": \"ha...",
+      "timestamp": "2026-01-26T01:42:26.867845"
+    },
+    {
+      "test_name": "Get Inventory by Category",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: [\n  {\n    \"id\": \"e1171e7a-d812-4418-a44e-4f8f3a1faba7\",\n    \"name_en\": \"Test Turmeric\",\n    \"name_gu\": \"Test Turmeric\",\n    \"name_mr\": \"Test Turmeric\",\n    \"category\": \"spices\",\n    \"stock_level\": \"ha...",
+      "timestamp": "2026-01-26T01:42:26.914528"
+    },
+    {
+      "test_name": "Update Inventory Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"message\": \"Updated successfully\"\n}...",
+      "timestamp": "2026-01-26T01:42:26.951267"
+    },
+    {
+      "test_name": "Delete Inventory Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"message\": \"Deleted successfully\"\n}...",
+      "timestamp": "2026-01-26T01:42:27.029900"
+    },
+    {
+      "test_name": "Update Non-existent Item",
+      "success": true,
+      "details": "Status: 404, Expected: 404, Response: {\n  \"detail\": \"Item not found\"\n}...",
+      "timestamp": "2026-01-26T01:42:27.072928"
+    },
+    {
+      "test_name": "Delete Non-existent Item",
+      "success": true,
+      "details": "Status: 404, Expected: 404, Response: {\n  \"detail\": \"Item not found\"\n}...",
+      "timestamp": "2026-01-26T01:42:27.113128"
+    },
+    {
+      "test_name": "Get Empty Shopping List",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: []...",
+      "timestamp": "2026-01-26T01:42:27.153029"
+    },
+    {
+      "test_name": "Create Shopping Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"id\": \"c3c8a88e-e798-4d4a-bb2f-095dbf00f1dd\",\n  \"name_en\": \"Test Basmati Rice\",\n  \"name_gu\": \"Test Basmati Rice\",\n  \"name_mr\": \"Test Basmati Rice\",\n  \"category\": \"grains\",\n  \"quantity\": \"2 kg\",\n  ...",
+      "timestamp": "2026-01-26T01:42:27.283714"
+    },
+    {
+      "test_name": "Get Shopping List with Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: [\n  {\n    \"id\": \"c3c8a88e-e798-4d4a-bb2f-095dbf00f1dd\",\n    \"name_en\": \"Test Basmati Rice\",\n    \"name_gu\": \"Test Basmati Rice\",\n    \"name_mr\": \"Test Basmati Rice\",\n    \"category\": \"grains\",\n    \"quant...",
+      "timestamp": "2026-01-26T01:42:27.325554"
+    },
+    {
+      "test_name": "Get Shopping by Store Type",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: [\n  {\n    \"id\": \"c3c8a88e-e798-4d4a-bb2f-095dbf00f1dd\",\n    \"name_en\": \"Test Basmati Rice\",\n    \"name_gu\": \"Test Basmati Rice\",\n    \"name_mr\": \"Test Basmati Rice\",\n    \"category\": \"grains\",\n    \"quant...",
+      "timestamp": "2026-01-26T01:42:27.362486"
+    },
+    {
+      "test_name": "Delete Shopping Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"message\": \"Deleted successfully\"\n}...",
+      "timestamp": "2026-01-26T01:42:27.400716"
+    },
+    {
+      "test_name": "Clear Shopping List",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"message\": \"Shopping list cleared\"\n}...",
+      "timestamp": "2026-01-26T01:42:27.476500"
+    },
+    {
+      "test_name": "Get Empty Meal Plans",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: []...",
+      "timestamp": "2026-01-26T01:42:27.517179"
+    },
+    {
+      "test_name": "Create Meal Plan",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"id\": \"2a52d161-85cb-4cbe-a8b6-563a2b7c3eae\",\n  \"date\": \"2026-01-27\",\n  \"meal_name\": \"Test Dal Tadka\",\n  \"youtube_video_id\": \"dQw4w9WgXcQ\",\n  \"youtube_thumbnail\": null,\n  \"youtube_title\": null,\n  ...",
+      "timestamp": "2026-01-26T01:42:27.640165"
+    },
+    {
+      "test_name": "Get Meal Plans with Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: [\n  {\n    \"id\": \"2a52d161-85cb-4cbe-a8b6-563a2b7c3eae\",\n    \"date\": \"2026-01-27\",\n    \"meal_name\": \"Test Dal Tadka\",\n    \"youtube_video_id\": \"dQw4w9WgXcQ\",\n    \"youtube_thumbnail\": null,\n    \"youtube_...",
+      "timestamp": "2026-01-26T01:42:27.680767"
+    },
+    {
+      "test_name": "Delete Meal Plan",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"message\": \"Deleted successfully\"\n}...",
+      "timestamp": "2026-01-26T01:42:27.723292"
+    },
+    {
+      "test_name": "Get Empty Recipes",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: []...",
+      "timestamp": "2026-01-26T01:42:27.758577"
+    },
+    {
+      "test_name": "Create Recipe",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"id\": \"97edc706-c7d5-4705-8642-fd9f2a468191\",\n  \"title\": \"Test Gujarati Dal\",\n  \"youtube_url\": \"https://youtube.com/watch?v=dQw4w9WgXcQ\",\n  \"youtube_video_id\": \"dQw4w9WgXcQ\",\n  \"youtube_thumbnail\"...",
+      "timestamp": "2026-01-26T01:42:27.858688"
+    },
+    {
+      "test_name": "Get Recipes with Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: [\n  {\n    \"id\": \"97edc706-c7d5-4705-8642-fd9f2a468191\",\n    \"title\": \"Test Gujarati Dal\",\n    \"youtube_url\": \"https://youtube.com/watch?v=dQw4w9WgXcQ\",\n    \"youtube_video_id\": \"dQw4w9WgXcQ\",\n    \"yout...",
+      "timestamp": "2026-01-26T01:42:27.896312"
+    },
+    {
+      "test_name": "Search YouTube Recipes",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"results\": []\n}...",
+      "timestamp": "2026-01-26T01:42:28.021503"
+    },
+    {
+      "test_name": "Translate Text",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"original_text\": \"turmeric powder\",\n  \"source_language\": \"en\",\n  \"translations\": {\n    \"gu\": \"turmeric powder\",\n    \"mr\": \"turmeric powder\"\n  }\n}...",
+      "timestamp": "2026-01-26T01:42:28.120733"
+    },
+    {
+      "test_name": "Get Festival Alert",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: null...",
+      "timestamp": "2026-01-26T01:42:28.155782"
+    },
+    {
+      "test_name": "Get Gap Analysis",
+      "success": true,
+      "details": "Status: 200, Expected: 200, Response: {\n  \"missing_ingredients\": []\n}...",
+      "timestamp": "2026-01-26T01:42:28.190667"
+    }
+  ]
+}
