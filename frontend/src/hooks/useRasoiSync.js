@@ -16,6 +16,7 @@ export const useInventory = () => {
       const url = category ? `${API}/inventory?category=${category}` : `${API}/inventory`;
       const response = await axios.get(url);
       setInventory(response.data);
+      return response.data;
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,15 +49,29 @@ export const useInventory = () => {
 
   const deleteItem = async (itemId) => {
     try {
-      await axios.delete(`${API}/inventory/${itemId}`);
+      const response = await axios.delete(`${API}/inventory/${itemId}`);
+      console.log('Delete API response:', response.data);
+      
       // Immediately update local state
       setInventory(prev => {
         const updated = prev.filter(item => item.id !== itemId);
         console.log(`Deleted item ${itemId}. Remaining items:`, updated.length);
         return updated;
       });
+      
+      // Also refresh from server to ensure consistency
+      await fetchInventory();
+      
+      return response.data;
     } catch (err) {
-      console.error('Delete error:', err);
+      console.error('Delete error:', err.response?.data || err.message);
+      
+      // If item not found, refresh inventory to sync state
+      if (err.response?.status === 404) {
+        console.log('Item not found in DB, refreshing inventory...');
+        await fetchInventory();
+      }
+      
       setError(err.message);
       throw err;
     }
