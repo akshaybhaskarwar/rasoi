@@ -256,23 +256,23 @@ async def fetch_video_details(video_id: str) -> Dict[str, Any]:
         return {}
 
 async def search_youtube_recipes(query: str, max_results: int = 10, favorite_channels: List[str] = []) -> List[Dict[str, Any]]:
-    """Search YouTube for recipe videos with priority for favorite channels"""
+    """Search YouTube for recipe videos - only from favorite channels if set"""
     try:
         youtube = get_youtube_service()
         
         all_results = []
         seen_video_ids = set()
         
-        # First, search within favorite channels by including channel name in query
+        # If favorite channels exist, search ONLY within those channels
         if favorite_channels:
-            for channel_name in favorite_channels[:3]:  # Limit to top 3 channels for performance
+            for channel_name in favorite_channels[:5]:  # Check up to 5 favorite channels
                 try:
                     # Search for recipes from this specific channel by including channel name
                     request = youtube.search().list(
                         part="snippet",
                         q=f"{channel_name} {query} recipe",
                         type="video",
-                        maxResults=3,
+                        maxResults=max_results,  # Get more results per channel
                         regionCode="IN"
                     )
                     response = request.execute()
@@ -293,43 +293,41 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
                                     'channel_id': item['snippet']['channelId'],
                                     'is_favorite': True
                                 })
+                                
+                                if len(all_results) >= max_results:
+                                    break
                 except Exception as e:
                     logger.error(f"Error searching favorite channel {channel_name}: {e}")
                     continue
-        
-        # Then, do general search to fill remaining slots
-        remaining_slots = max_results - len(all_results)
-        if remaining_slots > 0:
-            request = youtube.search().list(
-                part="snippet",
-                q=f"{query} recipe",
-                type="video",
-                maxResults=remaining_slots + 5,  # Get extra to account for duplicates
-                regionCode="IN"
-            )
-            response = request.execute()
-            
-            # Normalize favorite channel names for comparison
-            favorite_names_lower = [ch.lower() for ch in favorite_channels]
-            
-            for item in response.get('items', []):
-                video_id = item['id']['videoId']
-                if video_id not in seen_video_ids:
-                    seen_video_ids.add(video_id)
-                    channel_title = item['snippet']['channelTitle']
-                    # Check if this channel matches any favorite
-                    is_fav = any(fav in channel_title.lower() or channel_title.lower() in fav for fav in favorite_names_lower)
-                    all_results.append({
-                        'video_id': video_id,
-                        'title': item['snippet']['title'],
-                        'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                        'channel': channel_title,
-                        'channel_id': item['snippet']['channelId'],
-                        'is_favorite': is_fav
-                    })
                     
-                    if len(all_results) >= max_results:
-                        break
+                if len(all_results) >= max_results:
+                    break
+            
+            # Return only favorite channel results (could be empty if no matches)
+            return all_results[:max_results]
+        
+        # No favorite channels set - do general search
+        request = youtube.search().list(
+            part="snippet",
+            q=f"{query} recipe",
+            type="video",
+            maxResults=max_results,
+            regionCode="IN"
+        )
+        response = request.execute()
+        
+        for item in response.get('items', []):
+            video_id = item['id']['videoId']
+            if video_id not in seen_video_ids:
+                seen_video_ids.add(video_id)
+                all_results.append({
+                    'video_id': video_id,
+                    'title': item['snippet']['title'],
+                    'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                    'channel': item['snippet']['channelTitle'],
+                    'channel_id': item['snippet']['channelId'],
+                    'is_favorite': False
+                })
         
         return all_results[:max_results]
         
