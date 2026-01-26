@@ -116,9 +116,29 @@ export const useShoppingList = () => {
 
   const deleteItem = async (itemId) => {
     try {
-      await axios.delete(`${API}/shopping/${itemId}`);
-      setShoppingList(prev => prev.filter(item => item.id !== itemId));
+      const response = await axios.delete(`${API}/shopping/${itemId}`);
+      console.log('Delete shopping item API response:', response.data);
+      
+      // Immediately update local state
+      setShoppingList(prev => {
+        const updated = prev.filter(item => item.id !== itemId);
+        console.log(`Deleted shopping item ${itemId}. Remaining items:`, updated.length);
+        return updated;
+      });
+      
+      // Also refresh from server to ensure consistency
+      await fetchShoppingList();
+      
+      return response.data;
     } catch (err) {
+      console.error('Delete shopping item error:', err.response?.data || err.message);
+      
+      // If item not found, refresh shopping list to sync state
+      if (err.response?.status === 404) {
+        console.log('Shopping item not found in DB, refreshing list...');
+        await fetchShoppingList();
+      }
+      
       setError(err.message);
       throw err;
     }
