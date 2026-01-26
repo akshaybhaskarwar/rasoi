@@ -55,7 +55,8 @@ const InventoryPage = () => {
                          (item.name_gu && item.name_gu.includes(searchQuery)) ||
                          (item.name_mr && item.name_mr.includes(searchQuery));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesStockLevel = selectedStockLevel === 'all' || item.stock_level === selectedStockLevel;
+    return matchesSearch && matchesCategory && matchesStockLevel;
   });
 
   // Group items by category
