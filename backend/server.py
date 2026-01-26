@@ -269,21 +269,7 @@ async def search_youtube_recipes(query: str, max_results: int = 10) -> List[Dict
         return results
     except HttpError as e:
         logger.error(f"YouTube search error: {e}")
-        # Return mock data for demo purposes if API not enabled
-        return [
-            {
-                'video_id': 'dQw4w9WgXcQ',
-                'title': f'{query.title()} Recipe - Authentic Indian Style',
-                'thumbnail': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-                'channel': 'Rasoi Kitchen'
-            },
-            {
-                'video_id': 'dQw4w9WgXcR',
-                'title': f'Quick & Easy {query.title()} Recipe',
-                'thumbnail': 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400',
-                'channel': 'Indian Home Cooking'
-            }
-        ]
+        return []
 
 # ============ FESTIVAL INTELLIGENCE ============
 
