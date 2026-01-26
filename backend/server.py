@@ -263,76 +263,93 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
         all_results = []
         seen_video_ids = set()
         
-        # If favorite channels exist, search ONLY within those channels
+        # If favorite channels exist, do a single search with all channel names
         if favorite_channels:
-            for channel_name in favorite_channels[:5]:  # Check up to 5 favorite channels
-                try:
-                    # Search for recipes from this specific channel by including channel name
-                    request = youtube.search().list(
-                        part="snippet",
-                        q=f"{channel_name} {query} recipe",
-                        type="video",
-                        maxResults=max_results,  # Get more results per channel
-                        regionCode="IN"
-                    )
-                    response = request.execute()
-                    
-                    for item in response.get('items', []):
-                        video_id = item['id']['videoId']
-                        channel_title = item['snippet']['channelTitle'].lower()
-                        
-                        # Only include if the channel name matches (case-insensitive)
-                        if channel_name.lower() in channel_title or channel_title in channel_name.lower():
-                            if video_id not in seen_video_ids:
-                                seen_video_ids.add(video_id)
-                                all_results.append({
-                                    'video_id': video_id,
-                                    'title': item['snippet']['title'],
-                                    'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                                    'channel': item['snippet']['channelTitle'],
-                                    'channel_id': item['snippet']['channelId'],
-                                    'is_favorite': True
-                                })
-                                
-                                if len(all_results) >= max_results:
-                                    break
-                except Exception as e:
-                    logger.error(f"Error searching favorite channel {channel_name}: {e}")
-                    continue
-                    
-                if len(all_results) >= max_results:
-                    break
+            # Combine all favorite channel names into one search query
+            channels_query = " OR ".join([f'"{ch}"' for ch in favorite_channels[:3]])
+            search_query = f"{query} recipe ({channels_query})"
             
-            # Return only favorite channel results (could be empty if no matches)
+            try:
+                request = youtube.search().list(
+                    part="snippet",
+                    q=search_query,
+                    type="video",
+                    maxResults=max_results * 2,  # Get extra to filter
+                    regionCode="IN"
+                )
+                response = request.execute()
+                
+                # Normalize favorite channel names for matching
+                favorite_names_lower = [ch.lower() for ch in favorite_channels]
+                
+                for item in response.get('items', []):
+                    video_id = item['id']['videoId']
+                    channel_title = item['snippet']['channelTitle'].lower()
+                    
+                    # Check if channel matches any favorite
+                    is_favorite = any(
+                        fav in channel_title or channel_title in fav 
+                        for fav in favorite_names_lower
+                    )
+                    
+                    if is_favorite and video_id not in seen_video_ids:
+                        seen_video_ids.add(video_id)
+                        all_results.append({
+                            'video_id': video_id,
+                            'title': item['snippet']['title'],
+                            'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                            'channel': item['snippet']['channelTitle'],
+                            'channel_id': item['snippet']['channelId'],
+                            'is_favorite': True
+                        })
+                        
+                        if len(all_results) >= max_results:
+                            break
+                            
+            except HttpError as e:
+                if 'quotaExceeded' in str(e):
+                    logger.error("YouTube API quota exceeded")
+                    raise HTTPException(status_code=429, detail="YouTube API quota exceeded. Please try again later.")
+                raise
+            
             return all_results[:max_results]
         
         # No favorite channels set - do general search
-        request = youtube.search().list(
-            part="snippet",
-            q=f"{query} recipe",
-            type="video",
-            maxResults=max_results,
-            regionCode="IN"
-        )
-        response = request.execute()
-        
-        for item in response.get('items', []):
-            video_id = item['id']['videoId']
-            if video_id not in seen_video_ids:
-                seen_video_ids.add(video_id)
-                all_results.append({
-                    'video_id': video_id,
-                    'title': item['snippet']['title'],
-                    'thumbnail': item['snippet']['thumbnails']['high']['url'],
-                    'channel': item['snippet']['channelTitle'],
-                    'channel_id': item['snippet']['channelId'],
-                    'is_favorite': False
-                })
+        try:
+            request = youtube.search().list(
+                part="snippet",
+                q=f"{query} recipe",
+                type="video",
+                maxResults=max_results,
+                regionCode="IN"
+            )
+            response = request.execute()
+            
+            for item in response.get('items', []):
+                video_id = item['id']['videoId']
+                if video_id not in seen_video_ids:
+                    seen_video_ids.add(video_id)
+                    all_results.append({
+                        'video_id': video_id,
+                        'title': item['snippet']['title'],
+                        'thumbnail': item['snippet']['thumbnails']['high']['url'],
+                        'channel': item['snippet']['channelTitle'],
+                        'channel_id': item['snippet']['channelId'],
+                        'is_favorite': False
+                    })
+                    
+        except HttpError as e:
+            if 'quotaExceeded' in str(e):
+                logger.error("YouTube API quota exceeded")
+                raise HTTPException(status_code=429, detail="YouTube API quota exceeded. Please try again later.")
+            raise
         
         return all_results[:max_results]
         
     except HttpError as e:
         logger.error(f"YouTube search error: {e}")
+        if 'quotaExceeded' in str(e):
+            raise HTTPException(status_code=429, detail="YouTube API quota exceeded. Please try again later.")
         return []
 
 # ============ FESTIVAL INTELLIGENCE ============
