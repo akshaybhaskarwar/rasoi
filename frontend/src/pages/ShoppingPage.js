@@ -143,7 +143,7 @@ const ShoppingPage = () => {
     Object.entries(groupedByCategory).forEach(([category, items]) => {
       message += `*${category.toUpperCase()}*\n`;
       items.forEach(item => {
-        const bilingual = item.name_gu ? `${item.name_en} / ${item.name_gu}` : item.name_en;
+        const bilingual = item.name_mr ? `${item.name_en} / ${item.name_mr}` : item.name_en;
         message += `• ${bilingual} - ${item.quantity}\n`;
       });
       message += '\n';
