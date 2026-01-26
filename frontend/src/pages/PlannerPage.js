@@ -77,7 +77,7 @@ const PlannerPage = () => {
     setSearching(true);
     try {
       const query = selectedIngredients.join(' ');
-      const results = await searchYouTube(query, 8);
+      const results = await searchYouTube(query, 8, favoriteChannels);
       setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
