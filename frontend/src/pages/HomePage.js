@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DigitalDadiWidget } from '@/components/DigitalDadiWidget';
 import { useInventory, useMealPlanner, useGapAnalysis } from '@/hooks/useRasoiSync';
-import { Package, Calendar, ShoppingCart, AlertCircle } from 'lucide-react';
+import { Package2, Calendar, ShoppingCart, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const HomePage = () => {
