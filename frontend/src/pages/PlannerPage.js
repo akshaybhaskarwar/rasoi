@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMealPlanner, useRecipes, useInventory } from '@/hooks/useRasoiSync';
-import { Plus, Calendar as CalendarIcon, Trash2, Search, ChefHat, X } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Trash2, Search, ChefHat, X, Play, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
