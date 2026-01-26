@@ -574,8 +574,15 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between pt-6 border-t mt-6 sticky bottom-0 bg-white">
-          <div className="text-sm text-gray-600">
-            <span className="font-bold text-[#FF9933] text-lg">{getTotalSelected()}</span> items selected
+          <div className="text-sm text-gray-600 space-y-1">
+            <div>
+              <span className="font-bold text-[#FF9933] text-lg">{getTotalSelected()}</span> new items selected
+            </div>
+            {getTotalAlreadyAdded() > 0 && (
+              <div className="text-green-600 text-xs">
+                ✓ {getTotalAlreadyAdded()} items already in your inventory
+              </div>
+            )}
           </div>
           <div className="flex gap-3">
             <Button
