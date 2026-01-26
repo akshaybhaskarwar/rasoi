@@ -76,6 +76,7 @@ class ShoppingItem(BaseModel):
 
 class ShoppingItemCreate(BaseModel):
     name_en: str
+    name_mr: Optional[str] = None  # Accept Marathi name directly
     category: str
     quantity: str
     store_type: str = "grocery"
