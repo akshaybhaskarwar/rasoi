@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { createWorker } from 'tesseract.js';
-import { Camera, X, ScanLine, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
+import { Camera, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -21,23 +21,6 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
 
-  // Stop camera when dialog closes
-  useEffect(() => {
-    if (!isOpen) {
-      stopCamera();
-      resetState();
-    }
-  }, [isOpen]);
-
-  const resetState = () => {
-    setScanMode('barcode');
-    setProductData(null);
-    setExpiryDate('');
-    setError(null);
-    setOcrProgress(0);
-    setScanning(false);
-  };
-
   const stopCamera = useCallback(() => {
     if (codeReaderRef.current) {
       codeReaderRef.current = null;
@@ -47,6 +30,23 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       streamRef.current = null;
     }
   }, []);
+
+  const resetState = useCallback(() => {
+    setScanMode('barcode');
+    setProductData(null);
+    setExpiryDate('');
+    setError(null);
+    setOcrProgress(0);
+    setScanning(false);
+  }, []);
+
+  // Stop camera when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+      resetState();
+    }
+  }, [isOpen, stopCamera, resetState]);
 
   const startBarcodeScanner = async () => {
     setScanning(true);
