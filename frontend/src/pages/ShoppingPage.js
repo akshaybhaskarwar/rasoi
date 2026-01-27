@@ -281,7 +281,17 @@ const ShoppingPage = () => {
                               {item.name_en}
                               {item.name_mr && <span className="text-gray-600"> <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.name_mr}</span></span>}
                             </p>
-                            <p className="text-sm text-gray-600">{item.quantity}</p>
+                            <span className={`inline-block mt-1 text-xs px-2 py-1 rounded-full font-medium ${
+                              item.quantity === 'Out of Stock' || item.stock_level === 'empty'
+                                ? 'bg-gray-200 text-gray-700'
+                                : item.quantity === 'Low Stock' || item.stock_level === 'low'
+                                  ? 'bg-[#FF9933]/20 text-[#FF9933]'
+                                  : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {item.quantity === 'Out of Stock' ? '○ Empty' : 
+                               item.quantity === 'Low Stock' ? '◔ Low' : 
+                               item.quantity}
+                            </span>
                           </div>
                           <Button
                             variant="ghost"
