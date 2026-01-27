@@ -171,6 +171,45 @@ const InventoryPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="inventory-page">
+      {/* Expiring Soon Alert */}
+      {expiringItems.length > 0 && (
+        <Card className="border-2 border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50" data-testid="expiry-alert">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-bold text-amber-800 mb-2">Items Expiring Soon!</h3>
+                <div className="flex flex-wrap gap-2">
+                  {expiringItems.slice(0, 5).map(item => {
+                    const status = getExpiryStatus(item.expiry_date);
+                    return (
+                      <Badge 
+                        key={item.id}
+                        className={`${
+                          status.status === 'expired' ? 'bg-red-500 text-white' :
+                          status.status === 'today' ? 'bg-red-400 text-white' :
+                          'bg-amber-400 text-white'
+                        }`}
+                      >
+                        {item.name_en}: {status.message}
+                      </Badge>
+                    );
+                  })}
+                  {expiringItems.length > 5 && (
+                    <Badge className="bg-gray-200 text-gray-700">
+                      +{expiringItems.length - 5} more
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-amber-700 mt-2">
+                  Use these items in your next meal! Search for recipes with these ingredients.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -179,7 +218,7 @@ const InventoryPage = () => {
           </h1>
           <p className="text-gray-600 mt-1">Manage your kitchen stock in English - मराठी</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button 
             onClick={() => setIsPantryTemplateOpen(true)}
             className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-md"
@@ -188,6 +227,14 @@ const InventoryPage = () => {
             <Sparkles className="w-5 h-5 mr-2" />
             <span className="hidden md:inline">Indian Pantry Template</span>
             <span className="md:hidden">Template</span>
+          </Button>
+          <Button 
+            onClick={() => setIsScannerOpen(true)}
+            className="bg-[#138808] hover:bg-[#0d6606] text-white rounded-full shadow-md"
+            data-testid="scan-item-btn"
+          >
+            <Camera className="w-5 h-5 mr-2" />
+            Scan Item
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
