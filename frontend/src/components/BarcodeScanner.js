@@ -44,7 +44,13 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
-      // Reset state directly instead of calling resetState
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+  
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
       setScanMode('barcode');
       setProductData(null);
       setExpiryDate('');
@@ -52,7 +58,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       setOcrProgress(0);
       setScanning(false);
     }
-  }, [isOpen, stopCamera]);
+  }, [isOpen]);
 
   const startBarcodeScanner = async () => {
     setScanning(true);
