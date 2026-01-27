@@ -97,7 +97,7 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 
 ### Shopping Item
 ```
-{id, name_en, name_mr, category, quantity, stock_level?, store_type, created_at}
+{id, name_en, name_mr, category, quantity, stock_level?, monthly_quantity?, store_type, created_at}
 ```
 
 ### Meal Plan
