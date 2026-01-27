@@ -77,6 +77,7 @@ class ShoppingItem(BaseModel):
     category: str
     quantity: str
     stock_level: Optional[str] = None  # empty, low - synced from inventory
+    monthly_quantity: Optional[str] = None  # e.g., "2 kg", "500 g", "1 L"
     store_type: str = "grocery"  # grocery or mandi
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -86,6 +87,7 @@ class ShoppingItemCreate(BaseModel):
     category: str
     quantity: str
     stock_level: Optional[str] = None  # empty, low - synced from inventory
+    monthly_quantity: Optional[str] = None  # e.g., "2 kg", "500 g", "1 L"
     store_type: str = "grocery"
 
 class MealPlan(BaseModel):
