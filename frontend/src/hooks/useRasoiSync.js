@@ -114,6 +114,18 @@ export const useShoppingList = () => {
     }
   };
 
+  const updateItem = async (itemId, updates) => {
+    try {
+      await axios.put(`${API}/shopping/${itemId}`, updates);
+      setShoppingList(prev => prev.map(item => 
+        item.id === itemId ? { ...item, ...updates } : item
+      ));
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const deleteItem = async (itemId) => {
     try {
       const response = await axios.delete(`${API}/shopping/${itemId}`);
@@ -158,7 +170,7 @@ export const useShoppingList = () => {
     fetchShoppingList();
   }, []);
 
-  return { shoppingList, loading, error, fetchShoppingList, addItem, deleteItem, clearList };
+  return { shoppingList, loading, error, fetchShoppingList, addItem, updateItem, deleteItem, clearList };
 };
 
 export const useMealPlanner = () => {
