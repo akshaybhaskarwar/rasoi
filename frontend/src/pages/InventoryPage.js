@@ -535,6 +535,37 @@ const InventoryPage = () => {
                             </div>
                           )}
 
+                          {/* Expiry Date Display */}
+                          {item.expiry_date && (() => {
+                            const expStatus = getExpiryStatus(item.expiry_date);
+                            return (
+                              <div className={`mb-3 p-2 rounded-lg ${
+                                expStatus.status === 'expired' ? 'bg-red-100 border border-red-300' :
+                                expStatus.status === 'today' ? 'bg-red-50 border border-red-200' :
+                                expStatus.status === 'soon' ? 'bg-amber-50 border border-amber-200' :
+                                'bg-gray-50 border border-gray-200'
+                              }`}>
+                                <div className="flex items-center gap-2">
+                                  {(expStatus.status === 'expired' || expStatus.status === 'today' || expStatus.status === 'soon') && (
+                                    <AlertTriangle className={`w-4 h-4 ${
+                                      expStatus.status === 'expired' ? 'text-red-500' :
+                                      expStatus.status === 'today' ? 'text-red-400' :
+                                      'text-amber-500'
+                                    }`} />
+                                  )}
+                                  <span className={`text-xs font-medium ${
+                                    expStatus.status === 'expired' ? 'text-red-700' :
+                                    expStatus.status === 'today' ? 'text-red-600' :
+                                    expStatus.status === 'soon' ? 'text-amber-700' :
+                                    'text-gray-600'
+                                  }`}>
+                                    {expStatus.message}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
                           {/* Stock Level Display */}
                           <div className="mb-3">
                             <div className="flex items-center justify-between mb-2">
