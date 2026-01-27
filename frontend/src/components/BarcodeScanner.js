@@ -1,27 +1,36 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { createWorker } from 'tesseract.js';
-import { Camera, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
+import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'other'];
+
 export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
-  const [scanMode, setScanMode] = useState('barcode'); // 'barcode' | 'expiry' | 'confirm'
+  // Scan modes: 'choose' | 'barcode' | 'photo_name' | 'photo_expiry' | 'confirm'
+  const [scanMode, setScanMode] = useState('choose');
   const [scanning, setScanning] = useState(false);
-  const [productData, setProductData] = useState(null);
+  const [productData, setProductData] = useState({
+    name_en: '',
+    category: 'other',
+    barcode: ''
+  });
   const [expiryDate, setExpiryDate] = useState('');
   const [error, setError] = useState(null);
   const [ocrProgress, setOcrProgress] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false); // Prevent multiple lookups
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
   
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
-  const processedRef = useRef(false); // Track if barcode was already processed
+  const processedRef = useRef(false);
 
   const stopCamera = useCallback(() => {
     if (codeReaderRef.current) {
@@ -34,12 +43,15 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   }, []);
 
   const resetState = useCallback(() => {
-    setScanMode('barcode');
-    setProductData(null);
+    setScanMode('choose');
+    setProductData({ name_en: '', category: 'other', barcode: '' });
     setExpiryDate('');
     setError(null);
     setOcrProgress(0);
     setScanning(false);
+    setCapturedImage(null);
+    setIsProcessing(false);
+    processedRef.current = false;
   }, []);
 
   // Stop camera when dialog closes
@@ -47,23 +59,222 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     if (!isOpen) {
       stopCamera();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, stopCamera]);
   
   // Reset state when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setScanMode('barcode');
-      setProductData(null);
-      setExpiryDate('');
-      setError(null);
-      setOcrProgress(0);
-      setScanning(false);
-      setIsProcessing(false);
-      processedRef.current = false;
+      resetState();
     }
-  }, [isOpen]);
+  }, [isOpen, resetState]);
 
+  // Start camera for photo capture
+  const startCamera = async () => {
+    setScanning(true);
+    setError(null);
+    setCapturedImage(null);
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error('Camera error:', err);
+      setError('Could not access camera. Please ensure camera permissions are granted.');
+      setScanning(false);
+    }
+  };
+
+  // Capture photo from video
+  const capturePhoto = () => {
+    if (!videoRef.current) return null;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    setCapturedImage(imageData);
+    stopCamera();
+    setScanning(false);
+    
+    return canvas;
+  };
+
+  // OCR to read product name
+  const readProductName = async () => {
+    const canvas = capturePhoto();
+    if (!canvas) return;
+    
+    setIsProcessing(true);
+    setOcrProgress(10);
+    setError(null);
+    
+    try {
+      const worker = await createWorker('eng', 1, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            setOcrProgress(10 + Math.round(m.progress * 80));
+          }
+        }
+      });
+      
+      const { data: { text } } = await worker.recognize(canvas);
+      await worker.terminate();
+      
+      setOcrProgress(100);
+      
+      // Clean up the text - take first few lines as product name
+      const lines = text.split('\n').filter(line => line.trim().length > 2);
+      const productName = lines.slice(0, 2).join(' ').trim();
+      
+      if (productName) {
+        setProductData(prev => ({ ...prev, name_en: productName }));
+        // Move to expiry date capture
+        setScanMode('photo_expiry');
+      } else {
+        setError('Could not read product name. Please enter manually or try again.');
+        setScanMode('photo_expiry');
+      }
+      
+    } catch (err) {
+      console.error('OCR error:', err);
+      setError('Failed to read text. Please enter product name manually.');
+      setScanMode('photo_expiry');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // OCR to read expiry date
+  const readExpiryDate = async () => {
+    const canvas = capturePhoto();
+    if (!canvas) return;
+    
+    setIsProcessing(true);
+    setOcrProgress(10);
+    setError(null);
+    
+    try {
+      const worker = await createWorker('eng', 1, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            setOcrProgress(10 + Math.round(m.progress * 80));
+          }
+        }
+      });
+      
+      const { data: { text } } = await worker.recognize(canvas);
+      await worker.terminate();
+      
+      setOcrProgress(100);
+      
+      // Find date patterns in text
+      const datePatterns = [
+        /(\d{1,2})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{2,4})/g,  // DD/MM/YYYY, DD-MM-YY
+        /(\d{4})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{1,2})/g,    // YYYY/MM/DD
+        /([A-Z]{3})\s*(\d{1,2})[,\s]*(\d{2,4})/gi,            // MAR 2025, MAR 25
+        /(\d{1,2})\s*([A-Z]{3})\s*(\d{2,4})/gi               // 15 MAR 2025
+      ];
+      
+      let foundDate = null;
+      
+      for (const pattern of datePatterns) {
+        const matches = text.match(pattern);
+        if (matches && matches.length > 0) {
+          foundDate = parseExpiryDate(matches[0]);
+          if (foundDate) break;
+        }
+      }
+      
+      if (foundDate) {
+        setExpiryDate(foundDate);
+        setError(null);
+      } else {
+        setError('Could not detect expiry date. Please enter manually.');
+      }
+      
+      setScanMode('confirm');
+      
+    } catch (err) {
+      console.error('OCR error:', err);
+      setError('Failed to read expiry date. Please enter manually.');
+      setScanMode('confirm');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const parseExpiryDate = (dateStr) => {
+    // Handle month names
+    const months = {
+      'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+      'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    };
+    
+    // Try month name format (MAR 2025 or 15 MAR 2025)
+    const monthMatch = dateStr.match(/([A-Z]{3})\s*(\d{1,2})?[,\s]*(\d{2,4})/i) ||
+                       dateStr.match(/(\d{1,2})\s*([A-Z]{3})\s*(\d{2,4})/i);
+    
+    if (monthMatch) {
+      const monthStr = monthMatch[1].toLowerCase();
+      const month = months[monthStr] || months[monthMatch[2]?.toLowerCase()];
+      if (month) {
+        let year = parseInt(monthMatch[3] || monthMatch[2]);
+        let day = parseInt(monthMatch[2] || monthMatch[1]) || 1;
+        
+        if (year < 100) year += 2000;
+        if (day > 31) { day = 1; } // If day looks like year, default to 1
+        
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+    
+    // Try numeric formats
+    const parts = dateStr.split(/[\/\-\.\s]+/).filter(p => /^\d+$/.test(p));
+    if (parts.length < 2) return null;
+    
+    let year, month, day;
+    
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      year = parseInt(parts[0]);
+      month = parseInt(parts[1]);
+      day = parseInt(parts[2]) || 1;
+    } else if (parts.length >= 3 && parts[2].length === 4) {
+      // DD-MM-YYYY
+      day = parseInt(parts[0]);
+      month = parseInt(parts[1]);
+      year = parseInt(parts[2]);
+    } else {
+      // DD-MM-YY
+      day = parseInt(parts[0]);
+      month = parseInt(parts[1]);
+      year = parseInt(parts[2] || parts[1]) + 2000;
+    }
+    
+    // Swap if month > 12
+    if (month > 12 && day <= 12) {
+      [day, month] = [month, day];
+    }
+    
+    // Validate
+    if (!year || year < 2020 || year > 2040) return null;
+    if (!month || month < 1 || month > 12) return null;
+    if (!day) day = 1;
+    if (day > 31) day = 1;
+    
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  };
+
+  // Barcode scanning mode
   const startBarcodeScanner = async () => {
     setScanning(true);
     setError(null);
@@ -83,26 +294,18 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
         videoRef.current.srcObject = stream;
       }
       
-      // Start decoding from video
       codeReader.decodeFromVideoDevice(undefined, videoRef.current, async (result, err) => {
-        // Skip if already processing or processed
-        if (processedRef.current || isProcessing) {
-          return;
-        }
+        if (processedRef.current || isProcessing) return;
         
         if (result) {
           const barcode = result.getText();
           console.log('Barcode detected:', barcode);
           
-          // Mark as processed immediately to prevent loop
           processedRef.current = true;
           setIsProcessing(true);
-          
-          // Stop camera first
           stopCamera();
           setScanning(false);
           
-          // Then lookup product
           await lookupProduct(barcode);
         }
       });
@@ -117,42 +320,33 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const lookupProduct = async (barcode) => {
     try {
       setError(null);
-      const response = await fetch(`${API}/barcode/${barcode}`);
+      const response = await fetch(`${API}/api/barcode/${barcode}`);
       const data = await response.json();
       
       if (data.found) {
         setProductData({
           barcode: barcode,
           name_en: data.name || `Product ${barcode}`,
-          brand: data.brand,
-          category: mapCategory(data.category),
-          quantity: data.quantity,
-          image_url: data.image_url
+          category: mapCategory(data.category)
         });
-        setScanMode('expiry');
+        setScanMode('photo_expiry');
       } else {
-        // Product not found - allow manual entry
         setProductData({
           barcode: barcode,
           name_en: '',
-          brand: '',
-          category: 'other',
-          quantity: ''
+          category: 'other'
         });
-        setScanMode('expiry');
-        setError('Product not found in Open Food Facts database. Please enter details manually.');
+        setScanMode('photo_expiry');
+        setError('Product not found in database. Please enter name manually.');
       }
     } catch (err) {
       console.error('Lookup error:', err);
-      // Even on error, allow manual entry with the barcode
       setProductData({
         barcode: barcode,
         name_en: '',
-        brand: '',
-        category: 'other',
-        quantity: ''
+        category: 'other'
       });
-      setScanMode('expiry');
+      setScanMode('photo_expiry');
       setError('Could not lookup product. Please enter details manually.');
     } finally {
       setIsProcessing(false);
@@ -174,149 +368,26 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     return 'other';
   };
 
-  const startExpiryOCR = async () => {
-    setScanning(true);
-    setError(null);
-    setOcrProgress(0);
-    
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      
-    } catch (err) {
-      console.error('Camera error:', err);
-      setError('Could not access camera for OCR.');
-      setScanning(false);
-    }
-  };
-
-  const captureAndReadExpiry = async () => {
-    if (!videoRef.current) return;
-    
-    setOcrProgress(10);
-    
-    try {
-      // Create canvas and capture frame
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(videoRef.current, 0, 0);
-      
-      // Stop camera
-      stopCamera();
-      
-      setOcrProgress(30);
-      
-      // Initialize Tesseract worker
-      const worker = await createWorker('eng', 1, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(30 + Math.round(m.progress * 60));
-          }
-        }
-      });
-      
-      // Recognize text
-      const { data: { text } } = await worker.recognize(canvas);
-      await worker.terminate();
-      
-      setOcrProgress(100);
-      
-      // Try to find date pattern in text
-      const datePattern = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})|(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/g;
-      const matches = text.match(datePattern);
-      
-      if (matches && matches.length > 0) {
-        // Parse the first matched date
-        const dateStr = matches[0];
-        const parsedDate = parseExpiryDate(dateStr);
-        if (parsedDate) {
-          setExpiryDate(parsedDate);
-          setError(null);
-        } else {
-          setError(`Found date "${dateStr}" but could not parse it. Please enter manually.`);
-        }
-      } else {
-        setError('Could not detect expiry date. Please enter manually.');
-      }
-      
-      setScanning(false);
-      setScanMode('confirm');
-      
-    } catch (err) {
-      console.error('OCR error:', err);
-      setError('OCR failed. Please enter expiry date manually.');
-      setScanning(false);
-      setScanMode('confirm');
-    }
-  };
-
-  const parseExpiryDate = (dateStr) => {
-    // Try different date formats
-    const parts = dateStr.split(/[\/\-\.]/);
-    if (parts.length !== 3) return null;
-    
-    let year, month, day;
-    
-    // Check if first part is year (YYYY-MM-DD)
-    if (parts[0].length === 4) {
-      year = parseInt(parts[0]);
-      month = parseInt(parts[1]);
-      day = parseInt(parts[2]);
-    } 
-    // DD-MM-YYYY or MM-DD-YYYY
-    else if (parts[2].length === 4) {
-      year = parseInt(parts[2]);
-      // Assume DD-MM-YYYY (common in India)
-      day = parseInt(parts[0]);
-      month = parseInt(parts[1]);
-    }
-    // DD-MM-YY
-    else {
-      day = parseInt(parts[0]);
-      month = parseInt(parts[1]);
-      year = parseInt(parts[2]) + 2000;
-    }
-    
-    // Validate
-    if (month > 12) {
-      // Swap day and month
-      [day, month] = [month, day];
-    }
-    
-    if (year < 2020 || year > 2040 || month < 1 || month > 12 || day < 1 || day > 31) {
-      return null;
-    }
-    
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  };
-
-  const skipExpiryScan = () => {
-    stopCamera();
-    setScanning(false);
-    setScanMode('confirm');
-  };
-
   const handleConfirm = () => {
-    if (!productData) return;
+    if (!productData.name_en) return;
     
     onItemScanned({
       name_en: productData.name_en,
       category: productData.category,
       stock_level: 'full',
       unit: 'pcs',
-      barcode: productData.barcode,
+      barcode: productData.barcode || null,
       expiry_date: expiryDate || null
     });
     
     onClose();
+  };
+
+  const skipToConfirm = () => {
+    stopCamera();
+    setScanning(false);
+    setCapturedImage(null);
+    setScanMode('confirm');
   };
 
   return (
@@ -325,22 +396,84 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Camera className="w-6 h-6 text-[#FF9933]" />
-            {scanMode === 'barcode' && 'Scan Product Barcode'}
-            {scanMode === 'expiry' && 'Scan Expiry Date'}
-            {scanMode === 'confirm' && 'Confirm Item Details'}
+            {scanMode === 'choose' && 'Scan Item'}
+            {scanMode === 'barcode' && 'Scan Barcode'}
+            {scanMode === 'photo_name' && 'Photo: Product Name'}
+            {scanMode === 'photo_expiry' && 'Photo: Expiry Date'}
+            {scanMode === 'confirm' && 'Confirm Details'}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-700">{error}</p>
             </div>
           )}
 
-          {/* Barcode Scanning Mode */}
+          {/* Choose Scan Method */}
+          {scanMode === 'choose' && (
+            <div className="space-y-4">
+              <p className="text-gray-600 text-center">How would you like to add this item?</p>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {/* Photo Method - Primary */}
+                <Button
+                  onClick={() => {
+                    setScanMode('photo_name');
+                    startCamera();
+                  }}
+                  className="h-auto py-4 bg-[#FF9933] hover:bg-[#E68A2E] text-white"
+                  data-testid="choose-photo-method"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <Camera className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold">📸 Take Photos</p>
+                      <p className="text-xs opacity-90">Photo of name + Photo of expiry date</p>
+                    </div>
+                  </div>
+                </Button>
+                
+                {/* Barcode Method - Secondary */}
+                <Button
+                  onClick={() => {
+                    setScanMode('barcode');
+                    startBarcodeScanner();
+                  }}
+                  variant="outline"
+                  className="h-auto py-4"
+                  data-testid="choose-barcode-method"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Scan className="w-6 h-6 text-gray-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-gray-800">Scan Barcode</p>
+                      <p className="text-xs text-gray-500">Lookup product by barcode</p>
+                    </div>
+                  </div>
+                </Button>
+                
+                {/* Manual Entry */}
+                <Button
+                  onClick={() => setScanMode('confirm')}
+                  variant="ghost"
+                  className="text-gray-600"
+                  data-testid="choose-manual-method"
+                >
+                  Enter Manually
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Barcode Scanning */}
           {scanMode === 'barcode' && (
             <div className="space-y-4">
               {isProcessing ? (
@@ -348,20 +481,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   <Loader2 className="w-16 h-16 text-[#FF9933] mx-auto mb-4 animate-spin" />
                   <p className="text-gray-600">Looking up product...</p>
                 </div>
-              ) : !scanning ? (
-                <div className="text-center py-8">
-                  <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Click below to start scanning the product barcode</p>
-                  <Button
-                    onClick={startBarcodeScanner}
-                    className="bg-[#FF9933] hover:bg-[#E68A2E] text-white"
-                    data-testid="start-barcode-scan"
-                  >
-                    <Camera className="w-5 h-5 mr-2" />
-                    Start Barcode Scanner
-                  </Button>
-                </div>
-              ) : (
+              ) : scanning ? (
                 <div className="relative">
                   <video
                     ref={videoRef}
@@ -369,7 +489,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     playsInline
                     muted
                     className="w-full rounded-lg bg-black"
-                    style={{ minHeight: '300px' }}
+                    style={{ minHeight: '280px' }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-64 h-32 border-2 border-[#FF9933] rounded-lg relative">
@@ -380,60 +500,63 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                       <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 animate-pulse" />
                     </div>
                   </div>
-                  <p className="text-center text-sm text-gray-600 mt-2">
-                    Position barcode within the frame
-                  </p>
+                  <p className="text-center text-sm text-gray-600 mt-2">Position barcode within frame</p>
+                  <Button
+                    onClick={() => {
+                      stopCamera();
+                      setScanMode('choose');
+                    }}
+                    variant="outline"
+                    className="w-full mt-3"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Scan className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <Button onClick={startBarcodeScanner} className="bg-[#FF9933] hover:bg-[#E68A2E] text-white">
+                    Start Scanning
+                  </Button>
                 </div>
               )}
             </div>
           )}
 
-          {/* Expiry Date Scanning Mode */}
-          {scanMode === 'expiry' && (
+          {/* Photo: Product Name */}
+          {scanMode === 'photo_name' && (
             <div className="space-y-4">
-              {productData && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-800">
-                        {productData.name_en ? 'Product Found!' : 'Barcode Scanned!'}
-                      </p>
-                      <p className="text-green-700">
-                        {productData.name_en || 'Enter product name below'}
-                      </p>
-                      {productData.brand && (
-                        <p className="text-sm text-green-600">Brand: {productData.brand}</p>
-                      )}
-                      <p className="text-xs text-green-600 mt-1">Barcode: {productData.barcode}</p>
-                    </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-700 font-medium">Step 1 of 2: Product Name</p>
+                <p className="text-xs text-blue-600 mt-1">Point camera at the product name on the package</p>
+              </div>
+              
+              {isProcessing ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-16 h-16 text-[#FF9933] mx-auto mb-4 animate-spin" />
+                  <p className="text-gray-600">Reading text... {ocrProgress}%</p>
+                  <div className="w-48 h-2 bg-gray-200 rounded-full mx-auto mt-2">
+                    <div 
+                      className="h-full bg-[#FF9933] rounded-full transition-all"
+                      style={{ width: `${ocrProgress}%` }}
+                    />
                   </div>
                 </div>
-              )}
-
-              {!scanning ? (
-                <div className="text-center py-6">
-                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-600 mb-4">Now scan the expiry date on the package</p>
-                  <div className="flex gap-3 justify-center">
-                    <Button
-                      onClick={startExpiryOCR}
-                      className="bg-[#FF9933] hover:bg-[#E68A2E] text-white"
-                      data-testid="start-expiry-scan"
-                    >
-                      <Camera className="w-5 h-5 mr-2" />
-                      Scan Expiry Date
+              ) : capturedImage ? (
+                <div className="space-y-3">
+                  <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+                  <div className="flex gap-2">
+                    <Button onClick={() => { setCapturedImage(null); startCamera(); }} variant="outline" className="flex-1">
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Retake
                     </Button>
-                    <Button
-                      onClick={skipExpiryScan}
-                      variant="outline"
-                      data-testid="skip-expiry-scan"
-                    >
-                      Skip / Enter Manually
+                    <Button onClick={readProductName} className="flex-1 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Read Text
                     </Button>
                   </div>
                 </div>
-              ) : (
+              ) : scanning ? (
                 <div className="relative">
                   <video
                     ref={videoRef}
@@ -441,36 +564,126 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     playsInline
                     muted
                     className="w-full rounded-lg bg-black"
-                    style={{ minHeight: '250px' }}
+                    style={{ minHeight: '280px' }}
                   />
-                  {ocrProgress > 0 && ocrProgress < 100 && (
-                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
-                      <Loader2 className="w-10 h-10 text-white animate-spin mb-2" />
-                      <p className="text-white">Reading text... {ocrProgress}%</p>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-3/4 h-20 border-2 border-dashed border-[#FF9933] rounded-lg flex items-center justify-center">
+                      <Package className="w-8 h-8 text-[#FF9933] opacity-50" />
                     </div>
-                  )}
-                  <p className="text-center text-sm text-gray-600 mt-2">
-                    Point camera at the expiry date
-                  </p>
+                  </div>
                   <Button
-                    onClick={captureAndReadExpiry}
-                    className="w-full mt-3 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900"
-                    data-testid="capture-expiry"
+                    onClick={capturePhoto}
+                    className="w-full mt-3 bg-[#FF9933] hover:bg-[#E68A2E] text-white"
+                    data-testid="capture-name-photo"
                   >
                     <Camera className="w-5 h-5 mr-2" />
-                    Capture & Read Expiry
+                    Capture Photo
                   </Button>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <Button onClick={startCamera} className="bg-[#FF9933] hover:bg-[#E68A2E] text-white">
+                    Open Camera
+                  </Button>
+                </div>
+              )}
+              
+              <Button onClick={skipToConfirm} variant="ghost" className="w-full text-gray-500">
+                Skip & Enter Manually
+              </Button>
+            </div>
+          )}
+
+          {/* Photo: Expiry Date */}
+          {scanMode === 'photo_expiry' && (
+            <div className="space-y-4">
+              {productData.name_en && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <p className="text-sm text-green-700 font-medium">{productData.name_en}</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-700 font-medium">Step 2 of 2: Expiry Date</p>
+                <p className="text-xs text-blue-600 mt-1">Point camera at the expiry/best before date</p>
+              </div>
+              
+              {isProcessing ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-16 h-16 text-[#FF9933] mx-auto mb-4 animate-spin" />
+                  <p className="text-gray-600">Reading date... {ocrProgress}%</p>
+                  <div className="w-48 h-2 bg-gray-200 rounded-full mx-auto mt-2">
+                    <div 
+                      className="h-full bg-[#FF9933] rounded-full transition-all"
+                      style={{ width: `${ocrProgress}%` }}
+                    />
+                  </div>
+                </div>
+              ) : capturedImage ? (
+                <div className="space-y-3">
+                  <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+                  <div className="flex gap-2">
+                    <Button onClick={() => { setCapturedImage(null); startCamera(); }} variant="outline" className="flex-1">
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Retake
+                    </Button>
+                    <Button onClick={readExpiryDate} className="flex-1 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Read Date
+                    </Button>
+                  </div>
+                </div>
+              ) : scanning ? (
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full rounded-lg bg-black"
+                    style={{ minHeight: '280px' }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-3/4 h-16 border-2 border-dashed border-[#77DD77] rounded-lg flex items-center justify-center">
+                      <Calendar className="w-8 h-8 text-[#77DD77] opacity-50" />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={capturePhoto}
+                    className="w-full mt-3 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900"
+                    data-testid="capture-expiry-photo"
+                  >
+                    <Camera className="w-5 h-5 mr-2" />
+                    Capture Photo
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <div className="flex gap-3 justify-center">
+                    <Button onClick={startCamera} className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900">
+                      <Camera className="w-5 h-5 mr-2" />
+                      Scan Expiry Date
+                    </Button>
+                    <Button onClick={skipToConfirm} variant="outline">
+                      Skip
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Confirmation Mode */}
-          {scanMode === 'confirm' && productData && (
+          {/* Confirmation */}
+          {scanMode === 'confirm' && (
             <div className="space-y-4">
               <div className="space-y-3">
                 <div>
-                  <Label>Product Name</Label>
+                  <Label>Product Name *</Label>
                   <Input
                     value={productData.name_en}
                     onChange={(e) => setProductData({ ...productData, name_en: e.target.value })}
@@ -480,12 +693,20 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
                 
                 <div>
-                  <Label>Barcode</Label>
-                  <Input
-                    value={productData.barcode}
-                    disabled
-                    className="bg-gray-100"
-                  />
+                  <Label>Category</Label>
+                  <Select 
+                    value={productData.category} 
+                    onValueChange={(val) => setProductData({ ...productData, category: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
@@ -497,21 +718,23 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     data-testid="expiry-date-input"
                   />
                 </div>
+                
+                {productData.barcode && (
+                  <div>
+                    <Label>Barcode</Label>
+                    <Input value={productData.barcode} disabled className="bg-gray-100" />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    resetState();
-                  }}
-                  className="flex-1"
-                >
-                  Scan Another
+                <Button variant="outline" onClick={resetState} className="flex-1">
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Start Over
                 </Button>
                 <Button
                   onClick={handleConfirm}
-                  disabled={!productData.name_en}
+                  disabled={!productData.name_en.trim()}
                   className="flex-1 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900"
                   data-testid="confirm-add-item"
                 >
