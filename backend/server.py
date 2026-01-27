@@ -52,6 +52,8 @@ class InventoryItem(BaseModel):
     freshness: Optional[int] = None  # 0-100 for perishables
     is_secret_stash: bool = False
     unit: str = "kg"
+    expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
+    barcode: Optional[str] = None  # Product barcode if scanned
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class InventoryItemCreate(BaseModel):
@@ -62,6 +64,8 @@ class InventoryItemCreate(BaseModel):
     freshness: Optional[int] = None
     is_secret_stash: bool = False
     unit: str = "kg"
+    expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
+    barcode: Optional[str] = None  # Product barcode if scanned
 
 class ShoppingItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
