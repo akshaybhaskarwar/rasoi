@@ -138,11 +138,24 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
           quantity: ''
         });
         setScanMode('expiry');
-        setError('Product not found in database. Please enter details manually.');
+        setError('Product not found in Open Food Facts database. Please enter details manually.');
       }
     } catch (err) {
       console.error('Lookup error:', err);
-      setError('Failed to lookup product. Please try again.');
+      // Even on error, allow manual entry with the barcode
+      setProductData({
+        barcode: barcode,
+        name_en: '',
+        brand: '',
+        category: 'other',
+        quantity: ''
+      });
+      setScanMode('expiry');
+      setError('Could not lookup product. Please enter details manually.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
     }
   };
 
