@@ -137,12 +137,38 @@ const ShoppingPage = () => {
 
   const handleAddItem = async () => {
     try {
-      await addItem({ ...newItem, store_type: activeTab });
+      await addItem({ 
+        ...newItem, 
+        store_type: activeTab,
+        quantity: '-'  // Use monthly_quantity for display
+      });
       setIsAddDialogOpen(false);
-      setNewItem({ name_en: '', category: 'grains', quantity: '1 kg', store_type: 'grocery' });
+      setNewItem({ name_en: '', category: 'grains', quantity: '-', monthly_quantity: '1 kg', store_type: 'grocery' });
     } catch (error) {
       console.error('Error adding item:', error);
     }
+  };
+
+  // Handle inline editing of monthly quantity
+  const handleEditQuantity = (itemId, currentQty) => {
+    setEditingItemId(itemId);
+    setEditingQty(currentQty || '');
+  };
+
+  const handleSaveQuantity = async (itemId) => {
+    try {
+      await updateItem(itemId, { monthly_quantity: editingQty });
+      setEditingItemId(null);
+      setEditingQty('');
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      alert('Failed to update quantity');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setEditingQty('');
   };
 
   const generateWhatsAppMessage = () => {
@@ -152,7 +178,8 @@ const ShoppingPage = () => {
       message += `*${category.toUpperCase()}*\n`;
       items.forEach(item => {
         const bilingual = item.name_mr ? `${item.name_en} / ${item.name_mr}` : item.name_en;
-        message += `• ${bilingual} - ${item.quantity}\n`;
+        const qty = item.monthly_quantity || '-';
+        message += `• ${bilingual} - ${qty}\n`;
       });
       message += '\n';
     });
