@@ -298,7 +298,7 @@ const PlannerPage = () => {
               <div className="pt-2">
                 <p className="text-xs text-gray-500 mb-2">Popular Indian cooking channels:</p>
                 <div className="flex flex-wrap gap-2">
-                  {['Ranveer Brar', 'Kabita\'s Kitchen', 'Hebbars Kitchen', 'Sanjeev Kapoor', 'Vahchef'].map((name) => {
+                  {['Ranveer Brar', 'Anju\'s Kitchen', 'Hebbars Kitchen', 'madhurasrecipe', 'papa mummy'].map((name) => {
                     const isAdded = favoriteChannels.some(ch => ch.name.toLowerCase() === name.toLowerCase());
                     return (
                       <button

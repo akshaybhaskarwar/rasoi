@@ -17,6 +17,7 @@ const PANTRY_TEMPLATE = {
         { en: 'Wheat', mr: 'गहू' },
         { en: 'Wheat Flour', mr: 'गव्हाचे पीठ' },
         { en: 'Rice Flour', mr: 'तांदळाचे पीठ' },
+        { en: 'Gram Flour', mr: 'बेसन' },
         { en: 'Maida', mr: 'मैदा' },
         { en: 'Jowar Flour', mr: 'ज्वारीचे पीठ' },
         { en: 'Bajra Flour', mr: 'बाजरीचे पीठ' },
