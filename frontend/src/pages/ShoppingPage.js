@@ -71,26 +71,16 @@ const ShoppingPage = () => {
         if (!alreadyInList) {
           const storeType = CATEGORY_TO_STORE[item.category] || 'grocery';
           
-          // Smart quantity based on category
-          let quantity = '1 unit';
-          if (item.category === 'grains' || item.category === 'pulses') {
-            quantity = '1 kg';
-          } else if (item.category === 'vegetables' || item.category === 'fruits') {
-            quantity = '500 gm';
-          } else if (item.category === 'spices') {
-            quantity = '100 gm';
-          } else if (item.category === 'oils' || item.category === 'dairy') {
-            quantity = '1 ltr';
-          } else if (item.unit) {
-            quantity = `1 ${item.unit}`;
-          }
+          // Show stock status instead of arbitrary quantity
+          const stockStatus = item.stock_level === 'empty' ? 'Out of Stock' : 'Low Stock';
           
           await addItem({
             name_en: item.name_en,
             name_mr: item.name_mr,
             category: item.category,
-            quantity: quantity,
-            store_type: storeType
+            quantity: stockStatus,
+            store_type: storeType,
+            stock_level: item.stock_level
           });
           addedCount++;
         }
