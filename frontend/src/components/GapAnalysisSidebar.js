@@ -1,14 +1,94 @@
 import { useGapAnalysis } from '@/hooks/useRasoiSync';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export const GapAnalysisSidebar = () => {
+export const GapAnalysisSidebar = ({ isMobile = false }) => {
   const { analysis, loading } = useGapAnalysis();
+  const [isExpanded, setIsExpanded] = useState(!isMobile);
+  const navigate = useNavigate();
 
   if (loading || !analysis || analysis.missing_ingredients.length === 0) {
     return null;
   }
 
+  // Group missing ingredients by date
+  const groupedByDate = analysis.missing_ingredients.reduce((acc, item) => {
+    if (!acc[item.date]) acc[item.date] = [];
+    acc[item.date].push(item);
+    return acc;
+  }, {});
+
+  // Mobile collapsible card
+  if (isMobile) {
+    return (
+      <Card 
+        className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 shadow-md"
+        data-testid="gap-analysis-mobile"
+      >
+        <CardContent className="p-4">
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setIsExpanded(!isExpanded)}
+            data-testid="gap-analysis-toggle"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#FF9933] to-[#FFCC00] rounded-xl flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                  Gap Analysis
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {analysis.missing_ingredients.length}
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-600">Missing ingredients for planned meals</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm">
+              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </Button>
+          </div>
+
+          {isExpanded && (
+            <div className="mt-4 pt-4 border-t border-amber-200 space-y-3" data-testid="gap-analysis-content">
+              {Object.entries(groupedByDate).slice(0, 3).map(([date, items]) => (
+                <div key={date} className="bg-white rounded-lg p-3 border border-amber-100">
+                  <p className="text-xs font-semibold text-gray-600 mb-2">
+                    {new Date(date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {items.map((item, idx) => (
+                      <span 
+                        key={idx}
+                        className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full border border-red-200"
+                      >
+                        {item.ingredient}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              <Button
+                onClick={() => navigate('/shopping')}
+                className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white mt-2"
+                data-testid="add-to-shopping-btn"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Add to Shopping List
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Desktop sidebar (existing design)
   return (
     <Card 
       className="bg-white border-l-4 border-[#FF9933] shadow-lg"
@@ -37,6 +117,15 @@ export const GapAnalysisSidebar = () => {
             </div>
           ))}
         </div>
+        
+        <Button
+          onClick={() => navigate('/shopping')}
+          className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white mt-4"
+          data-testid="desktop-add-to-shopping-btn"
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Add All to Shopping
+        </Button>
       </CardContent>
     </Card>
   );
