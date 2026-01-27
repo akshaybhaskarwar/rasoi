@@ -118,10 +118,28 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     setError(null);
     
     try {
+      // Apply image preprocessing for better OCR
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Convert to grayscale and increase contrast
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        // Increase contrast
+        const contrast = 1.5;
+        const adjusted = ((gray - 128) * contrast) + 128;
+        const final = Math.max(0, Math.min(255, adjusted));
+        data[i] = data[i + 1] = data[i + 2] = final;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      
+      setOcrProgress(20);
+      
       const worker = await createWorker('eng', 1, {
         logger: (m) => {
           if (m.status === 'recognizing text') {
-            setOcrProgress(10 + Math.round(m.progress * 80));
+            setOcrProgress(20 + Math.round(m.progress * 70));
           }
         }
       });
@@ -130,17 +148,54 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       await worker.terminate();
       
       setOcrProgress(100);
+      console.log('OCR Text (Product):', text);
       
-      // Clean up the text - take first few lines as product name
-      const lines = text.split('\n').filter(line => line.trim().length > 2);
-      const productName = lines.slice(0, 2).join(' ').trim();
+      // Clean up the text - look for product name patterns
+      const lines = text.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 2);
+      
+      // Try to find product name - look for common patterns
+      let productName = '';
+      
+      // Look for ingredient line (common on Indian products)
+      const ingredientLine = lines.find(line => 
+        /ingredient|contains|product|item/i.test(line)
+      );
+      if (ingredientLine) {
+        const match = ingredientLine.match(/(?:ingredient|contains|product)[:\s]*(.+)/i);
+        if (match) productName = match[1].trim();
+      }
+      
+      // If not found, look for lines with common food words
+      if (!productName) {
+        const foodKeywords = ['seeds', 'powder', 'masala', 'flour', 'rice', 'dal', 'oil', 'salt', 'sugar', 'spice', 'ajwain', 'jeera', 'cumin', 'turmeric', 'chili', 'coriander'];
+        const foodLine = lines.find(line => 
+          foodKeywords.some(kw => line.toLowerCase().includes(kw))
+        );
+        if (foodLine) productName = foodLine;
+      }
+      
+      // If still not found, use first meaningful line (skip very short or numeric lines)
+      if (!productName) {
+        productName = lines.find(line => 
+          line.length > 3 && 
+          !/^\d+$/.test(line) && 
+          !/^[^a-zA-Z]+$/.test(line)
+        ) || '';
+      }
+      
+      // Clean up the product name
+      productName = productName
+        .replace(/[^\w\s\-()]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
       
       if (productName) {
         setProductData(prev => ({ ...prev, name_en: productName }));
-        // Move to expiry date capture
         setScanMode('photo_expiry');
       } else {
-        setError('Could not read product name. Please enter manually or try again.');
+        setError('Could not read product name clearly. Please enter manually or try again with better lighting.');
         setScanMode('photo_expiry');
       }
       
