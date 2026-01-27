@@ -107,94 +107,43 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     return canvas;
   };
 
-  // OCR to read product name
+  // AI-powered OCR to read product name
   const readProductName = async () => {
     const canvas = capturePhoto();
     if (!canvas) return;
     
     setIsProcessing(true);
-    setOcrProgress(10);
+    setOcrProgress(30);
     setError(null);
     
     try {
-      // Apply image preprocessing for better OCR
-      const ctx = canvas.getContext('2d');
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+      // Get base64 from canvas
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
       
-      // Convert to grayscale and increase contrast
-      for (let i = 0; i < data.length; i += 4) {
-        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-        // Increase contrast
-        const contrast = 1.5;
-        const adjusted = ((gray - 128) * contrast) + 128;
-        const final = Math.max(0, Math.min(255, adjusted));
-        data[i] = data[i + 1] = data[i + 2] = final;
-      }
-      ctx.putImageData(imageData, 0, 0);
+      setOcrProgress(50);
       
-      setOcrProgress(20);
-      
-      const worker = await createWorker('eng', 1, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(20 + Math.round(m.progress * 70));
-          }
-        }
+      // Call AI OCR endpoint
+      const response = await fetch(`${API}/api/ocr/extract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          ocr_type: 'product_name'
+        })
       });
       
-      const { data: { text } } = await worker.recognize(canvas);
-      await worker.terminate();
+      setOcrProgress(80);
+      
+      const data = await response.json();
+      console.log('AI OCR Product Name:', data);
       
       setOcrProgress(100);
-      console.log('OCR Text (Product):', text);
       
-      // Clean up the text - look for product name patterns
-      const lines = text.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 2);
-      
-      // Try to find product name - look for common patterns
-      let productName = '';
-      
-      // Look for ingredient line (common on Indian products)
-      const ingredientLine = lines.find(line => 
-        /ingredient|contains|product|item/i.test(line)
-      );
-      if (ingredientLine) {
-        const match = ingredientLine.match(/(?:ingredient|contains|product)[:\s]*(.+)/i);
-        if (match) productName = match[1].trim();
-      }
-      
-      // If not found, look for lines with common food words
-      if (!productName) {
-        const foodKeywords = ['seeds', 'powder', 'masala', 'flour', 'rice', 'dal', 'oil', 'salt', 'sugar', 'spice', 'ajwain', 'jeera', 'cumin', 'turmeric', 'chili', 'coriander'];
-        const foodLine = lines.find(line => 
-          foodKeywords.some(kw => line.toLowerCase().includes(kw))
-        );
-        if (foodLine) productName = foodLine;
-      }
-      
-      // If still not found, use first meaningful line (skip very short or numeric lines)
-      if (!productName) {
-        productName = lines.find(line => 
-          line.length > 3 && 
-          !/^\d+$/.test(line) && 
-          !/^[^a-zA-Z]+$/.test(line)
-        ) || '';
-      }
-      
-      // Clean up the product name
-      productName = productName
-        .replace(/[^\w\s\-()]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      if (productName) {
-        setProductData(prev => ({ ...prev, name_en: productName }));
+      if (data.success && data.result) {
+        setProductData(prev => ({ ...prev, name_en: data.result }));
         setScanMode('photo_expiry');
       } else {
-        setError('Could not read product name clearly. Please enter manually or try again with better lighting.');
+        setError(data.message || 'Could not read product name. Please enter manually or try again.');
         setScanMode('photo_expiry');
       }
       
@@ -207,96 +156,43 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     }
   };
 
-  // OCR to read expiry date
+  // AI-powered OCR to read expiry date
   const readExpiryDate = async () => {
     const canvas = capturePhoto();
     if (!canvas) return;
     
     setIsProcessing(true);
-    setOcrProgress(10);
+    setOcrProgress(30);
     setError(null);
     
     try {
-      // Apply image preprocessing for better OCR
-      const ctx = canvas.getContext('2d');
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+      // Get base64 from canvas
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
       
-      // Convert to grayscale and increase contrast for date stamps
-      for (let i = 0; i < data.length; i += 4) {
-        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-        // Higher contrast for date stamps which are often printed/stamped
-        const contrast = 1.8;
-        const adjusted = ((gray - 128) * contrast) + 128;
-        const final = Math.max(0, Math.min(255, adjusted));
-        data[i] = data[i + 1] = data[i + 2] = final;
-      }
-      ctx.putImageData(imageData, 0, 0);
+      setOcrProgress(50);
       
-      setOcrProgress(20);
-      
-      const worker = await createWorker('eng', 1, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(20 + Math.round(m.progress * 70));
-          }
-        }
+      // Call AI OCR endpoint
+      const response = await fetch(`${API}/api/ocr/extract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          ocr_type: 'expiry_date'
+        })
       });
       
-      const { data: { text } } = await worker.recognize(canvas);
-      await worker.terminate();
+      setOcrProgress(80);
+      
+      const data = await response.json();
+      console.log('AI OCR Expiry Date:', data);
       
       setOcrProgress(100);
-      console.log('OCR Text (Expiry):', text);
       
-      // More comprehensive date patterns
-      const datePatterns = [
-        // DD-MMM-YY or DD MMM YY (like "12 OCT 26", "12-OCT-26")
-        /(\d{1,2})[\s\-\.\/]*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{2,4})/gi,
-        // MMM-DD-YY or MMM DD YY
-        /(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{1,2})[\s\-\.\/]*(\d{2,4})/gi,
-        // MMM-YY or MMM YY (like "OCT 26")
-        /(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{2,4})/gi,
-        // Numeric: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
-        /(\d{1,2})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{2,4})/g,
-        // Numeric: YYYY/MM/DD
-        /(\d{4})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{1,2})/g
-      ];
-      
-      let foundDate = null;
-      let allMatches = [];
-      
-      // Collect all potential dates
-      for (const pattern of datePatterns) {
-        const matches = text.matchAll(pattern);
-        for (const match of matches) {
-          allMatches.push(match[0]);
-        }
-      }
-      
-      console.log('Found date matches:', allMatches);
-      
-      // Try to parse each match until we find a valid one
-      for (const dateStr of allMatches) {
-        const parsed = parseExpiryDate(dateStr);
-        if (parsed) {
-          // Prefer dates that look like expiry (in the future)
-          const parsedDate = new Date(parsed);
-          const now = new Date();
-          if (parsedDate > now) {
-            foundDate = parsed;
-            break;
-          } else if (!foundDate) {
-            foundDate = parsed; // Keep as fallback
-          }
-        }
-      }
-      
-      if (foundDate) {
-        setExpiryDate(foundDate);
+      if (data.success && data.result) {
+        setExpiryDate(data.result);
         setError(null);
       } else {
-        setError('Could not detect expiry date. Please enter manually. Tip: Focus on the date area with good lighting.');
+        setError(data.message || 'Could not detect expiry date. Please enter manually.');
       }
       
       setScanMode('confirm');
