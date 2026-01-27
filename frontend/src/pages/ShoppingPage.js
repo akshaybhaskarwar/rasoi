@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
-import { Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, Edit2, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +9,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks'];
+const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery'];
+
+// Default monthly quantities by category
+const DEFAULT_MONTHLY_QTY = {
+  'grains': '5 kg',
+  'pulses': '2 kg',
+  'spices': '100 g',
+  'dairy': '5 L',
+  'oils': '2 L',
+  'bakery': '1 pack',
+  'fasting': '500 g',
+  'snacks': '500 g',
+  'beverages': '2 L',
+  'vegetables': '2 kg',
+  'fruits': '2 kg',
+  'other': '1 kg'
+};
 
 // Map inventory categories to store types
 const CATEGORY_TO_STORE = {
@@ -28,15 +44,18 @@ const CATEGORY_TO_STORE = {
 };
 
 const ShoppingPage = () => {
-  const { shoppingList, addItem, deleteItem, clearList } = useShoppingList();
+  const { shoppingList, addItem, deleteItem, clearList, updateItem } = useShoppingList();
   const { inventory } = useInventory();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('grocery');
   const [syncing, setSyncing] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editingQty, setEditingQty] = useState('');
   const [newItem, setNewItem] = useState({
     name_en: '',
     category: 'grains',
-    quantity: '1 kg',
+    quantity: '-',
+    monthly_quantity: '1 kg',
     store_type: 'grocery'
   });
 
