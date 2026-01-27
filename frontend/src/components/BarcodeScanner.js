@@ -218,10 +218,28 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     setError(null);
     
     try {
+      // Apply image preprocessing for better OCR
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Convert to grayscale and increase contrast for date stamps
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        // Higher contrast for date stamps which are often printed/stamped
+        const contrast = 1.8;
+        const adjusted = ((gray - 128) * contrast) + 128;
+        const final = Math.max(0, Math.min(255, adjusted));
+        data[i] = data[i + 1] = data[i + 2] = final;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      
+      setOcrProgress(20);
+      
       const worker = await createWorker('eng', 1, {
         logger: (m) => {
           if (m.status === 'recognizing text') {
-            setOcrProgress(10 + Math.round(m.progress * 80));
+            setOcrProgress(20 + Math.round(m.progress * 70));
           }
         }
       });
@@ -230,22 +248,48 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       await worker.terminate();
       
       setOcrProgress(100);
+      console.log('OCR Text (Expiry):', text);
       
-      // Find date patterns in text
+      // More comprehensive date patterns
       const datePatterns = [
-        /(\d{1,2})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{2,4})/g,  // DD/MM/YYYY, DD-MM-YY
-        /(\d{4})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{1,2})/g,    // YYYY/MM/DD
-        /([A-Z]{3})\s*(\d{1,2})[,\s]*(\d{2,4})/gi,            // MAR 2025, MAR 25
-        /(\d{1,2})\s*([A-Z]{3})\s*(\d{2,4})/gi               // 15 MAR 2025
+        // DD-MMM-YY or DD MMM YY (like "12 OCT 26", "12-OCT-26")
+        /(\d{1,2})[\s\-\.\/]*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{2,4})/gi,
+        // MMM-DD-YY or MMM DD YY
+        /(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{1,2})[\s\-\.\/]*(\d{2,4})/gi,
+        // MMM-YY or MMM YY (like "OCT 26")
+        /(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{2,4})/gi,
+        // Numeric: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+        /(\d{1,2})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{2,4})/g,
+        // Numeric: YYYY/MM/DD
+        /(\d{4})[\/\-\.\s](\d{1,2})[\/\-\.\s](\d{1,2})/g
       ];
       
       let foundDate = null;
+      let allMatches = [];
       
+      // Collect all potential dates
       for (const pattern of datePatterns) {
-        const matches = text.match(pattern);
-        if (matches && matches.length > 0) {
-          foundDate = parseExpiryDate(matches[0]);
-          if (foundDate) break;
+        const matches = text.matchAll(pattern);
+        for (const match of matches) {
+          allMatches.push(match[0]);
+        }
+      }
+      
+      console.log('Found date matches:', allMatches);
+      
+      // Try to parse each match until we find a valid one
+      for (const dateStr of allMatches) {
+        const parsed = parseExpiryDate(dateStr);
+        if (parsed) {
+          // Prefer dates that look like expiry (in the future)
+          const parsedDate = new Date(parsed);
+          const now = new Date();
+          if (parsedDate > now) {
+            foundDate = parsed;
+            break;
+          } else if (!foundDate) {
+            foundDate = parsed; // Keep as fallback
+          }
         }
       }
       
@@ -253,7 +297,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
         setExpiryDate(foundDate);
         setError(null);
       } else {
-        setError('Could not detect expiry date. Please enter manually.');
+        setError('Could not detect expiry date. Please enter manually. Tip: Focus on the date area with good lighting.');
       }
       
       setScanMode('confirm');
