@@ -59,6 +59,8 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       setError(null);
       setOcrProgress(0);
       setScanning(false);
+      setIsProcessing(false);
+      processedRef.current = false;
     }
   }, [isOpen]);
 
