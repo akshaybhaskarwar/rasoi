@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { GapAnalysisSidebar } from '@/components/GapAnalysisSidebar';
 
 const MEAL_TYPES = [
   { value: 'breakfast', label: '🌅 Breakfast', color: 'bg-yellow-50 border-yellow-200' },
@@ -175,6 +176,11 @@ const PlannerPage = () => {
           <h1 className="text-3xl font-bold text-gray-800">Meal Planner</h1>
           <p className="text-gray-600 text-sm mt-1">Plan your weekly meals with recipes</p>
         </div>
+      </div>
+
+      {/* Mobile Gap Analysis Card - Only visible on mobile/tablet */}
+      <div className="xl:hidden" data-testid="mobile-gap-analysis">
+        <GapAnalysisSidebar isMobile={true} />
       </div>
 
       {/* Favorite Channels Section - Inline */}
