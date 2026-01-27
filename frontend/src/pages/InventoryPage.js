@@ -103,7 +103,10 @@ const InventoryPage = () => {
 
   const handleAddItem = async () => {
     try {
-      await addItem(newItem);
+      await addItem({
+        ...newItem,
+        expiry_date: newItem.expiry_date || null
+      });
       setIsAddDialogOpen(false);
       setNewItem({
         name_en: '',
@@ -111,10 +114,19 @@ const InventoryPage = () => {
         stock_level: 'empty',
         freshness: null,
         is_secret_stash: false,
-        unit: 'kg'
+        unit: 'kg',
+        expiry_date: ''
       });
     } catch (error) {
       console.error('Error adding item:', error);
+    }
+  };
+
+  const handleScannedItem = async (scannedItem) => {
+    try {
+      await addItem(scannedItem);
+    } catch (error) {
+      console.error('Error adding scanned item:', error);
     }
   };
 
