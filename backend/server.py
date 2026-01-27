@@ -76,6 +76,7 @@ class ShoppingItem(BaseModel):
     name_mr: Optional[str] = None
     category: str
     quantity: str
+    stock_level: Optional[str] = None  # empty, low - synced from inventory
     store_type: str = "grocery"  # grocery or mandi
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -84,6 +85,7 @@ class ShoppingItemCreate(BaseModel):
     name_mr: Optional[str] = None  # Accept Marathi name directly
     category: str
     quantity: str
+    stock_level: Optional[str] = None  # empty, low - synced from inventory
     store_type: str = "grocery"
 
 class MealPlan(BaseModel):
@@ -963,6 +965,10 @@ async def create_shopping_item(item: ShoppingItemCreate):
     # Auto-translate to Gujarati
     name_gu = await translate_text(item.name_en, "gu")
     shopping_item.name_gu = name_gu
+    
+    # Set stock_level from input if provided
+    if item.stock_level:
+        shopping_item.stock_level = item.stock_level
     
     doc = shopping_item.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
