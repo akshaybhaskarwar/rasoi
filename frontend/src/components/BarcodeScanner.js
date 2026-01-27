@@ -367,7 +367,10 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                       <Camera className="w-6 h-6" />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold">📸 Take Photos</p>
+                      <p className="font-bold flex items-center gap-2">
+                        📸 Take Photos
+                        <span className="text-xs bg-white/30 px-2 py-0.5 rounded-full">AI Powered</span>
+                      </p>
                       <p className="text-xs opacity-90">Photo of name + Photo of expiry date</p>
                     </div>
                   </div>
