@@ -461,8 +461,11 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
           {scanMode === 'photo_name' && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-700 font-medium">Step 1 of 2: Product Name</p>
-                <p className="text-xs text-blue-600 mt-1">Point camera at the product name on the package</p>
+                <p className="text-sm text-blue-700 font-medium flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Step 1 of 2: Product Name
+                </p>
+                <p className="text-xs text-blue-600 mt-1">AI will read the product name from your photo</p>
               </div>
               
               {isProcessing ? (
