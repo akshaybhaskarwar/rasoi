@@ -379,18 +379,65 @@ const ShoppingPage = () => {
                               {item.name_en}
                               {item.name_mr && <span className="text-gray-600"> <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.name_mr}</span></span>}
                             </p>
-                            {/* Display stock level badge */}
-                            <span className={`inline-block mt-1 text-xs px-2 py-1 rounded-full font-medium ${
-                              item.stock_level === 'empty'
-                                ? 'bg-gray-200 text-gray-700'
-                                : item.stock_level === 'low'
-                                  ? 'bg-[#FF9933]/20 text-[#FF9933]'
-                                  : 'bg-gray-100 text-gray-600'
-                            }`}>
-                              {item.stock_level === 'empty' ? '○ Empty' : 
-                               item.stock_level === 'low' ? '◔ Low' : 
-                               item.quantity}
-                            </span>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {/* Stock level badge */}
+                              {item.stock_level && (
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                  item.stock_level === 'empty'
+                                    ? 'bg-gray-200 text-gray-700'
+                                    : item.stock_level === 'low'
+                                      ? 'bg-[#FF9933]/20 text-[#FF9933]'
+                                      : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {item.stock_level === 'empty' ? '○ Empty' : '◔ Low'}
+                                </span>
+                              )}
+                              
+                              {/* Monthly quantity - editable */}
+                              {editingItemId === item.id ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={editingQty}
+                                    onChange={(e) => setEditingQty(e.target.value)}
+                                    className="h-7 w-20 text-xs"
+                                    placeholder="e.g., 2 kg"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveQuantity(item.id);
+                                      if (e.key === 'Escape') handleCancelEdit();
+                                    }}
+                                    data-testid={`edit-qty-input-${item.id}`}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleSaveQuantity(item.id)}
+                                    className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                                    data-testid={`save-qty-${item.id}`}
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleCancelEdit}
+                                    className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
+                                    data-testid={`cancel-qty-${item.id}`}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleEditQuantity(item.id, item.monthly_quantity)}
+                                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-[#138808]/10 text-[#138808] font-medium hover:bg-[#138808]/20 transition-colors"
+                                  data-testid={`monthly-qty-${item.id}`}
+                                >
+                                  <span>📦 {item.monthly_quantity || 'Set qty'}</span>
+                                  <Edit2 className="w-3 h-3 opacity-60" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <Button
                             variant="ghost"
