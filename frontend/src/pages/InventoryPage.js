@@ -622,6 +622,13 @@ const InventoryPage = () => {
         onClose={() => setIsPantryTemplateOpen(false)}
         existingInventory={inventory}
       />
+
+      {/* Barcode Scanner Dialog */}
+      <BarcodeScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onItemScanned={handleScannedItem}
+      />
     </div>
   );
 };
