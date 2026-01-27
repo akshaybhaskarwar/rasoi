@@ -89,6 +89,7 @@ const ShoppingPage = () => {
 
         if (!alreadyInList) {
           const storeType = CATEGORY_TO_STORE[item.category] || 'grocery';
+          const defaultQty = DEFAULT_MONTHLY_QTY[item.category] || '1 kg';
           
           await addItem({
             name_en: item.name_en,
@@ -96,7 +97,8 @@ const ShoppingPage = () => {
             category: item.category,
             quantity: '-',  // Placeholder since we use stock_level for display
             store_type: storeType,
-            stock_level: item.stock_level  // This is now saved by backend
+            stock_level: item.stock_level,  // This is now saved by backend
+            monthly_quantity: defaultQty  // Default based on category
           });
           addedCount++;
         }
