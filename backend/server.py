@@ -14,6 +14,7 @@ from googleapiclient.errors import HttpError
 from google.cloud import translate_v2 as translate
 import google.auth
 import httpx  # For Open Food Facts API
+import re
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -26,6 +27,7 @@ db = client[os.environ['DB_NAME']]
 # API Keys
 YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 EMERGENT_API_KEY = os.environ.get('EMERGENT_API_KEY')
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
 # Initialize translation client using Emergent API key
 # Create credentials from API key for Google Cloud Translate
