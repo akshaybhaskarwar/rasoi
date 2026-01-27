@@ -312,65 +312,90 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   };
 
   const parseExpiryDate = (dateStr) => {
-    // Handle month names
+    console.log('Parsing date:', dateStr);
+    
+    // Month name mapping
     const months = {
       'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
       'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
     };
     
-    // Try month name format (MAR 2025 or 15 MAR 2025)
-    const monthMatch = dateStr.match(/([A-Z]{3})\s*(\d{1,2})?[,\s]*(\d{2,4})/i) ||
-                       dateStr.match(/(\d{1,2})\s*([A-Z]{3})\s*(\d{2,4})/i);
+    let day, month, year;
     
-    if (monthMatch) {
-      const monthStr = monthMatch[1].toLowerCase();
-      const month = months[monthStr] || months[monthMatch[2]?.toLowerCase()];
-      if (month) {
-        let year = parseInt(monthMatch[3] || monthMatch[2]);
-        let day = parseInt(monthMatch[2] || monthMatch[1]) || 1;
-        
+    // Pattern 1: DD-MMM-YY or DD MMM YY (like "12 OCT 26", "12-OCT-26")
+    const ddMmmYyMatch = dateStr.match(/(\d{1,2})[\s\-\.\/]*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{2,4})/i);
+    if (ddMmmYyMatch) {
+      day = parseInt(ddMmmYyMatch[1]);
+      month = months[ddMmmYyMatch[2].toLowerCase()];
+      year = parseInt(ddMmmYyMatch[3]);
+      if (year < 100) year += 2000;
+      console.log('Matched DD-MMM-YY:', { day, month, year });
+    }
+    
+    // Pattern 2: MMM-YY or MMM YY (like "OCT 26") - assume day 1
+    if (!day) {
+      const mmmYyMatch = dateStr.match(/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[\s\-\.\/]*(\d{2,4})/i);
+      if (mmmYyMatch) {
+        day = 1;
+        month = months[mmmYyMatch[1].toLowerCase()];
+        year = parseInt(mmmYyMatch[2]);
         if (year < 100) year += 2000;
-        if (day > 31) { day = 1; } // If day looks like year, default to 1
-        
-        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        console.log('Matched MMM-YY:', { day, month, year });
       }
     }
     
-    // Try numeric formats
-    const parts = dateStr.split(/[\/\-\.\s]+/).filter(p => /^\d+$/.test(p));
-    if (parts.length < 2) return null;
-    
-    let year, month, day;
-    
-    if (parts[0].length === 4) {
-      // YYYY-MM-DD
-      year = parseInt(parts[0]);
-      month = parseInt(parts[1]);
-      day = parseInt(parts[2]) || 1;
-    } else if (parts.length >= 3 && parts[2].length === 4) {
-      // DD-MM-YYYY
-      day = parseInt(parts[0]);
-      month = parseInt(parts[1]);
-      year = parseInt(parts[2]);
-    } else {
-      // DD-MM-YY
-      day = parseInt(parts[0]);
-      month = parseInt(parts[1]);
-      year = parseInt(parts[2] || parts[1]) + 2000;
+    // Pattern 3: Numeric formats (DD/MM/YYYY, DD-MM-YY, etc.)
+    if (!day) {
+      const parts = dateStr.split(/[\/\-\.\s]+/).filter(p => /^\d+$/.test(p));
+      if (parts.length >= 2) {
+        if (parts[0].length === 4) {
+          // YYYY-MM-DD
+          year = parseInt(parts[0]);
+          month = parseInt(parts[1]);
+          day = parseInt(parts[2]) || 1;
+        } else if (parts.length >= 3 && parts[2].length === 4) {
+          // DD-MM-YYYY
+          day = parseInt(parts[0]);
+          month = parseInt(parts[1]);
+          year = parseInt(parts[2]);
+        } else if (parts.length >= 3) {
+          // DD-MM-YY
+          day = parseInt(parts[0]);
+          month = parseInt(parts[1]);
+          year = parseInt(parts[2]);
+          if (year < 100) year += 2000;
+        } else if (parts.length === 2) {
+          // MM-YY format
+          month = parseInt(parts[0]);
+          year = parseInt(parts[1]);
+          day = 1;
+          if (year < 100) year += 2000;
+        }
+        console.log('Matched numeric:', { day, month, year });
+      }
     }
     
-    // Swap if month > 12
+    // Validate and swap if needed
     if (month > 12 && day <= 12) {
       [day, month] = [month, day];
     }
     
-    // Validate
-    if (!year || year < 2020 || year > 2040) return null;
-    if (!month || month < 1 || month > 12) return null;
-    if (!day) day = 1;
-    if (day > 31) day = 1;
+    // Final validation
+    if (!year || year < 2020 || year > 2040) {
+      console.log('Invalid year:', year);
+      return null;
+    }
+    if (!month || month < 1 || month > 12) {
+      console.log('Invalid month:', month);
+      return null;
+    }
+    if (!day || day < 1 || day > 31) {
+      day = 1; // Default to first of month
+    }
     
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const result = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    console.log('Parsed result:', result);
+    return result;
   };
 
   // Barcode scanning mode
