@@ -18,10 +18,14 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - "Items Expiring Soon!" alert banner (30-day threshold)
   - Visual warnings on item cards (amber for soon, red for urgent/expired)
   - Suggestion to use expiring items in recipes
-- **Barcode Scanner**
-  - Scan product barcodes using camera
-  - Auto-lookup product details via Open Food Facts API
-  - Manual entry option if barcode not found
+- **Barcode Scanner** → **Product Scanner (Enhanced)** - Jan 27, 2025
+  - **📸 Two-Photo OCR Method** (Primary):
+    - Step 1: Take photo of product name → OCR reads text
+    - Step 2: Take photo of expiry date → OCR extracts date
+  - **Barcode Method** (Secondary): Scan barcode to lookup product
+  - **Manual Entry**: Direct data entry option
+  - Uses Tesseract.js for OCR text recognition
+  - Supports multiple date formats (DD/MM/YYYY, MM-DD-YY, MAR 2025, etc.)
 
 #### Shopping List
 - ✅ **Auto-sync with low-stock inventory items**
