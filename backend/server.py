@@ -972,11 +972,29 @@ async def create_shopping_item(item: ShoppingItemCreate):
     if item.stock_level:
         shopping_item.stock_level = item.stock_level
     
+    # Set monthly_quantity from input if provided
+    if item.monthly_quantity:
+        shopping_item.monthly_quantity = item.monthly_quantity
+    
     doc = shopping_item.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.shopping_list.insert_one(doc)
     return shopping_item
+
+
+@api_router.put("/shopping/{item_id}")
+async def update_shopping_item(item_id: str, updates: Dict[str, Any]):
+    """Update shopping list item"""
+    result = await db.shopping_list.update_one(
+        {"id": item_id},
+        {"$set": updates}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    return {"message": "Updated successfully"}
 
 @api_router.get("/shopping", response_model=List[ShoppingItem])
 async def get_shopping_list(store_type: Optional[str] = None):
