@@ -305,7 +305,14 @@ const ShoppingPage = () => {
               </div>
               <div>
                 <Label>Category</Label>
-                <Select value={newItem.category} onValueChange={(val) => setNewItem({ ...newItem, category: val })}>
+                <Select 
+                  value={newItem.category} 
+                  onValueChange={(val) => setNewItem({ 
+                    ...newItem, 
+                    category: val,
+                    monthly_quantity: DEFAULT_MONTHLY_QTY[val] || '1 kg'
+                  })}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -317,16 +324,19 @@ const ShoppingPage = () => {
                 </Select>
               </div>
               <div>
-                <Label>Quantity</Label>
+                <Label>Monthly Quantity Required</Label>
                 <Input
-                  value={newItem.quantity}
-                  onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-                  placeholder="e.g., 2 kg"
+                  value={newItem.monthly_quantity}
+                  onChange={(e) => setNewItem({ ...newItem, monthly_quantity: e.target.value })}
+                  placeholder="e.g., 2 kg, 500 g, 1 L"
+                  data-testid="shopping-item-monthly-qty"
                 />
+                <p className="text-xs text-gray-500 mt-1">How much do you typically need per month?</p>
               </div>
               <Button 
                 onClick={handleAddItem}
                 className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full"
+                disabled={!newItem.name_en.trim()}
               >
                 Add to Shopping List
               </Button>
