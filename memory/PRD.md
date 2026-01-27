@@ -70,7 +70,6 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - **YouTube API Search**: Unreliable due to quota limits (local recipe DB is workaround)
 
 ### 🔵 Backlog (P2)
-- OCR for scanning expiry dates (tesseract.js installed but not implemented)
 - Community Kitchen (user-submitted recipes)
 - "Digital Dadi" enhanced with more dynamic suggestions
 - Freshness indicators & "Mummy's Secret Stash" icons
