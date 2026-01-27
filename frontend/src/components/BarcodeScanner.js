@@ -545,8 +545,11 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
               )}
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-700 font-medium">Step 2 of 2: Expiry Date</p>
-                <p className="text-xs text-blue-600 mt-1">Point camera at the expiry/best before date</p>
+                <p className="text-sm text-blue-700 font-medium flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Step 2 of 2: Expiry Date
+                </p>
+                <p className="text-xs text-blue-600 mt-1">AI will read the expiry/best-before date</p>
               </div>
               
               {isProcessing ? (
