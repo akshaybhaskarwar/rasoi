@@ -44,9 +44,15 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
-      resetState();
+      // Reset state directly instead of calling resetState
+      setScanMode('barcode');
+      setProductData(null);
+      setExpiryDate('');
+      setError(null);
+      setOcrProgress(0);
+      setScanning(false);
     }
-  }, [isOpen, stopCamera, resetState]);
+  }, [isOpen, stopCamera]);
 
   const startBarcodeScanner = async () => {
     setScanning(true);
