@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { DigitalDadiWidget } from '@/components/DigitalDadiWidget';
 import { useInventory, useMealPlanner, useGapAnalysis } from '@/hooks/useRasoiSync';
 import { Package2, Calendar, ShoppingCart, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { DigitalDadiWidget } from '@/components/DigitalDadiWidget';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const { inventory } = useInventory();
   const { mealPlans } = useMealPlanner();
   const { analysis } = useGapAnalysis();
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -15,28 +16,32 @@ const HomePage = () => {
       label: 'Items in Stock',
       value: inventory.filter(i => i.stock_level === 'full' || i.stock_level === 'half').length,
       color: 'text-[#77DD77]',
-      bg: 'bg-[#77DD77]/10'
+      bg: 'bg-[#77DD77]/10',
+      link: '/inventory'
     },
     {
       icon: ShoppingCart,
       label: 'Low Stock Items',
       value: inventory.filter(i => i.stock_level === 'low').length,
       color: 'text-[#FF9933]',
-      bg: 'bg-[#FF9933]/10'
+      bg: 'bg-[#FF9933]/10',
+      link: '/shopping'
     },
     {
       icon: Calendar,
       label: 'Meals Planned',
       value: mealPlans.length,
       color: 'text-[#FFCC00]',
-      bg: 'bg-[#FFCC00]/10'
+      bg: 'bg-[#FFCC00]/10',
+      link: '/planner'
     },
     {
       icon: AlertCircle,
       label: 'Missing Items',
       value: analysis?.missing_ingredients?.length || 0,
       color: 'text-red-500',
-      bg: 'bg-red-50'
+      bg: 'bg-red-50',
+      link: '/shopping'
     }
   ];
 
@@ -58,7 +63,8 @@ const HomePage = () => {
           return (
             <Card 
               key={index}
-              className="hover-lift cursor-pointer"
+              className="hover-lift cursor-pointer transition-transform hover:scale-105"
+              onClick={() => navigate(stat.link)}
               data-testid={`stat-card-${index}`}
             >
               <CardContent className="p-6">
@@ -76,18 +82,27 @@ const HomePage = () => {
       {/* Recent Activity */}
       <Card className="shadow-sm">
         <CardContent className="p-6">
-          <h3 className="text-xl font-bold mb-4">Recent Updates</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Recent Updates</h3>
+            <button 
+              onClick={() => navigate('/inventory')}
+              className="text-sm text-[#FF9933] hover:underline"
+            >
+              View All →
+            </button>
+          </div>
           <div className="space-y-3">
             {inventory.slice(0, 5).map((item) => (
               <div 
                 key={item.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => navigate('/inventory')}
                 data-testid={`recent-item-${item.id}`}
               >
                 <div>
                   <p className="font-medium text-gray-800">{item.name_en}</p>
-                  {item.name_gu && (
-                    <p className="text-sm text-gray-600 bilingual-text">{item.name_gu}</p>
+                  {item.name_mr && (
+                    <p className="text-sm text-gray-600 bilingual-text">{item.name_mr}</p>
                   )}
                 </div>
                 <div className={`px-3 py-1 rounded-full text-xs font-medium ${
