@@ -343,7 +343,12 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
           {/* Barcode Scanning Mode */}
           {scanMode === 'barcode' && (
             <div className="space-y-4">
-              {!scanning ? (
+              {isProcessing ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-16 h-16 text-[#FF9933] mx-auto mb-4 animate-spin" />
+                  <p className="text-gray-600">Looking up product...</p>
+                </div>
+              ) : !scanning ? (
                 <div className="text-center py-8">
                   <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-600 mb-4">Click below to start scanning the product barcode</p>
