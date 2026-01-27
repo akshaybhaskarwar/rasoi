@@ -71,16 +71,13 @@ const ShoppingPage = () => {
         if (!alreadyInList) {
           const storeType = CATEGORY_TO_STORE[item.category] || 'grocery';
           
-          // Show stock status instead of arbitrary quantity
-          const stockStatus = item.stock_level === 'empty' ? 'Out of Stock' : 'Low Stock';
-          
           await addItem({
             name_en: item.name_en,
             name_mr: item.name_mr,
             category: item.category,
-            quantity: stockStatus,
+            quantity: '-',  // Placeholder since we use stock_level for display
             store_type: storeType,
-            stock_level: item.stock_level
+            stock_level: item.stock_level  // This is now saved by backend
           });
           addedCount++;
         }
@@ -281,15 +278,16 @@ const ShoppingPage = () => {
                               {item.name_en}
                               {item.name_mr && <span className="text-gray-600"> <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.name_mr}</span></span>}
                             </p>
+                            {/* Display stock level badge */}
                             <span className={`inline-block mt-1 text-xs px-2 py-1 rounded-full font-medium ${
-                              item.quantity === 'Out of Stock' || item.stock_level === 'empty'
+                              item.stock_level === 'empty'
                                 ? 'bg-gray-200 text-gray-700'
-                                : item.quantity === 'Low Stock' || item.stock_level === 'low'
+                                : item.stock_level === 'low'
                                   ? 'bg-[#FF9933]/20 text-[#FF9933]'
                                   : 'bg-gray-100 text-gray-600'
                             }`}>
-                              {item.quantity === 'Out of Stock' ? '○ Empty' : 
-                               item.quantity === 'Low Stock' ? '◔ Low' : 
+                              {item.stock_level === 'empty' ? '○ Empty' : 
+                               item.stock_level === 'low' ? '◔ Low' : 
                                item.quantity}
                             </span>
                           </div>
