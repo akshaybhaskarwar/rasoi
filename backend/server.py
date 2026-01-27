@@ -1305,6 +1305,100 @@ async def lookup_barcode(barcode: str):
         logger.error(f"Barcode lookup error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# AI-Powered OCR Endpoint
+class OCRRequest(BaseModel):
+    image_base64: str
+    ocr_type: str  # "product_name" or "expiry_date"
+
+@api_router.post("/ocr/extract")
+async def extract_text_from_image(request: OCRRequest):
+    """
+    Use AI vision to extract product name or expiry date from image.
+    Much more accurate than traditional OCR for product packaging.
+    """
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(status_code=500, detail="OCR service not configured")
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        
+        # Create chat instance with vision model
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"ocr-{uuid.uuid4()}",
+            system_message="You are a precise OCR assistant that extracts text from product packaging images. Be concise and accurate."
+        ).with_model("openai", "gpt-4o")
+        
+        # Prepare prompt based on OCR type
+        if request.ocr_type == "product_name":
+            prompt = """Look at this product packaging image and extract the PRODUCT NAME only.
+            
+            Rules:
+            - Extract the main product name (e.g., "Ajwain", "Basmati Rice", "Turmeric Powder")
+            - Include brand name if visible (e.g., "Diamond Ajwain", "Tata Salt")
+            - Do NOT include descriptions, weights, or other details
+            - If you see text like "Carom Seeds" or "Jeera" etc., include that as it helps identify the product
+            - Respond with ONLY the product name, nothing else
+            - If you cannot identify a product name, respond with "NOT_FOUND"
+            """
+        else:  # expiry_date
+            prompt = """Look at this product packaging image and extract the EXPIRY DATE or BEST BEFORE date.
+            
+            Rules:
+            - Look for dates labeled as "Expiry", "Exp", "Best Before", "Use By", "BB"
+            - Also look for any date stamps printed on the packaging
+            - Common formats: DD-MMM-YY, DD/MM/YYYY, MMM YYYY
+            - Respond in format: YYYY-MM-DD
+            - If only month and year visible, use the last day of that month
+            - If you cannot find an expiry date, respond with "NOT_FOUND"
+            - Respond with ONLY the date in YYYY-MM-DD format, nothing else
+            """
+        
+        # Create message with image
+        image_content = ImageContent(image_base64=request.image_base64)
+        user_message = UserMessage(text=prompt, file_contents=[image_content])
+        
+        # Get response
+        response = await chat.send_message(user_message)
+        result = response.strip()
+        
+        logger.info(f"OCR Result ({request.ocr_type}): {result}")
+        
+        if result == "NOT_FOUND":
+            return {
+                "success": False,
+                "ocr_type": request.ocr_type,
+                "result": None,
+                "message": f"Could not extract {request.ocr_type.replace('_', ' ')} from image"
+            }
+        
+        # Validate expiry date format
+        if request.ocr_type == "expiry_date":
+            # Try to parse and validate the date
+            date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', result)
+            if date_match:
+                result = date_match.group(0)
+            else:
+                # Try to extract any date-like pattern
+                return {
+                    "success": False,
+                    "ocr_type": request.ocr_type,
+                    "result": result,
+                    "message": "Date format not recognized"
+                }
+        
+        return {
+            "success": True,
+            "ocr_type": request.ocr_type,
+            "result": result
+        }
+        
+    except Exception as e:
+        logger.error(f"OCR extraction error: {e}")
+        raise HTTPException(status_code=500, detail=f"OCR failed: {str(e)}")
+
+
 @api_router.get("/")
 async def root():
     return {"message": "Rasoi-Sync API is running!"}
