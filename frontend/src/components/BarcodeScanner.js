@@ -156,8 +156,6 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       setIsProcessing(false);
     }
   };
-    }
-  };
 
   const mapCategory = (categoryStr) => {
     const categoryLower = (categoryStr || '').toLowerCase();
