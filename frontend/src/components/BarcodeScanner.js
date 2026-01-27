@@ -16,10 +16,12 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const [expiryDate, setExpiryDate] = useState('');
   const [error, setError] = useState(null);
   const [ocrProgress, setOcrProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false); // Prevent multiple lookups
   
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
+  const processedRef = useRef(false); // Track if barcode was already processed
 
   const stopCamera = useCallback(() => {
     if (codeReaderRef.current) {
