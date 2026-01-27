@@ -65,6 +65,8 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const startBarcodeScanner = async () => {
     setScanning(true);
     setError(null);
+    setIsProcessing(false);
+    processedRef.current = false;
     
     try {
       const codeReader = new BrowserMultiFormatReader();
@@ -81,15 +83,24 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       
       // Start decoding from video
       codeReader.decodeFromVideoDevice(undefined, videoRef.current, async (result, err) => {
+        // Skip if already processing or processed
+        if (processedRef.current || isProcessing) {
+          return;
+        }
+        
         if (result) {
           const barcode = result.getText();
           console.log('Barcode detected:', barcode);
           
-          // Stop scanning
+          // Mark as processed immediately to prevent loop
+          processedRef.current = true;
+          setIsProcessing(true);
+          
+          // Stop camera first
           stopCamera();
           setScanning(false);
           
-          // Lookup product
+          // Then lookup product
           await lookupProduct(barcode);
         }
       });
