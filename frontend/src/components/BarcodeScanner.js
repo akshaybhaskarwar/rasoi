@@ -396,11 +396,16 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-green-800">Product Found!</p>
-                      <p className="text-green-700">{productData.name_en || 'Unknown Product'}</p>
+                      <p className="font-medium text-green-800">
+                        {productData.name_en ? 'Product Found!' : 'Barcode Scanned!'}
+                      </p>
+                      <p className="text-green-700">
+                        {productData.name_en || 'Enter product name below'}
+                      </p>
                       {productData.brand && (
                         <p className="text-sm text-green-600">Brand: {productData.brand}</p>
                       )}
+                      <p className="text-xs text-green-600 mt-1">Barcode: {productData.barcode}</p>
                     </div>
                   </div>
                 </div>
