@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
-import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit } from 'lucide-react';
+import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
+import { BarcodeScanner } from '@/components/BarcodeScanner';
 import { Badge } from '@/components/ui/badge';
+
+// Helper function to check expiry status
+const getExpiryStatus = (expiryDate) => {
+  if (!expiryDate) return null;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiry = new Date(expiryDate);
+  expiry.setHours(0, 0, 0, 0);
+  
+  const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+  
+  if (daysUntilExpiry < 0) {
+    return { status: 'expired', days: Math.abs(daysUntilExpiry), message: `Expired ${Math.abs(daysUntilExpiry)} days ago` };
+  } else if (daysUntilExpiry === 0) {
+    return { status: 'today', days: 0, message: 'Expires today!' };
+  } else if (daysUntilExpiry <= 30) {
+    return { status: 'soon', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
+  }
+  return { status: 'ok', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
+};
 
 const CATEGORIES = [
   { value: 'grains', label: '🌾 Grains & Cereals', color: 'bg-amber-50' },
@@ -40,6 +62,7 @@ const InventoryPage = () => {
   const [selectedStockLevel, setSelectedStockLevel] = useState('all'); // New state for stock filtering
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPantryTemplateOpen, setIsPantryTemplateOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   const [newItem, setNewItem] = useState({
     name_en: '',
@@ -47,7 +70,18 @@ const InventoryPage = () => {
     stock_level: 'empty',
     freshness: null,
     is_secret_stash: false,
-    unit: 'kg'
+    unit: 'kg',
+    expiry_date: ''
+  });
+
+  // Get items expiring soon (within 30 days)
+  const expiringItems = inventory.filter(item => {
+    const status = getExpiryStatus(item.expiry_date);
+    return status && (status.status === 'expired' || status.status === 'today' || status.status === 'soon');
+  }).sort((a, b) => {
+    const statusA = getExpiryStatus(a.expiry_date);
+    const statusB = getExpiryStatus(b.expiry_date);
+    return statusA.days - statusB.days;
   });
 
   const filteredInventory = inventory.filter(item => {
