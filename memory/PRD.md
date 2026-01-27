@@ -26,6 +26,11 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 #### Shopping List
 - ✅ **Auto-sync with low-stock inventory items**
 - ✅ **Stock level badges (Empty, Low) instead of quantities** - Fixed Jan 27, 2025
+- ✅ **Monthly Quantity parameter** - Added Jan 27, 2025
+  - Each item shows expected monthly quantity (e.g., "5 kg", "2 L")
+  - Default quantities based on category
+  - Inline editing - click to modify quantity
+  - WhatsApp export includes monthly quantities
 - Bilingual display
 - Category grouping by store type (Grocery/Mandi)
 - CRUD operations
