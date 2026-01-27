@@ -288,6 +288,19 @@ const InventoryPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    Expiry Date (Optional)
+                  </Label>
+                  <Input
+                    type="date"
+                    value={newItem.expiry_date}
+                    onChange={(e) => setNewItem({ ...newItem, expiry_date: e.target.value })}
+                    className="mt-1"
+                    data-testid="expiry-date-input"
+                  />
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
