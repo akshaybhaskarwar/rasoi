@@ -144,10 +144,53 @@ const ShoppingPage = () => {
     window.open(`https://wa.me/?text=${message}`, '_blank');
   };
 
-  const handleCopyToClipboard = () => {
+  const handleCopyToClipboard = async () => {
     const message = decodeURIComponent(generateWhatsAppMessage());
-    navigator.clipboard.writeText(message);
-    alert('Copied to clipboard! You can now paste it in WhatsApp.');
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(message);
+        alert('Copied to clipboard! You can now paste it in WhatsApp.');
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = message;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          alert('Copied to clipboard! You can now paste it in WhatsApp.');
+        } else {
+          alert('Failed to copy. Please try the "Send to WhatsApp" button instead.');
+        }
+      }
+    } catch (err) {
+      console.error('Copy failed:', err);
+      // Fallback method
+      const textArea = document.createElement('textarea');
+      textArea.value = message;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        alert('Copied to clipboard! You can now paste it in WhatsApp.');
+      } catch (e) {
+        alert('Failed to copy. Please try the "Send to WhatsApp" button instead.');
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const handleDeleteItem = async (itemId, itemName) => {
