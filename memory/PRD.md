@@ -13,6 +13,16 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - Stock level filtering (Full, Half, Low, Empty)
 - CRUD operations for items
 - Indian Pantry Template for quick population
+- **NEW: Expiry Date Tracking**
+  - Optional expiry date for each item
+  - "Items Expiring Soon!" alert banner (30-day threshold)
+  - Visual warnings on item cards (amber for soon, red for urgent/expired)
+  - Suggestion to use expiring items in recipes
+- **NEW: Barcode Scanner**
+  - Scan product barcodes using camera
+  - Auto-lookup product details via Open Food Facts API
+  - OCR for reading expiry dates (Tesseract.js)
+  - Manual entry option if barcode not found
 
 #### Shopping List
 - Auto-sync with low-stock inventory items
@@ -23,18 +33,14 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 #### Meal Planner
 - 7-day weekly calendar view
 - 4 daily sections: Breakfast, Lunch, Snacks, Dinner
-- **NEW: Local Recipe Database Search** (no YouTube API dependency!)
+- **Local Recipe Database Search** (no YouTube API dependency)
   - 25+ pre-built Indian recipes
   - Search by ingredients from pantry
   - Filter: "All" or "Videos Only"
   - Shows matching ingredients highlighted
-  - Prep/cook time display
-  - Match score ranking
 - **Favorite YouTube Channels**
   - Inline collapsible section on Planner page
-  - Add/Remove favorite channels
   - Recipes from favorites shown first
-  - Visual indicators (⭐ Favorite Channel badge)
 
 ### 🟠 Known Issues
 - **Translation API**: Currently MOCKED with static dictionary
@@ -50,32 +56,15 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - **Frontend**: React, Tailwind CSS, shadcn/ui, Lucide icons
 - **Backend**: FastAPI, Pydantic
 - **Database**: MongoDB
-- **Recipe Search**: Local database (no external API dependency)
-- **Optional**: YouTube Data API v3 for video details
+- **Barcode Scanning**: @zxing/browser
+- **OCR**: Tesseract.js
+- **Product Lookup**: Open Food Facts API
 
 ## Key API Endpoints
-- `/api/inventory` - Inventory CRUD
-- `/api/shopping-list` - Shopping list CRUD
-- `/api/meal-plans` - Meal plan CRUD
-- `/api/recipes/search` - **NEW: Local recipe search by ingredients**
-- `/api/youtube/search` - YouTube recipe search (quota limited)
+- `/api/inventory` - Inventory CRUD (now with expiry_date, barcode fields)
+- `/api/barcode/{barcode}` - Product lookup from Open Food Facts
+- `/api/recipes/search` - Local recipe search by ingredients
 - `/api/preferences/favorite-channels` - GET/POST/DELETE favorites
-- `/api/translate` - Translation (MOCKED)
-
-## Database Collections
-- `inventory`: Kitchen items with bilingual names
-- `shopping_list`: Shopping items
-- `meal_plans`: Weekly meal assignments
-- `preferences`: User preferences including favorite_channels
-
-## Local Recipe Database
-25+ Indian recipes including:
-- Main courses: Dal Tadka, Palak Paneer, Chole, Rajma, Biryani
-- Breakfast: Poha, Upma, Idli, Dosa, Aloo Paratha
-- Snacks: Samosa, Vada Pav, Pav Bhaji
-- Desserts: Gajar Halwa, Gulab Jamun
-
-Sources: Ranveer Brar, Kabita's Kitchen, Hebbars Kitchen, Madhura's Recipe Marathi, Sanjeev Kapoor
 
 ---
-*Last updated: January 26, 2025*
+*Last updated: January 27, 2025*
