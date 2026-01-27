@@ -1233,6 +1233,50 @@ async def get_gap_analysis():
 
 # ============ ROOT ENDPOINTS ============
 
+# ============ BARCODE LOOKUP (Open Food Facts) ============
+
+@api_router.get("/barcode/{barcode}")
+async def lookup_barcode(barcode: str):
+    """Lookup product details from barcode using Open Food Facts API"""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Open Food Facts API
+            url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
+            response = await client.get(url, timeout=10.0)
+            data = response.json()
+            
+            if data.get('status') == 1 and data.get('product'):
+                product = data['product']
+                
+                # Extract relevant info
+                return {
+                    "found": True,
+                    "barcode": barcode,
+                    "name": product.get('product_name', product.get('product_name_en', '')),
+                    "brand": product.get('brands', ''),
+                    "category": product.get('categories', '').split(',')[0].strip() if product.get('categories') else 'other',
+                    "quantity": product.get('quantity', ''),
+                    "image_url": product.get('image_url', ''),
+                    "ingredients": product.get('ingredients_text', ''),
+                    "nutriscore": product.get('nutriscore_grade', ''),
+                    "raw_data": {
+                        "categories_tags": product.get('categories_tags', [])[:5],
+                        "labels": product.get('labels', '')
+                    }
+                }
+            else:
+                return {
+                    "found": False,
+                    "barcode": barcode,
+                    "message": "Product not found in database"
+                }
+                
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Request to Open Food Facts timed out")
+    except Exception as e:
+        logger.error(f"Barcode lookup error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/")
 async def root():
     return {"message": "Rasoi-Sync API is running!"}
