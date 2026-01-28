@@ -347,9 +347,25 @@ const ShoppingPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="grocery" data-testid="tab-grocery">Grocery Store</TabsTrigger>
-          <TabsTrigger value="mandi" data-testid="tab-mandi">Local Mandi</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 h-auto p-1">
+          <TabsTrigger 
+            value="grocery" 
+            data-testid="tab-grocery"
+            className="flex flex-col py-3 data-[state=active]:bg-[#FF9933] data-[state=active]:text-white"
+          >
+            <span className="text-lg">🏪</span>
+            <span className="font-bold">Grocery Store</span>
+            <span className="text-[10px] opacity-80">Grains, Spices, Dairy, Oils</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="mandi" 
+            data-testid="tab-mandi"
+            className="flex flex-col py-3 data-[state=active]:bg-[#138808] data-[state=active]:text-white"
+          >
+            <span className="text-lg">🥬</span>
+            <span className="font-bold">Local Mandi</span>
+            <span className="text-[10px] opacity-80">Vegetables & Fruits</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4 mt-6">
