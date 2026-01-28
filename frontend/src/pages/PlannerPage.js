@@ -471,52 +471,108 @@ const PlannerPage = () => {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Ingredient Selection */}
-            <div>
-              <Label className="text-base font-bold mb-3 block">Select Ingredients from Your Pantry</Label>
-              <div className="max-h-48 overflow-y-auto custom-scrollbar border rounded-lg p-3 bg-gray-50">
-                <div className="flex flex-wrap gap-2">
-                  {inventory.filter(item => item.stock_level !== 'empty').map((item) => {
-                    const isSelected = selectedIngredients.includes(item.name_en);
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => toggleIngredient(item.name_en)}
-                        className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
-                          isSelected
-                            ? 'bg-[#77DD77] text-white border-2 border-[#66CC66]'
-                            : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
-                        }`}
-                        data-testid={`ingredient-${item.id}`}
-                      >
-                        {item.name_en}
-                      </button>
-                    );
-                  })}
+            {/* Search Mode Toggle */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+              <button
+                onClick={() => setSearchMode('text')}
+                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                  searchMode === 'text'
+                    ? 'bg-[#FF9933] text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-200'
+                }`}
+                data-testid="search-mode-text"
+              >
+                <Search className="w-4 h-4 inline mr-2" />
+                Search by Name
+              </button>
+              <button
+                onClick={() => setSearchMode('ingredients')}
+                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                  searchMode === 'ingredients'
+                    ? 'bg-[#FF9933] text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-200'
+                }`}
+                data-testid="search-mode-ingredients"
+              >
+                <Package2 className="w-4 h-4 inline mr-2" />
+                Search by Ingredients
+              </button>
+            </div>
+
+            {/* Text Search Section */}
+            {searchMode === 'text' && (
+              <div className="space-y-3">
+                <Label className="text-base font-bold">Search Recipe by Name</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={textSearch}
+                    onChange={(e) => setTextSearch(e.target.value)}
+                    placeholder="e.g., Pav Bhaji, Biryani, Dal Tadka..."
+                    className="flex-1 h-12 text-base"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchRecipes()}
+                    data-testid="text-search-input"
+                  />
+                  <Button
+                    onClick={handleSearchRecipes}
+                    disabled={searching || !textSearch.trim()}
+                    className="h-12 px-6 bg-[#FF9933] hover:bg-[#E68A2E] text-white"
+                    data-testid="text-search-btn"
+                  >
+                    {searching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                  </Button>
                 </div>
+                <p className="text-xs text-gray-500">Type a recipe name and press Enter or click Search</p>
               </div>
-              
-              {selectedIngredients.length > 0 && (
-                <div className="mt-3 p-3 bg-[#FFFBF0] rounded-lg border border-[#FFCC00]/30">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Selected: {selectedIngredients.length} ingredients
-                  </p>
+            )}
+
+            {/* Ingredient Selection - Only show when in ingredients mode */}
+            {searchMode === 'ingredients' && (
+              <div>
+                <Label className="text-base font-bold mb-3 block">Select Ingredients from Your Pantry</Label>
+                <div className="max-h-48 overflow-y-auto custom-scrollbar border rounded-lg p-3 bg-gray-50">
                   <div className="flex flex-wrap gap-2">
-                    {selectedIngredients.map((ing, idx) => (
-                      <Badge key={idx} className="bg-[#FF9933] text-white">
-                        {ing}
+                    {inventory.filter(item => item.stock_level !== 'empty').map((item) => {
+                      const isSelected = selectedIngredients.includes(item.name_en);
+                      return (
                         <button
-                          onClick={() => toggleIngredient(ing)}
-                          className="ml-1 hover:text-gray-200"
+                          key={item.id}
+                          onClick={() => toggleIngredient(item.name_en)}
+                          className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                            isSelected
+                              ? 'bg-[#77DD77] text-white border-2 border-[#66CC66]'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
+                          }`}
+                          data-testid={`ingredient-${item.id}`}
                         >
-                          <X className="w-3 h-3" />
+                          {item.name_en}
                         </button>
-                      </Badge>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
-              )}
-            </div>
+                
+                {selectedIngredients.length > 0 && (
+                  <div className="mt-3 p-3 bg-[#FFFBF0] rounded-lg border border-[#FFCC00]/30">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Selected: {selectedIngredients.length} ingredients
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedIngredients.map((ing, idx) => (
+                        <Badge key={idx} className="bg-[#FF9933] text-white">
+                          {ing}
+                          <button
+                            onClick={() => toggleIngredient(ing)}
+                            className="ml-1 hover:text-gray-200"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Filter Tabs */}
             <div className="flex gap-2">
