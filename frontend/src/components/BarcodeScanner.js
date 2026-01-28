@@ -605,27 +605,47 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : scanning ? (
                 <div className="relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full rounded-lg bg-black"
-                    style={{ minHeight: '280px' }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-3/4 h-16 border-2 border-dashed border-[#77DD77] rounded-lg flex items-center justify-center">
-                      <Calendar className="w-8 h-8 text-[#77DD77] opacity-50" />
+                  {/* Camera View - Full height for mobile */}
+                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '50vh', minHeight: '300px' }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay guide */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-4/5 h-20 border-2 border-dashed border-[#77DD77] rounded-xl flex items-center justify-center bg-black/10">
+                        <Calendar className="w-10 h-10 text-[#77DD77] opacity-70" />
+                      </div>
+                    </div>
+                    {/* Hint text at top */}
+                    <div className="absolute top-3 left-0 right-0 text-center">
+                      <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">
+                        Point at the expiry/best-before date
+                      </span>
                     </div>
                   </div>
-                  <Button
-                    onClick={capturePhoto}
-                    className="w-full mt-3 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900"
-                    data-testid="capture-expiry-photo"
-                  >
-                    <Camera className="w-5 h-5 mr-2" />
-                    Capture Photo
-                  </Button>
+                  
+                  {/* Bottom Controls */}
+                  <div className="flex gap-3 mt-4">
+                    <Button
+                      onClick={skipToConfirm}
+                      variant="outline"
+                      className="flex-1 h-14 text-base"
+                    >
+                      Skip
+                    </Button>
+                    <Button
+                      onClick={capturePhoto}
+                      className="flex-[2] h-14 text-base bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 font-bold"
+                      data-testid="capture-expiry-photo"
+                    >
+                      <Camera className="w-6 h-6 mr-2" />
+                      Capture
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-6">
