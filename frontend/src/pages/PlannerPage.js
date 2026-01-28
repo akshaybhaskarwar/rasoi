@@ -629,6 +629,7 @@ const PlannerPage = () => {
               )}
             </Button>
             </div>
+            )}
 
             {/* Search Results */}
             {searchResults.length > 0 && (
