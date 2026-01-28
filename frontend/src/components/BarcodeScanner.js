@@ -557,9 +557,13 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <Button onClick={startCamera} className="bg-[#FF9933] hover:bg-[#E68A2E] text-white">
+                <div className="text-center py-6">
+                  <div className="w-20 h-20 bg-[#FF9933]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Camera className="w-10 h-10 text-[#FF9933]" />
+                  </div>
+                  <p className="text-gray-600 text-sm mb-4">Take a photo of the product name on the package</p>
+                  <Button onClick={startCamera} className="w-full h-14 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-base font-bold">
+                    <Camera className="w-6 h-6 mr-2" />
                     Open Camera
                   </Button>
                 </div>
