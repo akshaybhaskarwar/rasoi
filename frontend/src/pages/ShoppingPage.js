@@ -509,25 +509,6 @@ const ShoppingPage = () => {
                   </CardContent>
                 </Card>
               ))}
-
-              <div className="fixed bottom-20 md:bottom-6 right-6 flex flex-col gap-2 z-50">
-                <Button
-                  onClick={handleCopyToClipboard}
-                  className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-lg"
-                  data-testid="copy-whatsapp-btn"
-                >
-                  <Send className="w-5 h-5 mr-2" />
-                  Copy for WhatsApp
-                </Button>
-                <Button
-                  onClick={handleWhatsAppExport}
-                  className="bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-full shadow-lg"
-                  data-testid="send-whatsapp-btn"
-                >
-                  <Send className="w-5 h-5 mr-2" />
-                  Send to WhatsApp
-                </Button>
-              </div>
             </>
           )}
         </TabsContent>
