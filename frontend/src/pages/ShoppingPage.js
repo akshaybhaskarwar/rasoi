@@ -373,7 +373,7 @@ const ShoppingPage = () => {
             className="flex flex-col py-3 data-[state=active]:bg-[#FF9933] data-[state=active]:text-white"
           >
             <span className="text-lg">🏪</span>
-            <span className="font-bold">Grocery Store</span>
+            <span className="font-bold">Grocery Store {groceryCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{groceryCount}</span>}</span>
             <span className="text-[10px] opacity-80">Grains, Spices, Dairy, Oils</span>
           </TabsTrigger>
           <TabsTrigger 
@@ -382,12 +382,32 @@ const ShoppingPage = () => {
             className="flex flex-col py-3 data-[state=active]:bg-[#138808] data-[state=active]:text-white"
           >
             <span className="text-lg">🥬</span>
-            <span className="font-bold">Local Mandi</span>
+            <span className="font-bold">Local Mandi {mandiCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{mandiCount}</span>}</span>
             <span className="text-[10px] opacity-80">Vegetables & Fruits</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="space-y-4 mt-6">
+        <TabsContent value={activeTab} className="space-y-4 mt-4">
+          {/* WhatsApp Export Button for this tab */}
+          {Object.keys(groupedByCategory).length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => window.open(`https://wa.me/?text=${generateWhatsAppMessage()}`, '_blank')}
+                className={`flex-1 ${activeTab === 'grocery' ? 'bg-[#FF9933] hover:bg-[#E68A2E]' : 'bg-[#138808] hover:bg-[#0F6606]'} text-white`}
+                data-testid={`whatsapp-${activeTab}`}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send {activeTab === 'grocery' ? 'Grocery' : 'Mandi'} List to WhatsApp
+              </Button>
+              <Button
+                onClick={handleCopyToClipboard}
+                variant="outline"
+                data-testid={`copy-whatsapp-${activeTab}`}
+              >
+                📋
+              </Button>
+            </div>
+          )}
           {Object.keys(groupedByCategory).length === 0 ? (
             <Card className="p-12 text-center">
               <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
