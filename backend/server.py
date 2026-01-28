@@ -973,6 +973,27 @@ async def delete_inventory_item(item_id: str):
     
     return {"message": "Deleted successfully"}
 
+
+@api_router.get("/inventory/monthly-defaults")
+async def get_monthly_quantity_defaults():
+    """Get default monthly quantities for all categories"""
+    return DEFAULT_MONTHLY_QUANTITIES
+
+
+@api_router.put("/inventory/{item_id}/monthly-quantity")
+async def update_monthly_quantity(item_id: str, quantity: int, unit: str):
+    """Update monthly quantity for an inventory item"""
+    result = await db.inventory.update_one(
+        {"id": item_id},
+        {"$set": {"monthly_quantity": quantity, "monthly_unit": unit}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    return {"message": "Monthly quantity updated", "quantity": quantity, "unit": unit}
+
+
 # ============ SHOPPING LIST ENDPOINTS ============
 
 @api_router.post("/shopping", response_model=ShoppingItem)
