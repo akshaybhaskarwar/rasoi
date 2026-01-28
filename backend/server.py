@@ -603,6 +603,20 @@ RECIPE_DATABASE = [
         "category": "Snacks"
     },
     {
+        "id": "pav-bhaji-2",
+        "title": "Pav Bhaji",
+        "title_mr": "पाव भाजी",
+        "source": "MadhurasRecipe Marathi",
+        "type": "video",
+        "video_id": "eJlZW7keg5I",
+        "thumbnail": "https://i.ytimg.com/vi/eJlZW7keg5I/hqdefault.jpg",
+        "ingredients": ["Potato", "Cauliflower", "Peas", "Capsicum", "Tomato", "Onion", "Beetroot", "Pav Bhaji Masala", "Butter", "Pav"],
+        "prep_time": "15 min",
+        "cook_time": "25 min",
+        "servings": 10,
+        "category": "Snacks"
+    },
+    {
         "id": "misal-pav-1",
         "title": "Misal Pav",
         "title_mr": "मिसळ पाव",
