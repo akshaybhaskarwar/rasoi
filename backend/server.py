@@ -57,6 +57,8 @@ class InventoryItem(BaseModel):
     unit: str = "kg"
     expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
     barcode: Optional[str] = None  # Product barcode if scanned
+    monthly_quantity: Optional[int] = None  # Monthly usage quantity (numeric)
+    monthly_unit: Optional[str] = None  # Unit for monthly quantity (g, kg, ml, L, pcs)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class InventoryItemCreate(BaseModel):
@@ -69,6 +71,24 @@ class InventoryItemCreate(BaseModel):
     unit: str = "kg"
     expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
     barcode: Optional[str] = None  # Product barcode if scanned
+    monthly_quantity: Optional[int] = None  # Monthly usage quantity (numeric)
+    monthly_unit: Optional[str] = None  # Unit for monthly quantity (g, kg, ml, L, pcs)
+
+# Default monthly quantities by category
+DEFAULT_MONTHLY_QUANTITIES = {
+    'grains': {'quantity': 5, 'unit': 'kg', 'step': 1000},  # 5 kg, step 1 kg
+    'pulses': {'quantity': 500, 'unit': 'g', 'step': 250},  # 500 g, step 250 g
+    'spices': {'quantity': 100, 'unit': 'g', 'step': 50},   # 100 g, step 50 g
+    'dairy': {'quantity': 5, 'unit': 'L', 'step': 500},     # 5 L, step 500 ml
+    'oils': {'quantity': 1, 'unit': 'L', 'step': 250},      # 1 L, step 250 ml
+    'bakery': {'quantity': 2, 'unit': 'pcs', 'step': 1},    # 2 packs, step 1
+    'snacks': {'quantity': 500, 'unit': 'g', 'step': 100},  # 500 g, step 100 g
+    'beverages': {'quantity': 500, 'unit': 'g', 'step': 100}, # 500 g, step 100 g
+    'vegetables': {'quantity': 2, 'unit': 'kg', 'step': 500}, # 2 kg, step 500 g
+    'fruits': {'quantity': 2, 'unit': 'kg', 'step': 500},   # 2 kg, step 500 g
+    'fasting': {'quantity': 500, 'unit': 'g', 'step': 100}, # 500 g, step 100 g
+    'other': {'quantity': 1, 'unit': 'kg', 'step': 250}     # 1 kg, step 250 g
+}
 
 class ShoppingItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
