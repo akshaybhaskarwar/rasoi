@@ -601,23 +601,24 @@ const PlannerPage = () => {
               </button>
             </div>
 
-            {/* Search Button */}
-            <div className="space-y-2">
-              {favoriteChannels.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
-                  <Star className="w-4 h-4" fill="currentColor" />
-                  <span>Showing recipes from: {favoriteChannels.map(ch => ch.name).join(', ')}</span>
-                </div>
-              )}
-              <Button
-                onClick={handleSearchRecipes}
-                disabled={selectedIngredients.length === 0 || searching}
-                className="w-full bg-[#138808] hover:bg-[#0d6606] text-white rounded-lg"
-                data-testid="search-recipes-btn"
-              >
-              {searching ? (
-                <>
-                  <Search className="w-5 h-5 mr-2 animate-spin" />
+            {/* Search Button - Only for ingredients mode */}
+            {searchMode === 'ingredients' && (
+              <div className="space-y-2">
+                {favoriteChannels.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                    <Star className="w-4 h-4" fill="currentColor" />
+                    <span>Showing recipes from: {favoriteChannels.map(ch => ch.name).join(', ')}</span>
+                  </div>
+                )}
+                <Button
+                  onClick={handleSearchRecipes}
+                  disabled={selectedIngredients.length === 0 || searching}
+                  className="w-full bg-[#138808] hover:bg-[#0d6606] text-white rounded-lg"
+                  data-testid="search-recipes-btn"
+                >
+                {searching ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Searching Recipes...
                 </>
               ) : (
