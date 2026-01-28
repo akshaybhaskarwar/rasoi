@@ -651,10 +651,11 @@ def normalize_string(s: str) -> str:
     import re
     return re.sub(r'[^a-z0-9]', '', s.lower())
 
-def search_local_recipes(ingredients: List[str], videos_only: bool = False, favorite_channels: List[str] = []) -> List[Dict[str, Any]]:
-    """Search local recipe database by matching ingredients"""
+def search_local_recipes(ingredients: List[str], videos_only: bool = False, favorite_channels: List[str] = [], text_query: str = "") -> List[Dict[str, Any]]:
+    """Search local recipe database by matching ingredients or text query"""
     results = []
     ingredients_lower = [ing.lower() for ing in ingredients]
+    text_query_lower = text_query.lower().strip() if text_query else ""
     
     # Normalize favorite channel names for flexible matching
     favorite_channels_normalized = [normalize_string(ch) for ch in favorite_channels]
@@ -677,23 +678,53 @@ def search_local_recipes(ingredients: List[str], videos_only: bool = False, favo
             if not matches_favorite:
                 continue
         
-        # Count matching ingredients
-        recipe_ingredients_lower = [ing.lower() for ing in recipe.get('ingredients', [])]
-        matches = sum(1 for ing in ingredients_lower if any(ing in r_ing or r_ing in ing for r_ing in recipe_ingredients_lower))
-        
-        if matches > 0:
-            # Calculate match score (percentage of selected ingredients found in recipe)
-            match_score = matches / len(ingredients_lower) if ingredients_lower else 0
+        # Text query search - match against title and title_mr
+        if text_query_lower:
+            title_lower = recipe.get('title', '').lower()
+            title_mr = recipe.get('title_mr', '')
             
-            results.append({
-                **recipe,
-                'match_count': matches,
-                'match_score': match_score,
-                'is_favorite': bool(favorite_channels and any(
-                    fav in source_normalized or source_normalized in fav 
-                    for fav in favorite_channels_normalized
-                ))
-            })
+            # Check if query matches title
+            if text_query_lower in title_lower or title_lower in text_query_lower:
+                results.append({
+                    **recipe,
+                    'match_count': 1,
+                    'match_score': 1.0 if text_query_lower == title_lower else 0.8,
+                    'is_favorite': bool(favorite_channels and any(
+                        fav in source_normalized or source_normalized in fav 
+                        for fav in favorite_channels_normalized
+                    ))
+                })
+            # Also check partial matches
+            elif any(word in title_lower for word in text_query_lower.split()):
+                results.append({
+                    **recipe,
+                    'match_count': 1,
+                    'match_score': 0.5,
+                    'is_favorite': bool(favorite_channels and any(
+                        fav in source_normalized or source_normalized in fav 
+                        for fav in favorite_channels_normalized
+                    ))
+                })
+            continue  # Skip ingredient matching if text query is provided
+        
+        # Ingredient-based search (only if no text query)
+        if ingredients_lower:
+            recipe_ingredients_lower = [ing.lower() for ing in recipe.get('ingredients', [])]
+            matches = sum(1 for ing in ingredients_lower if any(ing in r_ing or r_ing in ing for r_ing in recipe_ingredients_lower))
+            
+            if matches > 0:
+                # Calculate match score (percentage of selected ingredients found in recipe)
+                match_score = matches / len(ingredients_lower) if ingredients_lower else 0
+                
+                results.append({
+                    **recipe,
+                    'match_count': matches,
+                    'match_score': match_score,
+                    'is_favorite': bool(favorite_channels and any(
+                        fav in source_normalized or source_normalized in fav 
+                        for fav in favorite_channels_normalized
+                    ))
+                })
     
     # Sort by match score (descending), then by favorite status
     results.sort(key=lambda x: (x['match_score'], x['is_favorite']), reverse=True)
