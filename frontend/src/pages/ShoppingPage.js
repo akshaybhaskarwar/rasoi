@@ -59,14 +59,15 @@ const ShoppingPage = () => {
     store_type: 'grocery'
   });
 
-  // Filter items by store type, but also check category for vegetables/fruits
+  // Filter items by store type, but also check category for vegetables/fruits/mandi items
   const filteredList = shoppingList.filter(item => {
-    // Vegetables and fruits should always go to mandi tab
-    if (item.category === 'vegetables' || item.category === 'fruits') {
+    const category = (item.category || '').toLowerCase();
+    // Items with mandi-related categories should go to mandi tab
+    if (category === 'vegetables' || category === 'fruits' || category === 'mandi') {
       return activeTab === 'mandi';
     }
-    // Other items go by their store_type or default to grocery
-    return (item.store_type || 'grocery') === activeTab;
+    // Other items go to grocery tab
+    return activeTab === 'grocery';
   });
   
   const groupedByCategory = filteredList.reduce((acc, item) => {
@@ -76,15 +77,15 @@ const ShoppingPage = () => {
   }, {});
 
   // Get counts for each tab
-  const groceryCount = shoppingList.filter(item => 
-    item.category !== 'vegetables' && item.category !== 'fruits' && 
-    (item.store_type || 'grocery') === 'grocery'
-  ).length;
+  const groceryCount = shoppingList.filter(item => {
+    const category = (item.category || '').toLowerCase();
+    return category !== 'vegetables' && category !== 'fruits' && category !== 'mandi';
+  }).length;
   
-  const mandiCount = shoppingList.filter(item => 
-    item.category === 'vegetables' || item.category === 'fruits' ||
-    item.store_type === 'mandi'
-  ).length;
+  const mandiCount = shoppingList.filter(item => {
+    const category = (item.category || '').toLowerCase();
+    return category === 'vegetables' || category === 'fruits' || category === 'mandi';
+  }).length;
 
   // Get low stock and empty items from inventory
   const getLowStockItems = () => {
