@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
-import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar } from 'lucide-react';
+import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar, Minus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,39 @@ import { Progress } from '@/components/ui/progress';
 import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
 import { BarcodeScanner } from '@/components/BarcodeScanner';
 import { Badge } from '@/components/ui/badge';
+
+const API = process.env.REACT_APP_BACKEND_URL;
+
+// Default monthly quantities by category
+const DEFAULT_MONTHLY = {
+  'grains': { quantity: 5000, unit: 'g', step: 1000, display: '5 kg' },
+  'pulses': { quantity: 500, unit: 'g', step: 250, display: '500 g' },
+  'spices': { quantity: 100, unit: 'g', step: 50, display: '100 g' },
+  'dairy': { quantity: 5000, unit: 'ml', step: 500, display: '5 L' },
+  'oils': { quantity: 1000, unit: 'ml', step: 250, display: '1 L' },
+  'bakery': { quantity: 2, unit: 'pcs', step: 1, display: '2 pcs' },
+  'snacks': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
+  'beverages': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
+  'vegetables': { quantity: 2000, unit: 'g', step: 500, display: '2 kg' },
+  'fruits': { quantity: 2000, unit: 'g', step: 500, display: '2 kg' },
+  'fasting': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
+  'other': { quantity: 1000, unit: 'g', step: 250, display: '1 kg' }
+};
+
+// Format quantity for display
+const formatQuantity = (quantity, unit) => {
+  if (!quantity) return null;
+  if (unit === 'pcs') return `${quantity} pcs`;
+  if (unit === 'ml') {
+    if (quantity >= 1000) return `${(quantity / 1000).toFixed(quantity % 1000 === 0 ? 0 : 1)} L`;
+    return `${quantity} ml`;
+  }
+  if (unit === 'g') {
+    if (quantity >= 1000) return `${(quantity / 1000).toFixed(quantity % 1000 === 0 ? 0 : 1)} kg`;
+    return `${quantity} g`;
+  }
+  return `${quantity} ${unit}`;
+};
 
 // Helper function to check expiry status
 const getExpiryStatus = (expiryDate) => {
