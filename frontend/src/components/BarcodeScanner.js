@@ -109,16 +109,19 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
 
   // AI-powered OCR to read product name
   const readProductName = async () => {
-    const canvas = capturePhoto();
-    if (!canvas) return;
+    // Use the already captured image (data URL)
+    if (!capturedImage) {
+      setError('No image captured. Please take a photo first.');
+      return;
+    }
     
     setIsProcessing(true);
     setOcrProgress(30);
     setError(null);
     
     try {
-      // Get base64 from canvas
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      // Extract base64 from data URL (format: "data:image/jpeg;base64,...")
+      const imageBase64 = capturedImage.split(',')[1];
       
       setOcrProgress(50);
       
@@ -141,6 +144,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       
       if (data.success && data.result) {
         setProductData(prev => ({ ...prev, name_en: data.result }));
+        setCapturedImage(null); // Clear for next step
         setScanMode('photo_expiry');
       } else {
         setError(data.message || 'Could not read product name. Please enter manually or try again.');
@@ -158,16 +162,19 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
 
   // AI-powered OCR to read expiry date
   const readExpiryDate = async () => {
-    const canvas = capturePhoto();
-    if (!canvas) return;
+    // Use the already captured image (data URL)
+    if (!capturedImage) {
+      setError('No image captured. Please take a photo first.');
+      return;
+    }
     
     setIsProcessing(true);
     setOcrProgress(30);
     setError(null);
     
     try {
-      // Get base64 from canvas
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      // Extract base64 from data URL
+      const imageBase64 = capturedImage.split(',')[1];
       
       setOcrProgress(50);
       
@@ -195,6 +202,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
         setError(data.message || 'Could not detect expiry date. Please enter manually.');
       }
       
+      setCapturedImage(null); // Clear captured image
       setScanMode('confirm');
       
     } catch (err) {
