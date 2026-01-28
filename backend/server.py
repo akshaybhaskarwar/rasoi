@@ -668,47 +668,45 @@ def search_local_recipes(ingredients: List[str], videos_only: bool = False, favo
         # Normalize source for comparison
         source_normalized = normalize_string(recipe.get('source', ''))
         
-        # If favorite channels are set, only include recipes from those channels
-        if favorite_channels:
-            # Check if source matches any favorite (flexible matching)
-            matches_favorite = any(
-                fav in source_normalized or source_normalized in fav 
-                for fav in favorite_channels_normalized
-            )
-            if not matches_favorite:
-                continue
+        # Check if this recipe is from a favorite channel
+        is_from_favorite = bool(favorite_channels_normalized and any(
+            fav in source_normalized or source_normalized in fav 
+            for fav in favorite_channels_normalized
+        ))
         
         # Text query search - match against title and title_mr
+        # For text search, we show ALL matches but prioritize favorites
         if text_query_lower:
             title_lower = recipe.get('title', '').lower()
             title_mr = recipe.get('title_mr', '')
             
             # Check if query matches title (full phrase match)
             if text_query_lower in title_lower:
+                # Boost score for favorites
+                base_score = 1.0 if text_query_lower == title_lower else 0.9
                 results.append({
                     **recipe,
                     'match_count': 1,
-                    'match_score': 1.0 if text_query_lower == title_lower else 0.9,
-                    'is_favorite': bool(favorite_channels and any(
-                        fav in source_normalized or source_normalized in fav 
-                        for fav in favorite_channels_normalized
-                    ))
+                    'match_score': base_score + (0.5 if is_from_favorite else 0),
+                    'is_favorite': is_from_favorite
                 })
             # Also check if title is contained in query (for shorter titles)
             elif title_lower in text_query_lower:
                 results.append({
                     **recipe,
                     'match_count': 1,
-                    'match_score': 0.8,
-                    'is_favorite': bool(favorite_channels and any(
-                        fav in source_normalized or source_normalized in fav 
-                        for fav in favorite_channels_normalized
-                    ))
+                    'match_score': 0.8 + (0.5 if is_from_favorite else 0),
+                    'is_favorite': is_from_favorite
                 })
             continue  # Skip ingredient matching if text query is provided
         
         # Ingredient-based search (only if no text query)
+        # For ingredient search, if favorites are set, only show favorites
         if ingredients_lower:
+            # If favorite channels are set for ingredient search, filter to favorites only
+            if favorite_channels and not is_from_favorite:
+                continue
+                
             recipe_ingredients_lower = [ing.lower() for ing in recipe.get('ingredients', [])]
             matches = sum(1 for ing in ingredients_lower if any(ing in r_ing or r_ing in ing for r_ing in recipe_ingredients_lower))
             
@@ -720,10 +718,7 @@ def search_local_recipes(ingredients: List[str], videos_only: bool = False, favo
                     **recipe,
                     'match_count': matches,
                     'match_score': match_score,
-                    'is_favorite': bool(favorite_channels and any(
-                        fav in source_normalized or source_normalized in fav 
-                        for fav in favorite_channels_normalized
-                    ))
+                    'is_favorite': is_from_favorite
                 })
     
     # Sort by match score (descending), then by favorite status
