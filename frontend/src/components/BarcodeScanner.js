@@ -143,7 +143,12 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       setOcrProgress(100);
       
       if (data.success && data.result) {
-        setProductData(prev => ({ ...prev, name_en: data.result }));
+        // Update product name AND auto-select category
+        setProductData(prev => ({ 
+          ...prev, 
+          name_en: data.result,
+          category: data.suggested_category || prev.category
+        }));
         setCapturedImage(null); // Clear for next step
         setScanMode('photo_expiry');
       } else {
