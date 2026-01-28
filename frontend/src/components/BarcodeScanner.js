@@ -498,27 +498,50 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : scanning ? (
                 <div className="relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full rounded-lg bg-black"
-                    style={{ minHeight: '280px' }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-3/4 h-20 border-2 border-dashed border-[#FF9933] rounded-lg flex items-center justify-center">
-                      <Package className="w-8 h-8 text-[#FF9933] opacity-50" />
+                  {/* Camera View - Full height for mobile */}
+                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '50vh', minHeight: '300px' }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay guide */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-4/5 h-24 border-2 border-dashed border-[#FF9933] rounded-xl flex items-center justify-center bg-black/10">
+                        <Package className="w-10 h-10 text-[#FF9933] opacity-70" />
+                      </div>
+                    </div>
+                    {/* Hint text at top */}
+                    <div className="absolute top-3 left-0 right-0 text-center">
+                      <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">
+                        Point at the product name
+                      </span>
                     </div>
                   </div>
-                  <Button
-                    onClick={capturePhoto}
-                    className="w-full mt-3 bg-[#FF9933] hover:bg-[#E68A2E] text-white"
-                    data-testid="capture-name-photo"
-                  >
-                    <Camera className="w-5 h-5 mr-2" />
-                    Capture Photo
-                  </Button>
+                  
+                  {/* Bottom Controls - Fixed at bottom of camera */}
+                  <div className="flex gap-3 mt-4">
+                    <Button
+                      onClick={() => {
+                        stopCamera();
+                        setScanMode('choose');
+                      }}
+                      variant="outline"
+                      className="flex-1 h-14 text-base"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={capturePhoto}
+                      className="flex-[2] h-14 text-base bg-[#FF9933] hover:bg-[#E68A2E] text-white font-bold"
+                      data-testid="capture-name-photo"
+                    >
+                      <Camera className="w-6 h-6 mr-2" />
+                      Capture
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
