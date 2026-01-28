@@ -34,6 +34,8 @@ const PlannerPage = () => {
   const [previewVideo, setPreviewVideo] = useState(null);
   const [videosOnly, setVideosOnly] = useState(false);
   const [totalFound, setTotalFound] = useState(0);
+  const [textSearch, setTextSearch] = useState(''); // New: text search query
+  const [searchMode, setSearchMode] = useState('text'); // 'text' or 'ingredients'
   
   // Favorite channels state
   const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(false);
