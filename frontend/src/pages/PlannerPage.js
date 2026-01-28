@@ -140,6 +140,10 @@ const PlannerPage = () => {
   const openRecipeFinder = (date, mealType) => {
     setSelectedDate(date);
     setSelectedMealType(mealType);
+    setSearchResults([]);  // Clear previous results
+    setTotalFound(0);
+    setTextSearch('');     // Clear text search
+    setSelectedIngredients([]);  // Clear selected ingredients
     setIsRecipeDialogOpen(true);
   };
 
