@@ -46,7 +46,8 @@ const PANTRY_TEMPLATE = {
         { en: 'Matki', mr: 'मटकी' },
         { en: 'Vatana', mr: 'वाटाणा' },
         { en: 'Rajma', mr: 'राजमा' },
-        { en: 'Cowpeas', mr: 'चवळी' }
+        { en: 'Cowpeas Big', mr: 'चवळी मोठी' },
+        { en: 'Cowpeas Small', mr: 'चवळी बारीक' }
       ]
     },
     '🥣 Poha, Puffed & Light Items': {
@@ -99,7 +100,9 @@ const PANTRY_TEMPLATE = {
         { en: 'Sesame Seeds', mr: 'तीळ' },
         { en: 'Poppy Seeds', mr: 'खसखस' },
         { en: 'Nutmeg', mr: 'जायफळ' },
-        { en: 'Mace', mr: 'जावित्री' }
+        { en: 'Mace', mr: 'जावित्री' },
+        { en: 'Dhana Daal', mr: 'धना डाळ' }
+        
       ]
     },
     '🌶️ Ready Masalas': {
@@ -210,13 +213,26 @@ const PANTRY_TEMPLATE = {
       color: 'bg-pink-50',
       items: [
         { en: 'Banana', mr: 'केळी' },
+        { en: 'Yelakki Banana', mr: 'इलायची केळी' },
         { en: 'Apple', mr: 'सफरचंद' },
         { en: 'Mango', mr: 'आंबा' },
         { en: 'Orange', mr: 'संत्री' },
         { en: 'Pomegranate', mr: 'डाळिंब' },
         { en: 'Grapes', mr: 'द्राक्षे' },
         { en: 'Lemon', mr: 'लिंबू' },
+        { en: 'Chiku (Sapota)', mr: 'चिकू' },
+        { en: 'Custard Apple', mr: 'सीताफळ' },
+        { en: 'Jackfruit', mr: 'फणस' },
+        { en: 'Watermelon', mr: 'कलिंगड' },
+        { en: 'Muskmelon', mr: 'खरबूज' },
+        { en: 'Pineapple', mr: 'अननस' },
+        { en: 'Strawberry', mr: 'स्ट्रॉबेरी' },
+        { en: 'Jamun', mr: 'जांभूळ' },
+        { en: 'Fig (Fresh)', mr: 'अंजीर' },
+        { en: 'Blueberry', mr: 'ब्लूबेरी' },
+        { en: 'Peach', mr: 'पीच' },
         { en: 'Coconut', mr: 'नारळ' }
+
       ]
     }
   },
