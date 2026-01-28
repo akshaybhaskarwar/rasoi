@@ -666,14 +666,17 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <div className="flex gap-3 justify-center">
-                    <Button onClick={startCamera} className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900">
-                      <Camera className="w-5 h-5 mr-2" />
-                      Scan Expiry Date
-                    </Button>
-                    <Button onClick={skipToConfirm} variant="outline">
+                  <div className="w-20 h-20 bg-[#77DD77]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-10 h-10 text-[#138808]" />
+                  </div>
+                  <p className="text-gray-600 text-sm mb-4">Take a photo of the expiry/best-before date</p>
+                  <div className="flex gap-3">
+                    <Button onClick={skipToConfirm} variant="outline" className="flex-1 h-14 text-base">
                       Skip
+                    </Button>
+                    <Button onClick={startCamera} className="flex-[2] h-14 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 text-base font-bold">
+                      <Camera className="w-6 h-6 mr-2" />
+                      Open Camera
                     </Button>
                   </div>
                 </div>
