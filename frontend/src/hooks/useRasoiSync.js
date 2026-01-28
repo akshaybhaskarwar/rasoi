@@ -265,8 +265,8 @@ export const useRecipes = () => {
     }
   };
 
-  // New: Search local recipe database by ingredients
-  const searchLocalRecipes = async (ingredients = [], videosOnly = false, favoriteChannels = [], maxResults = 20) => {
+  // New: Search local recipe database by ingredients or text
+  const searchLocalRecipes = async (ingredients = [], videosOnly = false, favoriteChannels = [], maxResults = 20, textQuery = '') => {
     try {
       const ingredientNames = ingredients.join(',');
       const channelNames = favoriteChannels.map(ch => ch.name).join(',');
@@ -275,7 +275,8 @@ export const useRecipes = () => {
           ingredients: ingredientNames,
           videos_only: videosOnly,
           favorite_channels: channelNames,
-          max_results: maxResults
+          max_results: maxResults,
+          query: textQuery // Add text query parameter
         }
       });
       return response.data;
