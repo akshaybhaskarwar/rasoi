@@ -1314,7 +1314,7 @@ class OCRRequest(BaseModel):
 # Category keywords for auto-detection
 CATEGORY_KEYWORDS = {
     'grains': ['rice', 'wheat', 'flour', 'atta', 'maida', 'sooji', 'rava', 'poha', 'oats', 'barley', 'millet', 'bajra', 'jowar', 'ragi', 'quinoa', 'semolina', 'besan', 'gram flour'],
-    'spices': ['masala', 'spice', 'powder', 'turmeric', 'haldi', 'chili', 'mirchi', 'cumin', 'jeera', 'coriander', 'dhania', 'garam masala', 'biryani', 'curry', 'pepper', 'cardamom', 'elaichi', 'cinnamon', 'dalchini', 'clove', 'laung', 'ajwain', 'carom', 'mustard', 'rai', 'fenugreek', 'methi', 'asafoetida', 'hing', 'nutmeg', 'saffron', 'kesar', 'bay leaf', 'tej patta'],
+    'spices': ['masala', 'spice', 'powder', 'turmeric', 'haldi', 'chili', 'mirchi', 'cumin', 'jeera', 'coriander', 'dhania', 'garam masala', 'biryani', 'curry', 'pepper', 'cardamom', 'elaichi', 'cinnamon', 'dalchini', 'clove', 'laung', 'ajwain', 'carom', 'mustard', 'rai', 'fenugreek', 'methi', 'asafoetida', 'hing', 'nutmeg', 'saffron', 'kesar', 'bay leaf', 'tej patta', 'salt', 'namak'],
     'pulses': ['dal', 'lentil', 'chana', 'chickpea', 'moong', 'toor', 'arhar', 'urad', 'masoor', 'rajma', 'kidney bean', 'black gram', 'green gram', 'split pea', 'moth', 'lobiya', 'chole'],
     'dairy': ['milk', 'doodh', 'ghee', 'butter', 'paneer', 'cheese', 'curd', 'yogurt', 'dahi', 'cream', 'khoya', 'mawa', 'condensed milk'],
     'oils': ['oil', 'tel', 'ghee', 'coconut oil', 'mustard oil', 'sunflower', 'groundnut', 'olive', 'sesame', 'til'],
