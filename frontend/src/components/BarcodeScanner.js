@@ -420,31 +420,41 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : scanning ? (
                 <div className="relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full rounded-lg bg-black"
-                    style={{ minHeight: '280px' }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-64 h-32 border-2 border-[#FF9933] rounded-lg relative">
-                      <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-[#FF9933]" />
-                      <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-[#FF9933]" />
-                      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-[#FF9933]" />
-                      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-[#FF9933]" />
-                      <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500 animate-pulse" />
+                  {/* Camera View - Full height for mobile */}
+                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '50vh', minHeight: '300px' }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Barcode overlay guide */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-72 h-36 border-2 border-[#FF9933] rounded-xl relative bg-black/10">
+                        <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-[#FF9933] rounded-tl-lg" />
+                        <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-[#FF9933] rounded-tr-lg" />
+                        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-[#FF9933] rounded-bl-lg" />
+                        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-[#FF9933] rounded-br-lg" />
+                        <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-red-500 animate-pulse" />
+                      </div>
+                    </div>
+                    {/* Hint text at top */}
+                    <div className="absolute top-3 left-0 right-0 text-center">
+                      <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">
+                        Position barcode within frame
+                      </span>
                     </div>
                   </div>
-                  <p className="text-center text-sm text-gray-600 mt-2">Position barcode within frame</p>
+                  
+                  {/* Bottom Controls */}
                   <Button
                     onClick={() => {
                       stopCamera();
                       setScanMode('choose');
                     }}
                     variant="outline"
-                    className="w-full mt-3"
+                    className="w-full h-14 text-base mt-4"
                   >
                     Cancel
                   </Button>
@@ -452,7 +462,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
               ) : (
                 <div className="text-center py-8">
                   <Scan className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <Button onClick={startBarcodeScanner} className="bg-[#FF9933] hover:bg-[#E68A2E] text-white">
+                  <Button onClick={startBarcodeScanner} className="bg-[#FF9933] hover:bg-[#E68A2E] text-white h-12 px-8">
                     Start Scanning
                   </Button>
                 </div>
