@@ -53,12 +53,14 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - 4 daily sections: Breakfast, Lunch, Snacks, Dinner
 - **Local Recipe Database Search** (no YouTube API dependency)
   - 25+ pre-built Indian recipes
-  - Search by ingredients from pantry
+  - **Search by Name** - Full phrase text search (e.g., "Pav Bhaji") - Fixed Jan 28, 2025
+  - **Search by Ingredients** - Select from your pantry
   - Filter: "All" or "Videos Only"
   - Shows matching ingredients highlighted
 - **Favorite YouTube Channels**
   - Inline collapsible section on Planner page
-  - Recipes from favorites shown first
+  - For text search: All recipes shown, favorites prioritized (higher score)
+  - For ingredient search: Filter to favorites only when set
 
 #### Home Page
 - Digital Dadi Widget with context-aware suggestions
