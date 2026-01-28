@@ -59,13 +59,32 @@ const ShoppingPage = () => {
     store_type: 'grocery'
   });
 
-  const filteredList = shoppingList.filter(item => item.store_type === activeTab);
+  // Filter items by store type, but also check category for vegetables/fruits
+  const filteredList = shoppingList.filter(item => {
+    // Vegetables and fruits should always go to mandi tab
+    if (item.category === 'vegetables' || item.category === 'fruits') {
+      return activeTab === 'mandi';
+    }
+    // Other items go by their store_type or default to grocery
+    return (item.store_type || 'grocery') === activeTab;
+  });
   
   const groupedByCategory = filteredList.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = [];
     acc[item.category].push(item);
     return acc;
   }, {});
+
+  // Get counts for each tab
+  const groceryCount = shoppingList.filter(item => 
+    item.category !== 'vegetables' && item.category !== 'fruits' && 
+    (item.store_type || 'grocery') === 'grocery'
+  ).length;
+  
+  const mandiCount = shoppingList.filter(item => 
+    item.category === 'vegetables' || item.category === 'fruits' ||
+    item.store_type === 'mandi'
+  ).length;
 
   // Get low stock and empty items from inventory
   const getLowStockItems = () => {
