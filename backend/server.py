@@ -1069,6 +1069,42 @@ async def delete_meal_plan(plan_id: str):
     
     return {"message": "Deleted successfully"}
 
+
+@api_router.post("/meal-plans/refresh-videos")
+async def refresh_meal_plan_videos():
+    """Refresh video IDs for existing meal plans from recipe database"""
+    # Create a mapping of recipe titles to video IDs
+    recipe_video_map = {}
+    for recipe in RECIPE_DATABASE:
+        title = recipe.get('title', '').lower().strip()
+        video_id = recipe.get('video_id')
+        if title and video_id:
+            recipe_video_map[title] = {
+                'video_id': video_id,
+                'thumbnail': recipe.get('thumbnail', '')
+            }
+    
+    # Get all meal plans
+    meal_plans = await db.meal_plans.find({}, {"_id": 0}).to_list(length=1000)
+    updated_count = 0
+    
+    for plan in meal_plans:
+        meal_name = plan.get('meal_name', '').lower().strip()
+        if meal_name in recipe_video_map:
+            new_video = recipe_video_map[meal_name]
+            if plan.get('youtube_video_id') != new_video['video_id']:
+                await db.meal_plans.update_one(
+                    {"id": plan['id']},
+                    {"$set": {
+                        "youtube_video_id": new_video['video_id'],
+                        "youtube_thumbnail": new_video['thumbnail']
+                    }}
+                )
+                updated_count += 1
+    
+    return {"message": f"Updated {updated_count} meal plans with correct video IDs"}
+
+
 # ============ RECIPE COMMUNITY ENDPOINTS ============
 
 @api_router.post("/recipes", response_model=Recipe)
