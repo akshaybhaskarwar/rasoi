@@ -83,6 +83,7 @@ const PlannerPage = () => {
       return;
     }
 
+    console.log('Search triggered:', { searchMode, textSearch, selectedIngredients });
     setSearching(true);
     try {
       const response = await searchLocalRecipes(
@@ -92,6 +93,7 @@ const PlannerPage = () => {
         20,
         searchMode === 'text' ? textSearch.trim() : ''
       );
+      console.log('Search response:', response);
       setSearchResults(response.results || []);
       setTotalFound(response.total_found || 0);
     } catch (error) {
