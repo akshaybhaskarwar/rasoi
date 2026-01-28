@@ -326,19 +326,22 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg" data-testid="barcode-scanner-dialog">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Camera className="w-6 h-6 text-[#FF9933]" />
+      <DialogContent 
+        className="max-w-lg sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto p-4 sm:p-6" 
+        data-testid="barcode-scanner-dialog"
+      >
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <Camera className="w-5 h-5 text-[#FF9933]" />
             {scanMode === 'choose' && 'Scan Item'}
             {scanMode === 'barcode' && 'Scan Barcode'}
-            {scanMode === 'photo_name' && 'Photo: Product Name'}
-            {scanMode === 'photo_expiry' && 'Photo: Expiry Date'}
+            {scanMode === 'photo_name' && 'Step 1: Product Name'}
+            {scanMode === 'photo_expiry' && 'Step 2: Expiry Date'}
             {scanMode === 'confirm' && 'Confirm Details'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Error Message */}
           {error && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
