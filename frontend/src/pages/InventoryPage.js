@@ -627,6 +627,35 @@ const InventoryPage = () => {
                             ))}
                           </div>
 
+                          {/* Monthly Quantity Controls */}
+                          <div className="mb-3 p-3 bg-white/70 rounded-xl border border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-gray-600">Monthly Need</span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleMonthlyQuantityChange(item, 'decrease')}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                                  data-testid={`monthly-minus-${item.id}`}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="min-w-[70px] text-center font-bold text-gray-800 bg-[#FFFBF0] px-3 py-1.5 rounded-lg border border-[#FFCC00]/30">
+                                  {formatQuantity(
+                                    item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500,
+                                    item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'
+                                  )}
+                                </span>
+                                <button
+                                  onClick={() => handleMonthlyQuantityChange(item, 'increase')}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#FF9933] hover:bg-[#E68A2E] text-white transition-colors"
+                                  data-testid={`monthly-plus-${item.id}`}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
                           {/* Delete Button */}
                           <Button
                             variant="ghost"
