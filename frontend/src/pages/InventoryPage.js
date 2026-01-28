@@ -171,6 +171,29 @@ const InventoryPage = () => {
     }
   };
 
+  const handleMonthlyQuantityChange = async (item, direction) => {
+    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
+    const currentQty = item.monthly_quantity || defaults.quantity;
+    const currentUnit = item.monthly_unit || defaults.unit;
+    const step = defaults.step;
+    
+    let newQty;
+    if (direction === 'increase') {
+      newQty = currentQty + step;
+    } else {
+      newQty = Math.max(step, currentQty - step); // Don't go below one step
+    }
+    
+    try {
+      await updateItem(item.id, { 
+        monthly_quantity: newQty, 
+        monthly_unit: currentUnit 
+      });
+    } catch (error) {
+      console.error('Error updating monthly quantity:', error);
+    }
+  };
+
   const handleDelete = async (itemId, itemName) => {
     if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
       try {
