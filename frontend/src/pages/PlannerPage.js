@@ -74,14 +74,24 @@ const PlannerPage = () => {
 
   // Search recipes based on selected ingredients (using local database)
   const handleSearchRecipes = async () => {
-    if (selectedIngredients.length === 0) {
+    if (searchMode === 'ingredients' && selectedIngredients.length === 0) {
       alert('Please select at least one ingredient');
+      return;
+    }
+    if (searchMode === 'text' && !textSearch.trim()) {
+      alert('Please enter a recipe name to search');
       return;
     }
 
     setSearching(true);
     try {
-      const response = await searchLocalRecipes(selectedIngredients, videosOnly, favoriteChannels, 20);
+      const response = await searchLocalRecipes(
+        searchMode === 'ingredients' ? selectedIngredients : [], 
+        videosOnly, 
+        favoriteChannels, 
+        20,
+        searchMode === 'text' ? textSearch.trim() : ''
+      );
       setSearchResults(response.results || []);
       setTotalFound(response.total_found || 0);
     } catch (error) {
