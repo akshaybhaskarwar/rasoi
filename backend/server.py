@@ -683,23 +683,23 @@ def search_local_recipes(ingredients: List[str], videos_only: bool = False, favo
             title_lower = recipe.get('title', '').lower()
             title_mr = recipe.get('title_mr', '')
             
-            # Check if query matches title
-            if text_query_lower in title_lower or title_lower in text_query_lower:
+            # Check if query matches title (full phrase match)
+            if text_query_lower in title_lower:
                 results.append({
                     **recipe,
                     'match_count': 1,
-                    'match_score': 1.0 if text_query_lower == title_lower else 0.8,
+                    'match_score': 1.0 if text_query_lower == title_lower else 0.9,
                     'is_favorite': bool(favorite_channels and any(
                         fav in source_normalized or source_normalized in fav 
                         for fav in favorite_channels_normalized
                     ))
                 })
-            # Also check partial matches
-            elif any(word in title_lower for word in text_query_lower.split()):
+            # Also check if title is contained in query (for shorter titles)
+            elif title_lower in text_query_lower:
                 results.append({
                     **recipe,
                     'match_count': 1,
-                    'match_score': 0.5,
+                    'match_score': 0.8,
                     'is_favorite': bool(favorite_channels and any(
                         fav in source_normalized or source_normalized in fav 
                         for fav in favorite_channels_normalized
