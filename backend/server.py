@@ -1190,8 +1190,8 @@ async def search_recipes(query: str, max_results: int = 10, favorite_channels: s
 # ============ LOCAL RECIPE SEARCH ENDPOINT ============
 
 @api_router.get("/recipes/search")
-async def search_local_recipes_endpoint(ingredients: str = "", videos_only: bool = False, favorite_channels: str = "", max_results: int = 20):
-    """Search local recipe database by ingredients with favorite channel priority"""
+async def search_local_recipes_endpoint(ingredients: str = "", videos_only: bool = False, favorite_channels: str = "", max_results: int = 20, query: str = ""):
+    """Search local recipe database by ingredients or text query with favorite channel priority"""
     # Parse ingredients from comma-separated string
     ingredients_list = [ing.strip() for ing in ingredients.split(',') if ing.strip()] if ingredients else []
     
@@ -1199,7 +1199,7 @@ async def search_local_recipes_endpoint(ingredients: str = "", videos_only: bool
     channels_list = [ch.strip() for ch in favorite_channels.split(',') if ch.strip()] if favorite_channels else []
     
     # Search local database
-    results = search_local_recipes(ingredients_list, videos_only, channels_list)
+    results = search_local_recipes(ingredients_list, videos_only, channels_list, query.strip())
     
     # Limit results
     limited_results = results[:max_results]
