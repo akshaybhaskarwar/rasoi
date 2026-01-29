@@ -15,10 +15,10 @@ import { toast } from 'sonner';
 import { format, isToday, addDays, startOfDay } from 'date-fns';
 
 const MEAL_TYPES = [
-  { value: 'breakfast', label: '🌅 Breakfast', color: 'bg-yellow-50 border-yellow-200', time: '7:00 AM' },
-  { value: 'lunch', label: '🌞 Lunch', color: 'bg-orange-50 border-orange-200', time: '12:30 PM' },
-  { value: 'snacks', label: '☕ Snacks', color: 'bg-pink-50 border-pink-200', time: '5:00 PM' },
-  { value: 'dinner', label: '🌙 Dinner', color: 'bg-indigo-50 border-indigo-200', time: '8:00 PM' }
+  { value: 'breakfast', label: '🌅 Breakfast', shortLabel: 'Bfast', color: 'bg-yellow-50 border-yellow-200', accent: 'bg-yellow-400', time: '7:00 AM' },
+  { value: 'lunch', label: '🌞 Lunch', shortLabel: 'Lunch', color: 'bg-orange-50 border-orange-200', accent: 'bg-orange-400', time: '12:30 PM' },
+  { value: 'snacks', label: '☕ Snacks', shortLabel: 'Snack', color: 'bg-pink-50 border-pink-200', accent: 'bg-pink-400', time: '5:00 PM' },
+  { value: 'dinner', label: '🌙 Dinner', shortLabel: 'Dinner', color: 'bg-indigo-50 border-indigo-200', accent: 'bg-indigo-400', time: '8:00 PM' }
 ];
 
 const PlannerPage = () => {
