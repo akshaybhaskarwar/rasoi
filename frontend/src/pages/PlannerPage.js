@@ -47,6 +47,9 @@ const PlannerPage = () => {
   // Favorite channels state
   const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(false);
   const [newChannelInput, setNewChannelInput] = useState('');
+  
+  // Mobile meal slot expansion state (track which day-meal combo is expanded)
+  const [expandedMealSlot, setExpandedMealSlot] = useState(null);
 
   // Get dates for next 7 days with enhanced formatting
   const getWeekDates = () => {
