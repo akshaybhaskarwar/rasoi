@@ -466,19 +466,19 @@ const PlannerPage = () => {
 
       {/* Recipe Finder Dialog */}
       <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" data-testid="recipe-finder-dialog">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="recipe-finder-dialog">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ChefHat className="w-6 h-6 text-[#FF9933]" />
               Find Recipe for {MEAL_TYPES.find(m => m.value === selectedMealType)?.label}
             </DialogTitle>
             <p className="text-sm text-gray-600">
-              Select ingredients from your pantry and search for recipes
+              Search from local database or discover videos on YouTube
             </p>
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Search Mode Toggle */}
+            {/* Search Mode Toggle - 3 tabs */}
             <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
               <button
                 onClick={() => setSearchMode('text')}
@@ -490,7 +490,7 @@ const PlannerPage = () => {
                 data-testid="search-mode-text"
               >
                 <Search className="w-4 h-4 inline mr-2" />
-                Search by Name
+                Local Search
               </button>
               <button
                 onClick={() => setSearchMode('ingredients')}
@@ -502,9 +502,31 @@ const PlannerPage = () => {
                 data-testid="search-mode-ingredients"
               >
                 <Package2 className="w-4 h-4 inline mr-2" />
-                Search by Ingredients
+                By Ingredients
+              </button>
+              <button
+                onClick={() => setSearchMode('youtube')}
+                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                  searchMode === 'youtube'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-200'
+                }`}
+                data-testid="search-mode-youtube"
+              >
+                <Youtube className="w-4 h-4 inline mr-2" />
+                YouTube Videos
               </button>
             </div>
+
+            {/* YouTube Discovery Mode */}
+            {searchMode === 'youtube' && (
+              <YouTubeRecipeDiscovery 
+                inventory={inventory}
+                selectedDate={selectedDate}
+                selectedMealType={selectedMealType}
+                onAddToPlan={(recipe) => handleAddRecipe(recipe)}
+              />
+            )}
 
             {/* Text Search Section */}
             {searchMode === 'text' && (
