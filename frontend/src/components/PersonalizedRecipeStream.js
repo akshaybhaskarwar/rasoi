@@ -85,33 +85,14 @@ const InventoryMatchBadge = ({ match }) => {
 };
 
 // Video card component
-const VideoCard = ({ video, onAddToPlan }) => {
-  const [isAdding, setIsAdding] = useState(false);
-  
-  const handleAddClick = async () => {
-    if (!onAddToPlan) {
-      console.error('onAddToPlan is not defined');
-      return;
-    }
-    
-    setIsAdding(true);
-    try {
-      await onAddToPlan({
-        title: video.title,
-        video_id: video.video_id,
-        thumbnail: video.thumbnail,
-        ingredients: video.inventory_match?.matched_items || []
-      });
-    } catch (error) {
-      console.error('Error in handleAddClick:', error);
-    } finally {
-      setIsAdding(false);
-    }
-  };
+const VideoCard = ({ video, onOpenModal, plannedInfo }) => {
+  const isPlanned = plannedInfo?.is_planned;
   
   return (
     <div 
-      className="min-w-[300px] max-w-[300px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all group"
+      className={`min-w-[300px] max-w-[300px] bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all group ${
+        isPlanned ? 'border-green-300 bg-green-50/30' : 'border-gray-200'
+      }`}
       data-testid={`stream-video-${video.video_id}`}
     >
       {/* Thumbnail */}
@@ -134,6 +115,13 @@ const VideoCard = ({ video, onAddToPlan }) => {
         {video.inventory_match && (
           <div className="absolute top-2 left-2">
             <InventoryMatchBadge match={video.inventory_match} />
+          </div>
+        )}
+        {/* Planned badge */}
+        {isPlanned && (
+          <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+            <Check className="w-3 h-3" />
+            Planned
           </div>
         )}
       </div>
@@ -188,19 +176,25 @@ const VideoCard = ({ video, onAddToPlan }) => {
             <Play className="w-3 h-3 mr-1" />
             Watch
           </Button>
-          {onAddToPlan && (
+          
+          {isPlanned ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 text-xs border-green-500 text-green-600 bg-green-50"
+              disabled
+            >
+              <Check className="w-3 h-3 mr-1" />
+              {plannedInfo.display_text || 'Planned'}
+            </Button>
+          ) : (
             <Button
               size="sm"
               className="flex-1 text-xs bg-[#138808] hover:bg-[#0d6606] text-white"
-              onClick={handleAddClick}
-              disabled={isAdding}
+              onClick={() => onOpenModal(video)}
             >
-              {isAdding ? (
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              ) : (
-                <Plus className="w-3 h-3 mr-1" />
-              )}
-              {isAdding ? 'Adding...' : 'Add'}
+              <Plus className="w-3 h-3 mr-1" />
+              Add
             </Button>
           )}
         </div>
