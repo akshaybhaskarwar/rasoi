@@ -119,7 +119,7 @@ const AddToPlannerModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -127,16 +127,16 @@ const AddToPlannerModal = ({
       />
       
       {/* Modal - Bottom sheet on mobile, centered modal on desktop */}
-      <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom duration-300">
+      <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom duration-300 mb-0 sm:mb-0">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#FF9933] to-[#138808] rounded-xl flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-white" />
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-[#FF9933] to-[#138808] rounded-xl flex items-center justify-center">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">Add to Meal Plan</h2>
-              <p className="text-xs text-gray-500">Schedule this recipe</p>
+              <h2 className="font-bold text-gray-900 text-sm sm:text-base">Add to Meal Plan</h2>
+              <p className="text-[10px] sm:text-xs text-gray-500">Schedule this recipe</p>
             </div>
           </div>
           <button 
