@@ -632,16 +632,16 @@ const InventoryPage = () => {
                             </div>
                           </div>
 
-                          {/* Stock Level Toggles */}
-                          <div className="grid grid-cols-4 gap-2 mb-3">
+                          {/* Stock Level Toggles - Touch-friendly 44x44px minimum */}
+                          <div className="grid grid-cols-4 gap-1.5 md:gap-2 mb-3">
                             {STOCK_LEVELS.map((level) => (
                               <button
                                 key={level.value}
                                 onClick={() => handleUpdateStock(item.id, level.value)}
-                                className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                                className={`min-h-[44px] py-2.5 md:py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
                                   item.stock_level === level.value
                                     ? level.color + ' shadow-md'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100 active:bg-gray-200 border border-gray-300'
                                 }`}
                                 data-testid={`stock-${level.value}-${item.id}`}
                               >
@@ -650,19 +650,19 @@ const InventoryPage = () => {
                             ))}
                           </div>
 
-                          {/* Monthly Quantity Controls */}
-                          <div className="mb-3 p-3 bg-white/70 rounded-xl border border-gray-200">
+                          {/* Monthly Quantity Controls - Touch-friendly */}
+                          <div className="mb-3 p-2.5 md:p-3 bg-white/70 rounded-xl border border-gray-200">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-medium text-gray-600">Monthly Need</span>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 md:gap-2">
                                 <button
                                   onClick={() => handleMonthlyQuantityChange(item, 'decrease')}
-                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition-colors"
                                   data-testid={`monthly-minus-${item.id}`}
                                 >
                                   <Minus className="w-4 h-4" />
                                 </button>
-                                <span className="min-w-[70px] text-center font-bold text-gray-800 bg-[#FFFBF0] px-3 py-1.5 rounded-lg border border-[#FFCC00]/30">
+                                <span className="min-w-[60px] md:min-w-[70px] text-center text-sm font-bold text-gray-800 bg-[#FFFBF0] px-2 md:px-3 py-1.5 rounded-lg border border-[#FFCC00]/30">
                                   {formatQuantity(
                                     item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500,
                                     item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'
@@ -670,7 +670,7 @@ const InventoryPage = () => {
                                 </span>
                                 <button
                                   onClick={() => handleMonthlyQuantityChange(item, 'increase')}
-                                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#FF9933] hover:bg-[#E68A2E] text-white transition-colors"
+                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-[#FF9933] hover:bg-[#E68A2E] active:bg-[#D07A20] text-white transition-colors"
                                   data-testid={`monthly-plus-${item.id}`}
                                 >
                                   <Plus className="w-4 h-4" />
