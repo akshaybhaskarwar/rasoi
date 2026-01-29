@@ -85,6 +85,29 @@ const InventoryMatchBadge = ({ match }) => {
 
 // Video card component
 const VideoCard = ({ video, onAddToPlan }) => {
+  const [isAdding, setIsAdding] = useState(false);
+  
+  const handleAddClick = async () => {
+    if (!onAddToPlan) {
+      console.error('onAddToPlan is not defined');
+      return;
+    }
+    
+    setIsAdding(true);
+    try {
+      await onAddToPlan({
+        title: video.title,
+        video_id: video.video_id,
+        thumbnail: video.thumbnail,
+        ingredients: video.inventory_match?.matched_items || []
+      });
+    } catch (error) {
+      console.error('Error in handleAddClick:', error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+  
   return (
     <div 
       className="min-w-[300px] max-w-[300px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all group"
