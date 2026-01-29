@@ -90,7 +90,7 @@ const VideoCard = ({ video, onOpenModal, plannedInfo }) => {
   
   return (
     <div 
-      className={`min-w-[300px] max-w-[300px] bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all group ${
+      className={`w-[85vw] sm:w-[300px] min-w-[280px] sm:min-w-[300px] max-w-[320px] sm:max-w-[300px] bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all group snap-center ${
         isPlanned ? 'border-green-300 bg-green-50/30' : 'border-gray-200'
       }`}
       data-testid={`stream-video-${video.video_id}`}
@@ -102,13 +102,13 @@ const VideoCard = ({ video, onOpenModal, plannedInfo }) => {
           alt={video.title}
           className="w-full h-full object-cover"
         />
-        {/* Play overlay */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+        {/* Play overlay - visible on touch for mobile */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 active:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100">
           <button 
             onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, '_blank')}
-            className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-lg"
+            className="w-12 h-12 sm:w-14 sm:h-14 bg-red-600 rounded-full flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-lg"
           >
-            <Play className="w-6 h-6 text-white ml-1" fill="white" />
+            <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" fill="white" />
           </button>
         </div>
         {/* Match badge overlay */}
