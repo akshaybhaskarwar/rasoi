@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMealPlanner, useRecipes, useInventory, useFavoriteChannels } from '@/hooks/useRasoiSync';
-import { Plus, Calendar as CalendarIcon, Trash2, Search, ChefHat, X, Play, ExternalLink, Star, ChevronDown, ChevronUp, Youtube, Video, FileText, Clock, Package2, Loader2 } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Trash2, Search, ChefHat, X, Play, ExternalLink, Star, ChevronDown, ChevronUp, Youtube, Video, FileText, Clock, Package2, Loader2, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { GapAnalysisSidebar } from '@/components/GapAnalysisSidebar';
 import YouTubeRecipeDiscovery from '@/components/YouTubeRecipeDiscovery';
 import PersonalizedRecipeStream from '@/components/PersonalizedRecipeStream';
+import { toast } from 'sonner';
 
 const MEAL_TYPES = [
   { value: 'breakfast', label: '🌅 Breakfast', color: 'bg-yellow-50 border-yellow-200' },
