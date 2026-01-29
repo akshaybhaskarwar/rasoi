@@ -177,6 +177,7 @@ export const useMealPlanner = () => {
   const [mealPlans, setMealPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
 
   const fetchMealPlans = async () => {
     setLoading(true);
@@ -188,6 +189,17 @@ export const useMealPlanner = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    try {
+      const response = await axios.get(`${API}/meal-plans/suggestions`);
+      setSuggestions(response.data.suggestions || []);
+      return response.data.suggestions || [];
+    } catch (err) {
+      console.error('Failed to fetch suggestions:', err);
+      return [];
     }
   };
 
@@ -204,8 +216,9 @@ export const useMealPlanner = () => {
 
   const deleteMealPlan = async (planId) => {
     try {
-      await axios.delete(`${API}/meal-plans/${planId}`);
+      const response = await axios.delete(`${API}/meal-plans/${planId}`);
       setMealPlans(prev => prev.filter(plan => plan.id !== planId));
+      return response.data; // Returns { message, released_ingredients, plan_name }
     } catch (err) {
       setError(err.message);
       throw err;
@@ -214,9 +227,10 @@ export const useMealPlanner = () => {
 
   useEffect(() => {
     fetchMealPlans();
+    fetchSuggestions();
   }, []);
 
-  return { mealPlans, loading, error, fetchMealPlans, addMealPlan, deleteMealPlan };
+  return { mealPlans, loading, error, suggestions, fetchMealPlans, fetchSuggestions, addMealPlan, deleteMealPlan };
 };
 
 export const useRecipes = () => {
