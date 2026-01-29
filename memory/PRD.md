@@ -56,6 +56,18 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   2. **By Ingredients** - Select from pantry items
   3. **YouTube Videos** - Cache-first YouTube API search
 
+#### Personalized Recipe Stream - "Cook with Your Stock" - Added Jan 28, 2025
+- **Channel Avatar Bar**: Horizontal scroll of favorite channel avatars with YouTube profile pictures
+- **Channel Filtering**: Tap any channel to filter feed to that creator only
+- **Inventory-Match Badge**: Each video shows "X% in Stock" with matched ingredient count
+- **Matched Ingredients Tags**: Green pills showing which pantry items match the recipe
+- **Minimum Match Threshold**: Filter to show only recipes with 1+, 2+, or 3+ ingredient matches
+- **Quota-Efficient Playlist API**:
+  - Uses `playlistItems.list` (1 unit) instead of `search` (100 units)
+  - Channel info cached for 7 days
+  - Playlist videos cached for 6 hours
+  - Regex matching against video title + description
+
 #### YouTube Recipe Discovery Module - Added Jan 28, 2025
 - **Cache-First Architecture** - Minimizes API quota usage
   - LocalStorage cache (24-hour TTL) - instant repeat searches
@@ -92,7 +104,6 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - "Digital Dadi" enhanced with more dynamic suggestions
 - Freshness indicators & "Mummy's Secret Stash" icons
 - Expand local recipe database
-- Auto-sync favorite channels weekly (AI ingredient extraction)
 
 ## Tech Stack
 - **Frontend**: React, Tailwind CSS, shadcn/ui, Lucide icons
