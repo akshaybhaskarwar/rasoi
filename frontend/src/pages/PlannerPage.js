@@ -634,7 +634,7 @@ const PlannerPage = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+        })}
       </div>
 
       {/* Recipe Finder Dialog */}
