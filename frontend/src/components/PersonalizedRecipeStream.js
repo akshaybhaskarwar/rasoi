@@ -272,6 +272,22 @@ const PersonalizedRecipeStream = () => {
     }
   };
 
+  const checkPlannedStatus = async () => {
+    // Check planned status for each video
+    const newPlannedStatus = {};
+    for (const video of feed) {
+      try {
+        const response = await axios.get(`${API}/meal-plans/check/${video.video_id}`);
+        if (response.data.is_planned) {
+          newPlannedStatus[video.video_id] = response.data;
+        }
+      } catch (error) {
+        // Video not planned, ignore
+      }
+    }
+    setPlannedVideos(newPlannedStatus);
+  };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -288,8 +304,41 @@ const PersonalizedRecipeStream = () => {
     setSelectedChannel(prev => prev === channelId ? null : channelId);
   };
 
+  const handleOpenModal = (video) => {
+    setSelectedVideo(video);
+    setIsModalOpen(true);
+  };
+
+  const handleModalSuccess = ({ date, dayName, mealSlot }) => {
+    // Update planned status for this video
+    if (selectedVideo) {
+      setPlannedVideos(prev => ({
+        ...prev,
+        [selectedVideo.video_id]: {
+          is_planned: true,
+          date,
+          meal_type: mealSlot,
+          display_text: `Planned for ${dayName}`
+        }
+      }));
+    }
+    setSelectedVideo(null);
+  };
+
   return (
     <div className="space-y-6" data-testid="personalized-recipe-stream">
+      {/* Add to Planner Modal */}
+      <AddToPlannerModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedVideo(null);
+        }}
+        video={selectedVideo}
+        matchedIngredients={selectedVideo?.inventory_match?.matched_items || []}
+        onSuccess={handleModalSuccess}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
