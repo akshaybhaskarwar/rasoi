@@ -648,7 +648,7 @@ const PlannerPage = () => {
                         className={`${mealType.color} rounded-xl p-4 border-2 min-h-[200px] ${
                           isCurrentDay && isEmpty ? 'border-dashed' : ''
                         }`}
-                        data-testid={`meal-slot-${dateInfo.dateStr}-${mealType.value}`}
+                        data-testid={`meal-slot-desktop-${dateInfo.dateStr}-${mealType.value}`}
                       >
                         {/* Meal Type Header */}
                         <div className="flex items-center justify-between mb-3">
@@ -660,7 +660,7 @@ const PlannerPage = () => {
                             size="sm"
                             onClick={() => openRecipeFinder(dateInfo.dateStr, mealType.value)}
                             className="h-7 px-2 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
-                            data-testid={`find-recipe-${dateInfo.dateStr}-${mealType.value}`}
+                            data-testid={`find-recipe-desktop-${dateInfo.dateStr}-${mealType.value}`}
                           >
                             <Plus className="w-3 h-3 mr-1" />
                             Add
