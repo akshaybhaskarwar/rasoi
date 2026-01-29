@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Youtube, Play, Plus, RefreshCw, Filter, ChevronLeft, ChevronRight, Loader2, Sparkles, Check, X } from 'lucide-react';
+import { Youtube, Play, Plus, RefreshCw, Filter, ChevronLeft, ChevronRight, Loader2, Sparkles, Check, X, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import AddToPlannerModal from './AddToPlannerModal';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
