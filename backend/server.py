@@ -1969,4 +1969,12 @@ async def startup_event():
     # Create indexes
     await db.translation_cache.create_index([("source_text", 1), ("target_language", 1)], unique=True)
     await db.translation_cache.create_index("created_at", expireAfterSeconds=86400)
+    
+    # YouTube search cache indexes
+    await db.search_cache.create_index("cache_key", unique=True)
+    await db.search_cache.create_index("expires_at", expireAfterSeconds=0)  # TTL index
+    
+    # User videos index
+    await db.user_videos.create_index("video_id", unique=True)
+    
     logger.info("Rasoi-Sync backend started successfully!")
