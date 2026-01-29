@@ -501,7 +501,7 @@ const ShoppingPage = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteItem(item.id, item.name_en)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 min-h-[44px] min-w-[44px]"
                             data-testid={`delete-shopping-${item.id}`}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -516,6 +516,18 @@ const ShoppingPage = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* WhatsApp FAB - Mobile Only */}
+      {shoppingList.length > 0 && (
+        <button
+          onClick={() => window.open(`https://wa.me/?text=${generateWhatsAppMessage()}`, '_blank')}
+          className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-[#25D366] hover:bg-[#20BD5A] active:bg-[#1DAA50] rounded-full shadow-lg flex items-center justify-center z-[90] transition-transform active:scale-95"
+          data-testid="whatsapp-fab"
+          aria-label="Send to WhatsApp"
+        >
+          <Send className="w-6 h-6 text-white" />
+        </button>
+      )}
     </div>
   );
 };
