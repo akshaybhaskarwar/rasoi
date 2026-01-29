@@ -56,6 +56,30 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   2. **By Ingredients** - Select from pantry items
   3. **YouTube Videos** - Cache-first YouTube API search
 
+#### Mobile-First Responsive UI - Enhanced Jan 29, 2025
+
+##### Planner Calendar Redesign (Mobile 2x2 Grid)
+- **Compact 2x2 Grid Layout**: All 4 meal slots (Breakfast, Lunch, Snacks, Dinner) visible at once
+- **Color-Coded Slots**: Each meal type has distinct accent color (yellow, orange, pink, indigo)
+- **Condensed Headers**: Short labels (Bfast, Lunch, Snack, Dinner) with time shown below
+- **Meal Count Indicators**: Green badge showing number of planned meals
+- **Thumbnail Previews**: First recipe thumbnail visible in collapsed state
+- **Accordion Expansion**: Tap any slot to expand it to full width (col-span-2)
+- **Add Recipe Button**: Appears in expanded state
+- **Responsive Breakpoints**: Mobile (2x2 grid) at default, Desktop (4-column) at md: breakpoint
+
+##### App Layout Fixes
+- **min-w-0 on main element**: Prevents flex item from expanding beyond viewport width
+- **overflow-x-hidden on App container**: Ensures no horizontal scrolling
+- **flex-shrink-0 on sidebar**: Prevents sidebar from collapsing on desktop
+
+##### Other Mobile Optimizations
+- Bottom navigation bar with proper spacing
+- Adaptive headers with mobile-first typography
+- Single-column layouts for inventory and shopping pages
+- FAB (Floating Action Button) for WhatsApp share on shopping page
+- Mobile-friendly modals as bottom sheets
+
 #### Today-First Context-Aware Calendar - Added Jan 29, 2025
 - **Auto-Scroll to Today**: Page loads with today's card scrolled into view
 - **Visual Highlighting**: 
