@@ -483,7 +483,7 @@ const PlannerPage = () => {
                 {/* 4 Meal Sections - Mobile: Compact Grid, Desktop: Full Cards */}
                 {/* Mobile View: 2x2 Compact Grid */}
                 <div className="md:hidden">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2" style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)'}}>
                     {MEAL_TYPES.map((mealType) => {
                       const meals = getMealsForSlot(dateInfo.dateStr, mealType.value);
                       const isEmpty = meals.length === 0;
@@ -496,7 +496,8 @@ const PlannerPage = () => {
                           className={`${mealType.color} rounded-lg border-2 overflow-hidden transition-all duration-200 ${
                             isCurrentDay && isEmpty ? 'border-dashed' : ''
                           } ${isExpanded ? 'col-span-2' : ''}`}
-                          data-testid={`meal-slot-${dateInfo.dateStr}-${mealType.value}`}
+                          style={isExpanded ? {gridColumn: 'span 2'} : {}}
+                          data-testid={`meal-slot-mobile-${dateInfo.dateStr}-${mealType.value}`}
                         >
                           {/* Compact Header - Always Visible */}
                           <div 
