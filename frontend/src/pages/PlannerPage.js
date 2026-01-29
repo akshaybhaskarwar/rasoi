@@ -133,6 +133,48 @@ const PlannerPage = () => {
     }
   };
 
+  // Handle removing a meal with inventory release
+  const handleDeleteMeal = async (meal) => {
+    setDeletingMealId(meal.id);
+    try {
+      const result = await deleteMealPlan(meal.id);
+      
+      // Show toast with Digital Dadi suggestion
+      const releasedCount = result.released_ingredients?.length || 0;
+      
+      toast.success('Recipe removed!', {
+        description: releasedCount > 0 
+          ? `${releasedCount} ingredient${releasedCount > 1 ? 's' : ''} released back to inventory`
+          : 'Meal plan updated',
+        duration: 4000
+      });
+      
+      // If there are suggestions and this was today's meal, show a Dadi suggestion
+      if (meal.date === todayStr && suggestions.length > 0) {
+        setTimeout(() => {
+          const suggestion = suggestions[0];
+          toast.info(`💡 Dadi's Tip`, {
+            description: `Since you have the ingredients, how about "${suggestion.title}"?`,
+            duration: 6000,
+            action: {
+              label: 'Add',
+              onClick: () => openRecipeFinder(todayStr, meal.meal_type)
+            }
+          });
+        }, 1500);
+      }
+      
+      // Refresh suggestions
+      fetchSuggestions();
+      
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+      toast.error('Failed to remove recipe');
+    } finally {
+      setDeletingMealId(null);
+    }
+  };
+
   // Add recipe to meal plan
   // Add recipe to meal plan
   const handleAddRecipe = async (recipe) => {
