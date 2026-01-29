@@ -344,7 +344,7 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
         </CardContent>
       </Card>
 
-      {/* Ingredient Multi-Select Search */}
+      {/* Recipe Search - Text Only */}
       <Card className="border-2 border-gray-200">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -352,94 +352,38 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
               <Search className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-800">Find Recipes by Ingredients</h3>
-              <p className="text-xs text-gray-500">Select 2-3 ingredients from your pantry</p>
+              <h3 className="font-bold text-gray-800">Search Recipes</h3>
+              <p className="text-xs text-gray-500">Find recipes by name on YouTube</p>
             </div>
           </div>
 
           {/* Text search input */}
-          <div className="mb-4">
+          <div className="flex gap-2">
             <Input
-              placeholder="Or search by recipe name (e.g., 'Dal Tadka', 'Pav Bhaji')"
+              placeholder="Search recipe (e.g., 'Dal Tadka', 'Pav Bhaji')"
               value={textQuery}
               onChange={(e) => setTextQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full"
+              className="flex-1"
               data-testid="recipe-text-search"
             />
+            <Button
+              onClick={handleSearch}
+              disabled={isSearching || !textQuery.trim()}
+              className="bg-[#FF9933] hover:bg-[#E68A2E] text-white font-semibold px-6"
+              data-testid="find-recipes-btn"
+            >
+              {isSearching ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Search className="w-5 h-5" />
+              )}
+            </Button>
           </div>
-          
-          {/* Ingredient pills */}
-          <div className="max-h-32 overflow-y-auto mb-4 p-3 bg-gray-50 rounded-lg border">
-            <div className="flex flex-wrap gap-2">
-              {inventory.filter(item => item.stock_level !== 'empty').map((item) => {
-                const isSelected = selectedIngredients.includes(item.name_en);
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => toggleIngredient(item.name_en)}
-                    disabled={!isSelected && selectedIngredients.length >= 5}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      isSelected
-                        ? 'bg-[#138808] text-white shadow-md'
-                        : selectedIngredients.length >= 5
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:border-[#138808]'
-                    }`}
-                    data-testid={`ingredient-pill-${item.id}`}
-                  >
-                    {isSelected && '✓ '}{item.name_en}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* Selected ingredients summary */}
-          {selectedIngredients.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {selectedIngredients.map((ing) => (
-                <Badge 
-                  key={ing} 
-                  className="bg-[#138808] text-white cursor-pointer hover:bg-[#0d6606]"
-                  onClick={() => toggleIngredient(ing)}
-                >
-                  {ing}
-                  <X className="w-3 h-3 ml-1" />
-                </Badge>
-              ))}
-              <button
-                onClick={() => setSelectedIngredients([])}
-                className="text-xs text-red-500 hover:underline"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-          
-          {/* Search button */}
-          <Button
-            onClick={handleSearch}
-            disabled={isSearching || (selectedIngredients.length === 0 && !textQuery.trim())}
-            className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white font-semibold"
-            data-testid="find-recipes-btn"
-          >
-            {isSearching ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Searching...
-              </>
-            ) : (
-              <>
-                <Search className="w-5 h-5 mr-2" />
-                Find Recipes
-              </>
-            )}
-          </Button>
           
           {/* Search source indicator */}
           {searchSource && (
-            <p className="text-xs text-center text-gray-500 mt-2">
+            <p className="text-xs text-center text-gray-500 mt-3">
               {searchSource === 'local_cache' && '⚡ Instant result from cache (0 API units)'}
               {searchSource === 'cache' && '⚡ Result from server cache (0 API units)'}
               {searchSource === 'youtube_api' && `📡 Fresh from YouTube (${quotaCost} API units used)`}
