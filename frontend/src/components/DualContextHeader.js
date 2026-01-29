@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Globe } from 'lucide-react';
+import { MapPin, Globe, Menu } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -23,7 +23,46 @@ export const DualContextHeader = ({ onLanguageChange }) => {
       className="sticky top-0 z-50 glassmorphism shadow-sm"
       data-testid="dual-context-header"
     >
-      <div className="container mx-auto px-4 py-4">
+      {/* Mobile Header - Compact */}
+      <div className="md:hidden px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full masala-gradient flex items-center justify-center text-white font-bold text-sm">
+              RS
+            </div>
+            <span className="font-bold text-lg text-gray-800">Rasoi-Sync</span>
+          </div>
+          
+          {/* Mobile: Location + Language compact */}
+          <div className="flex items-center gap-2">
+            {/* Location badge - compact */}
+            <div className="flex items-center gap-1 bg-[#FFFBF0] px-2 py-1 rounded-full text-xs">
+              <MapPin className="w-3 h-3 text-[#FF9933]" />
+              <span className="font-medium">Pune</span>
+            </div>
+            
+            {/* Language toggle - compact */}
+            <Select value={language} onValueChange={handleLanguageChange}>
+              <SelectTrigger 
+                className="w-[70px] h-8 border-[#FF9933] focus:ring-[#FF9933] text-xs px-2"
+                data-testid="language-selector-mobile"
+              >
+                <Globe className="w-3 h-3 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en" className="text-xs">EN</SelectItem>
+                <SelectItem value="gu" className="text-xs">ગુજ</SelectItem>
+                <SelectItem value="mr" className="text-xs">मरा</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Header - Full */}
+      <div className="hidden md:block container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo & Title */}
           <div className="flex items-center gap-3">
@@ -34,7 +73,7 @@ export const DualContextHeader = ({ onLanguageChange }) => {
           </div>
 
           {/* Location & Culture Badge */}
-          <div className="hidden md:flex items-center gap-4 bg-[#FFFBF0] px-4 py-2 rounded-full border border-[#FFCC00]/30">
+          <div className="flex items-center gap-4 bg-[#FFFBF0] px-4 py-2 rounded-full border border-[#FFCC00]/30">
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="w-4 h-4 text-[#FF9933]" />
               <span className="font-medium">Pune, MH</span>
