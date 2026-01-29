@@ -1272,20 +1272,21 @@ async def match_ingredients_to_inventory(ingredient_names: List[str]) -> List[Di
     
     return matched
 
-@api_router.post("/meal-plans/prepare")
-async def prepare_meal_plan(
-    video_id: str,
-    video_title: str,
-    video_thumbnail: str = "",
-    channel_name: str = "",
+class PrepareMealPlanRequest(BaseModel):
+    video_id: str
+    video_title: str
+    video_thumbnail: str = ""
+    channel_name: str = ""
     matched_ingredients: List[str] = []
-):
+
+@api_router.post("/meal-plans/prepare")
+async def prepare_meal_plan(request: PrepareMealPlanRequest):
     """
     Prepare meal plan data before showing the scheduling modal.
     Returns matched inventory items with estimated quantities.
     """
     # Match ingredients to inventory
-    inventory_matches = await match_ingredients_to_inventory(matched_ingredients)
+    inventory_matches = await match_ingredients_to_inventory(request.matched_ingredients)
     
     # Prepare ingredient options with quantities for each serving size
     ingredient_options = []
@@ -1321,10 +1322,10 @@ async def prepare_meal_plan(
     
     return {
         "video": {
-            "video_id": video_id,
-            "title": video_title,
-            "thumbnail": video_thumbnail,
-            "channel": channel_name
+            "video_id": request.video_id,
+            "title": request.video_title,
+            "thumbnail": request.video_thumbnail,
+            "channel": request.channel_name
         },
         "ingredient_options": ingredient_options,
         "week_dates": week_dates,
