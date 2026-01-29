@@ -25,8 +25,8 @@ function App() {
         <DualContextHeader onLanguageChange={handleLanguageChange} />
         
         <div className="flex">
-          {/* Main Content */}
-          <div className="flex-1">
+          {/* Main Content - with bottom padding for mobile nav */}
+          <main className="flex-1 pb-20 md:pb-0">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/inventory" element={<InventoryPage />} />
@@ -34,7 +34,7 @@ function App() {
               <Route path="/planner" element={<PlannerPage />} />
               <Route path="/community" element={<CommunityPage />} />
             </Routes>
-          </div>
+          </main>
 
           {/* Gap Analysis Sidebar (Desktop Only) */}
           <aside className="hidden xl:block w-80 p-4 sticky top-24 h-screen overflow-y-auto">
@@ -43,7 +43,7 @@ function App() {
         </div>
 
         <BottomNavigation />
-        <Toaster />
+        <Toaster position="top-center" className="md:bottom-4" />
       </BrowserRouter>
     </div>
   );
