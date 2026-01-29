@@ -205,31 +205,7 @@ const PlannerPage = () => {
       </div>
 
       {/* Personalized Recipe Stream - Cook with Your Stock */}
-      <PersonalizedRecipeStream 
-        onAddToPlan={async (recipe) => {
-          // Use today's dinner as default
-          const today = new Date().toISOString().split('T')[0];
-          try {
-            await addMealPlan({
-              date: today,
-              meal_type: 'dinner',
-              meal_name: recipe.title,
-              youtube_video_id: recipe.video_id || null,
-              youtube_thumbnail: recipe.thumbnail,
-              ingredients_needed: recipe.ingredients || []
-            });
-            toast.success(`Added to today's dinner!`, {
-              description: recipe.title.substring(0, 50) + (recipe.title.length > 50 ? '...' : ''),
-              duration: 3000
-            });
-          } catch (error) {
-            console.error('Error adding recipe:', error);
-            toast.error('Failed to add recipe', {
-              description: 'Please try again'
-            });
-          }
-        }}
-      />
+      <PersonalizedRecipeStream />
 
       {/* Favorite Channels Section - Inline */}
       <Card className="shadow-sm border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50" data-testid="favorite-channels-section">
