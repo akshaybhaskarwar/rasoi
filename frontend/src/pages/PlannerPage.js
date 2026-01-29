@@ -480,8 +480,163 @@ const PlannerPage = () => {
                   </div>
                 </div>
 
-                {/* 4 Meal Sections */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 4 Meal Sections - Mobile: Compact Grid, Desktop: Full Cards */}
+                {/* Mobile View: 2x2 Compact Grid */}
+                <div className="md:hidden">
+                  <div className="grid grid-cols-2 gap-2">
+                    {MEAL_TYPES.map((mealType) => {
+                      const meals = getMealsForSlot(dateInfo.dateStr, mealType.value);
+                      const isEmpty = meals.length === 0;
+                      const slotKey = `${dateInfo.dateStr}-${mealType.value}`;
+                      const isExpanded = expandedMealSlot === slotKey;
+                      
+                      return (
+                        <div 
+                          key={mealType.value}
+                          className={`${mealType.color} rounded-lg border-2 overflow-hidden transition-all duration-200 ${
+                            isCurrentDay && isEmpty ? 'border-dashed' : ''
+                          } ${isExpanded ? 'col-span-2' : ''}`}
+                          data-testid={`meal-slot-${dateInfo.dateStr}-${mealType.value}`}
+                        >
+                          {/* Compact Header - Always Visible */}
+                          <div 
+                            className="flex items-center justify-between p-2 cursor-pointer"
+                            onClick={() => setExpandedMealSlot(isExpanded ? null : slotKey)}
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <div className={`w-2 h-8 ${mealType.accent} rounded-full flex-shrink-0`} />
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-bold text-xs text-gray-800 truncate">{mealType.shortLabel}</h4>
+                                <span className="text-[9px] text-gray-400">{mealType.time}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {/* Meal count indicator */}
+                              {meals.length > 0 ? (
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-[10px] font-bold">
+                                  {meals.length}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-gray-400">Empty</span>
+                              )}
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-gray-400" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Preview - Show first meal thumbnail when collapsed */}
+                          {!isExpanded && meals.length > 0 && meals[0].youtube_thumbnail && (
+                            <div className="px-2 pb-2">
+                              <div className="relative h-16 rounded overflow-hidden">
+                                <img 
+                                  src={meals[0].youtube_thumbnail}
+                                  alt={meals[0].meal_name}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                <p className="absolute bottom-1 left-1 right-1 text-[9px] text-white font-medium line-clamp-1">
+                                  {meals[0].meal_name}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Expanded Content */}
+                          {isExpanded && (
+                            <div className="px-2 pb-2 space-y-2">
+                              {/* Add Recipe Button */}
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openRecipeFinder(dateInfo.dateStr, mealType.value);
+                                }}
+                                className="w-full h-8 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
+                                data-testid={`find-recipe-${dateInfo.dateStr}-${mealType.value}`}
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Recipe
+                              </Button>
+                              
+                              {/* Meal List */}
+                              {isEmpty ? (
+                                <div className="text-center py-3 text-gray-400">
+                                  <ChefHat className="w-6 h-6 mx-auto mb-1 opacity-50" />
+                                  <p className="text-[10px]">No meal planned</p>
+                                </div>
+                              ) : (
+                                meals.map((meal) => (
+                                  <div 
+                                    key={meal.id}
+                                    className="bg-white rounded-lg p-2 shadow-sm"
+                                    data-testid={`meal-${meal.id}`}
+                                  >
+                                    {meal.youtube_thumbnail && (
+                                      <div className="relative mb-2">
+                                        <img 
+                                          src={meal.youtube_thumbnail}
+                                          alt={meal.meal_name}
+                                          className="w-full h-20 object-cover rounded"
+                                        />
+                                        {meal.youtube_video_id && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.open(`https://www.youtube.com/watch?v=${meal.youtube_video_id}`, '_blank');
+                                            }}
+                                            className="absolute inset-0 bg-black/40 flex items-center justify-center"
+                                          >
+                                            <div className="w-8 h-8 bg-[#FF9933] rounded-full flex items-center justify-center">
+                                              <Play className="w-4 h-4 text-white ml-0.5" fill="white" />
+                                            </div>
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                    <p className="font-medium text-xs text-gray-800 mb-1 line-clamp-2">
+                                      {meal.meal_name}
+                                    </p>
+                                    {meal.reserved_ingredients?.length > 0 && (
+                                      <div className="flex items-center gap-1 text-[9px] text-green-600 mb-1">
+                                        <Package2 className="w-3 h-3" />
+                                        <span>{meal.reserved_ingredients.length} reserved</span>
+                                      </div>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteMeal(meal);
+                                      }}
+                                      disabled={deletingMealId === meal.id}
+                                      className="w-full text-red-600 hover:bg-red-50 text-[10px] h-6"
+                                    >
+                                      {deletingMealId === meal.id ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Trash2 className="w-3 h-3 mr-1" />
+                                          Remove
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Desktop View: Full 4-Column Layout */}
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {MEAL_TYPES.map((mealType) => {
                     const meals = getMealsForSlot(dateInfo.dateStr, mealType.value);
                     const isEmpty = meals.length === 0;
