@@ -653,7 +653,7 @@ const PlannerPage = () => {
           <div className="space-y-6">
             {/* Search Mode Toggle - 3 tabs */}
             <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-              <button
+              {/* <button
                 onClick={() => setSearchMode('text')}
                 className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
                   searchMode === 'text'
@@ -664,8 +664,8 @@ const PlannerPage = () => {
               >
                 <Search className="w-4 h-4 inline mr-2" />
                 Local Search
-              </button>
-              <button
+              </button> */}
+              {/* <button
                 onClick={() => setSearchMode('ingredients')}
                 className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
                   searchMode === 'ingredients'
@@ -676,7 +676,7 @@ const PlannerPage = () => {
               >
                 <Package2 className="w-4 h-4 inline mr-2" />
                 By Ingredients
-              </button>
+              </button> */}
               <button
                 onClick={() => setSearchMode('youtube')}
                 className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
