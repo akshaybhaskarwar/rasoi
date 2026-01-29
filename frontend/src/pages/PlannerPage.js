@@ -440,9 +440,9 @@ const PlannerPage = () => {
               }`}
               data-testid={`date-card-${dateInfo.dateStr}`}
             >
-              <CardContent className="p-6">
-                {/* Date Header */}
-                <div className="mb-4 pb-3 border-b">
+              <CardContent className="p-3 md:p-6">
+                {/* Date Header - More compact on mobile */}
+                <div className="mb-3 md:mb-4 pb-2 md:pb-3 border-b">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {/* Today indicator */}
