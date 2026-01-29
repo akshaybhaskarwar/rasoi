@@ -473,7 +473,8 @@ const PersonalizedRecipeStream = () => {
               <VideoCard 
                 key={video.video_id} 
                 video={video} 
-                onAddToPlan={onAddToPlan}
+                onOpenModal={handleOpenModal}
+                plannedInfo={plannedVideos[video.video_id]}
               />
             ))}
           </div>
