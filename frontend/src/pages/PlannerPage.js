@@ -560,17 +560,30 @@ const PlannerPage = () => {
                                         className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center"
                                         data-testid={`play-meal-${meal.id}`}
                                       >
-                                      <div className="w-12 h-12 bg-[#FF9933] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                                      <div className="w-10 h-10 bg-[#FF9933] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                                        <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
                                       </div>
                                     </button>
                                   )}
+                                  {/* Quick delete overlay on hover */}
+                                  <button
+                                    onClick={() => handleDeleteMeal(meal)}
+                                    disabled={deletingMealId === meal.id}
+                                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                    title="Remove from plan"
+                                  >
+                                    {deletingMealId === meal.id ? (
+                                      <Loader2 className="w-3 h-3 text-white animate-spin" />
+                                    ) : (
+                                      <X className="w-3 h-3 text-white" />
+                                    )}
+                                  </button>
                                 </div>
                               )}
                               <p className="font-medium text-xs text-gray-800 mb-2 line-clamp-2">
                                 {meal.meal_name}
                               </p>
-                              {meal.ingredients_needed.length > 0 && (
+                              {meal.ingredients_needed && meal.ingredients_needed.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mb-2">
                                   {meal.ingredients_needed.slice(0, 3).map((ing, idx) => (
                                     <Badge key={idx} variant="secondary" className="text-[10px] px-1 py-0">
@@ -584,15 +597,32 @@ const PlannerPage = () => {
                                   )}
                                 </div>
                               )}
+                              {/* Reserved ingredients indicator */}
+                              {meal.reserved_ingredients && meal.reserved_ingredients.length > 0 && (
+                                <div className="flex items-center gap-1 text-[10px] text-green-600 mb-2">
+                                  <Package2 className="w-3 h-3" />
+                                  <span>{meal.reserved_ingredients.length} items reserved</span>
+                                </div>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => deleteMealPlan(meal.id)}
-                                className="w-full text-red-600 hover:text-red-700 text-xs h-6"
+                                onClick={() => handleDeleteMeal(meal)}
+                                disabled={deletingMealId === meal.id}
+                                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-7 border border-transparent hover:border-red-200"
                                 data-testid={`delete-meal-${meal.id}`}
                               >
-                                <Trash2 className="w-3 h-3 mr-1" />
-                                Remove
+                                {deletingMealId === meal.id ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    Removing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="w-3 h-3 mr-1" />
+                                    Remove
+                                  </>
+                                )}
                               </Button>
                             </div>
                           ))
