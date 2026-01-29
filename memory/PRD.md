@@ -56,6 +56,21 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   2. **By Ingredients** - Select from pantry items
   3. **YouTube Videos** - Cache-first YouTube API search
 
+#### Add to Planner Modal - Added Jan 29, 2025
+- **Scheduling Bottom Sheet**: Opens when clicking "Add" on any video card
+- **Week View Day Picker**: Horizontal scroll (Mon-Sun) with "Today" highlight
+- **Meal Slot Selection**: Breakfast, Lunch, Snacks, Dinner buttons
+- **Serving Size Options**: Single (1), Couple (2), Family (4), Party (8+)
+- **Ingredient Reservation System**:
+  - Pre-populated list from video title/description match
+  - Checkbox to include/exclude ingredients
+  - Quantity auto-estimated based on serving size
+  - Items marked as "Reserved" in inventory
+- **Visual Feedback After Adding**:
+  - Button changes from "Add" to "✓ Planned for [Day]" (green)
+  - "Planned" badge appears on video thumbnail
+  - Video card gets green border highlight
+
 #### Personalized Recipe Stream - "Cook with Your Stock" - Added Jan 28, 2025
 - **Channel Avatar Bar**: Horizontal scroll of favorite channel avatars with YouTube profile pictures
 - **Channel Filtering**: Tap any channel to filter feed to that creator only
