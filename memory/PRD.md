@@ -56,6 +56,32 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   2. **By Ingredients** - Select from pantry items
   3. **YouTube Videos** - Cache-first YouTube API search
 
+#### Today-First Context-Aware Calendar - Added Jan 29, 2025
+- **Auto-Scroll to Today**: Page loads with today's card scrolled into view
+- **Visual Highlighting**: 
+  - Orange ring/border around today's card
+  - Pulsing calendar icon with gradient
+  - "TODAY" badge with bounce animation
+  - "X meals planned" summary count
+- **Localized Date Display**: "Thursday, 29 Jan" format using date-fns
+- **Meal Time Labels**: Each slot shows time (7:00 AM, 12:30 PM, 5:00 PM, 8:00 PM)
+
+#### Full CRUD Meal Plan Operations - Added Jan 29, 2025
+- **Create**: Add to Planner modal with scheduling
+- **Read**: Calendar view with meal cards, video thumbnails, ingredient badges
+- **Update**: Reserved ingredients indicator "📦 X items reserved"
+- **Delete**: 
+  - "Remove" button with loading state
+  - Inventory release: Reserved ingredients return to "Available"
+  - Toast: "Recipe removed! X ingredients released"
+  - **Dadi's Tip**: After removal, suggests alternative: "Since you have the ingredients, how about 'Pav Bhaji'?"
+
+#### Empty Slot Suggestions - Added Jan 29, 2025
+- For today's empty meal slots:
+  - Shows "✨ No meal planned"
+  - "Quick picks available!" button with suggestion preview
+  - Dashed border to indicate action needed
+
 #### Add to Planner Modal - Added Jan 29, 2025
 - **Scheduling Bottom Sheet**: Opens when clicking "Add" on any video card
 - **Week View Day Picker**: Horizontal scroll (Mon-Sun) with "Today" highlight
