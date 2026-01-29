@@ -1206,22 +1206,181 @@ async def clear_shopping_list():
 
 # ============ MEAL PLANNER ENDPOINTS ============
 
+def estimate_ingredient_quantity(ingredient_name: str, serving_size: str = "family_4") -> Dict[str, Any]:
+    """Estimate ingredient quantity based on serving size"""
+    ingredient_lower = ingredient_name.lower().strip()
+    
+    # Find matching ingredient in defaults
+    default_qty = None
+    for key, value in DEFAULT_INGREDIENT_QUANTITIES.items():
+        if key in ingredient_lower or ingredient_lower in key:
+            default_qty = value
+            break
+    
+    if not default_qty:
+        # Default fallback
+        default_qty = {"qty": 100, "unit": "g"}
+    
+    # Apply serving multiplier
+    multiplier = SERVING_MULTIPLIERS.get(serving_size, 1.0)
+    estimated_qty = int(default_qty["qty"] * multiplier)
+    
+    return {
+        "qty": estimated_qty,
+        "unit": default_qty["unit"]
+    }
+
+async def match_ingredients_to_inventory(ingredient_names: List[str]) -> List[Dict[str, Any]]:
+    """Match ingredient names to inventory items"""
+    inventory_items = await db.inventory.find({}, {"_id": 0}).to_list(500)
+    matched = []
+    
+    for ing_name in ingredient_names:
+        ing_lower = ing_name.lower().strip()
+        best_match = None
+        
+        for item in inventory_items:
+            item_name_lower = item.get('name_en', '').lower()
+            # Flexible matching
+            if ing_lower in item_name_lower or item_name_lower in ing_lower:
+                best_match = item
+                break
+            # Also check if any word matches
+            ing_words = ing_lower.split()
+            item_words = item_name_lower.split()
+            if any(iw in item_words or any(iw in tw for tw in item_words) for iw in ing_words):
+                best_match = item
+                break
+        
+        if best_match:
+            matched.append({
+                "item_id": best_match["id"],
+                "item_name": best_match["name_en"],
+                "category": best_match.get("category", "other"),
+                "stock_level": best_match.get("stock_level", "empty"),
+                "in_stock": best_match.get("stock_level") not in ["empty"]
+            })
+        else:
+            # Not in inventory
+            matched.append({
+                "item_id": None,
+                "item_name": ing_name,
+                "category": "other",
+                "stock_level": "empty",
+                "in_stock": False
+            })
+    
+    return matched
+
+@api_router.post("/meal-plans/prepare")
+async def prepare_meal_plan(
+    video_id: str,
+    video_title: str,
+    video_thumbnail: str = "",
+    channel_name: str = "",
+    matched_ingredients: List[str] = []
+):
+    """
+    Prepare meal plan data before showing the scheduling modal.
+    Returns matched inventory items with estimated quantities.
+    """
+    # Match ingredients to inventory
+    inventory_matches = await match_ingredients_to_inventory(matched_ingredients)
+    
+    # Prepare ingredient options with quantities for each serving size
+    ingredient_options = []
+    for i, match in enumerate(inventory_matches):
+        ing_name = match["item_name"]
+        options = {
+            "ingredient_name": ing_name,
+            "item_id": match["item_id"],
+            "in_stock": match["in_stock"],
+            "stock_level": match["stock_level"],
+            "selected": match["in_stock"],  # Pre-select items in stock
+            "quantities": {}
+        }
+        
+        # Calculate quantities for each serving size
+        for size_key in SERVING_MULTIPLIERS.keys():
+            qty_info = estimate_ingredient_quantity(ing_name, size_key)
+            options["quantities"][size_key] = qty_info
+        
+        ingredient_options.append(options)
+    
+    # Get week dates
+    today = datetime.now(timezone.utc)
+    week_dates = []
+    for i in range(7):
+        day = today + timedelta(days=i)
+        week_dates.append({
+            "date": day.strftime("%Y-%m-%d"),
+            "day_name": day.strftime("%a"),
+            "day_num": day.strftime("%d"),
+            "is_today": i == 0
+        })
+    
+    return {
+        "video": {
+            "video_id": video_id,
+            "title": video_title,
+            "thumbnail": video_thumbnail,
+            "channel": channel_name
+        },
+        "ingredient_options": ingredient_options,
+        "week_dates": week_dates,
+        "serving_sizes": [
+            {"key": "single", "label": "Single (1 person)", "multiplier": 0.25},
+            {"key": "couple", "label": "Couple (2 people)", "multiplier": 0.5},
+            {"key": "family_4", "label": "Family (4 people)", "multiplier": 1.0},
+            {"key": "party", "label": "Party (8+ people)", "multiplier": 2.0}
+        ],
+        "meal_slots": [
+            {"key": "breakfast", "label": "🌅 Breakfast"},
+            {"key": "lunch", "label": "☀️ Lunch"},
+            {"key": "snacks", "label": "🍪 Snacks"},
+            {"key": "dinner", "label": "🌙 Dinner"}
+        ]
+    }
+
 @api_router.post("/meal-plans", response_model=MealPlan)
 async def create_meal_plan(plan: MealPlanCreate):
-    """Create meal plan"""
+    """Create meal plan with ingredient reservations"""
     plan_dict = plan.model_dump()
     meal_plan = MealPlan(**plan_dict)
+    
+    # Set channel info
+    if plan.youtube_channel:
+        meal_plan.youtube_channel = plan.youtube_channel
     
     # Fetch YouTube details if video ID provided
     if plan.youtube_video_id:
         video_details = await fetch_video_details(plan.youtube_video_id)
-        meal_plan.youtube_thumbnail = video_details.get('thumbnail')
+        meal_plan.youtube_thumbnail = video_details.get('thumbnail') or plan.youtube_thumbnail
         meal_plan.youtube_title = video_details.get('title')
     
     doc = meal_plan.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.meal_plans.insert_one(doc)
+    
+    # Create inventory reservations
+    if plan.reserved_ingredients:
+        for reservation in plan.reserved_ingredients:
+            item_id = reservation.get('item_id')
+            if item_id:
+                # Add reservation to inventory item
+                reservation_record = {
+                    "meal_plan_id": meal_plan.id,
+                    "date": plan.date,
+                    "meal_type": plan.meal_type,
+                    "qty": reservation.get('est_qty'),
+                    "unit": reservation.get('unit')
+                }
+                await db.inventory.update_one(
+                    {"id": item_id},
+                    {"$push": {"reserved_for": reservation_record}}
+                )
+    
     return meal_plan
 
 @api_router.get("/meal-plans", response_model=List[MealPlan])
@@ -1237,13 +1396,76 @@ async def get_meal_plans():
 
 @api_router.delete("/meal-plans/{plan_id}")
 async def delete_meal_plan(plan_id: str):
-    """Delete meal plan"""
+    """Delete meal plan and remove reservations"""
+    # First get the plan to find reserved ingredients
+    plan = await db.meal_plans.find_one({"id": plan_id}, {"_id": 0})
+    
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Remove reservations from inventory items
+    reserved = plan.get('reserved_ingredients', [])
+    for reservation in reserved:
+        item_id = reservation.get('item_id')
+        if item_id:
+            await db.inventory.update_one(
+                {"id": item_id},
+                {"$pull": {"reserved_for": {"meal_plan_id": plan_id}}}
+            )
+    
+    # Delete the plan
     result = await db.meal_plans.delete_one({"id": plan_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Plan not found")
     
     return {"message": "Deleted successfully"}
+
+@api_router.get("/meal-plans/check/{video_id}")
+async def check_video_planned(video_id: str):
+    """Check if a video is already planned"""
+    existing = await db.meal_plans.find_one(
+        {"youtube_video_id": video_id},
+        {"_id": 0, "id": 1, "date": 1, "meal_type": 1}
+    )
+    
+    if existing:
+        # Format the date nicely
+        plan_date = datetime.strptime(existing['date'], "%Y-%m-%d")
+        day_name = plan_date.strftime("%A")
+        return {
+            "is_planned": True,
+            "plan_id": existing['id'],
+            "date": existing['date'],
+            "meal_type": existing['meal_type'],
+            "display_text": f"Planned for {day_name}"
+        }
+    
+    return {"is_planned": False}
+
+@api_router.get("/inventory/reservations")
+async def get_inventory_with_reservations():
+    """Get inventory items with their reservations"""
+    items = await db.inventory.find({}, {"_id": 0}).to_list(500)
+    
+    # Process reservations
+    for item in items:
+        reservations = item.get('reserved_for', [])
+        if reservations:
+            # Calculate total reserved quantity
+            total_reserved = sum(r.get('qty', 0) for r in reservations)
+            item['total_reserved'] = total_reserved
+            item['has_reservations'] = True
+            # Get next reservation date
+            upcoming = sorted(reservations, key=lambda x: x.get('date', ''))
+            if upcoming:
+                item['next_reservation'] = upcoming[0]
+        else:
+            item['total_reserved'] = 0
+            item['has_reservations'] = False
+            item['next_reservation'] = None
+    
+    return items
 
 
 @api_router.post("/meal-plans/refresh-videos")
