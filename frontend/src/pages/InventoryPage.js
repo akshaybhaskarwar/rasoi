@@ -537,7 +537,7 @@ const InventoryPage = () => {
                   </Badge>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {items.map((item) => {
                     const stockInfo = getStockLevelInfo(item.stock_level);
                     
@@ -547,17 +547,17 @@ const InventoryPage = () => {
                         className={`${categoryInfo.color} border-2 border-gray-200 hover-lift transition-all`}
                         data-testid={`inventory-item-${item.id}`}
                       >
-                        <CardContent className="p-5">
+                        <CardContent className="p-4 md:p-5">
                           {/* Header with Secret Stash */}
                           <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              {/* Bilingual Item Name */}
-                              <h3 className="text-xl font-bold text-gray-800 mb-1 bilingual-text">
-                                {item.name_en}
+                            <div className="flex-1 min-w-0">
+                              {/* Bilingual Item Name - with proper text wrapping */}
+                              <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 break-words">
+                                <span className="block sm:inline">{item.name_en}</span>
                                 {(item.name_gu || item.name_mr) && (
                                   <>
-                                    <span className="text-[#FF9933] mx-2">/</span>
-                                    <span className="text-gray-700 font-semibold">
+                                    <span className="text-[#FF9933] mx-1 sm:mx-2 hidden sm:inline">/</span>
+                                    <span className="text-gray-600 font-medium text-sm sm:text-base block sm:inline mt-0.5 sm:mt-0">
                                       {item.name_mr || item.name_gu}
                                     </span>
                                   </>
@@ -565,13 +565,13 @@ const InventoryPage = () => {
                               </h3>
                               
                               {/* Category Badge */}
-                              <Badge variant="outline" className="text-xs border-gray-400">
+                              <Badge variant="outline" className="text-[10px] md:text-xs border-gray-400">
                                 {categoryInfo.label}
                               </Badge>
                             </div>
                             
                             {item.is_secret_stash && (
-                              <div className="flex-shrink-0">
+                              <div className="flex-shrink-0 ml-2">
                                 <Lock className="w-5 h-5 text-[#FFCC00]" />
                               </div>
                             )}
