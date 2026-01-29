@@ -203,7 +203,7 @@ const VideoCard = ({ video, onOpenModal, plannedInfo }) => {
   );
 };
 
-const PersonalizedRecipeStream = ({ onAddToPlan }) => {
+const PersonalizedRecipeStream = () => {
   const [channels, setChannels] = useState([]);
   const [feed, setFeed] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
@@ -212,6 +212,13 @@ const PersonalizedRecipeStream = ({ onAddToPlan }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [feedStats, setFeedStats] = useState({ total: 0, quotaCost: 0 });
   const [minMatches, setMinMatches] = useState(1);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  
+  // Track planned videos {video_id: {is_planned, display_text, ...}}
+  const [plannedVideos, setPlannedVideos] = useState({});
 
   // Fetch channels on mount
   useEffect(() => {
@@ -222,6 +229,13 @@ const PersonalizedRecipeStream = ({ onAddToPlan }) => {
   useEffect(() => {
     fetchFeed();
   }, [selectedChannel, minMatches]);
+
+  // Check planned status for all videos in feed
+  useEffect(() => {
+    if (feed.length > 0) {
+      checkPlannedStatus();
+    }
+  }, [feed]);
 
   const fetchChannels = async () => {
     setIsLoadingChannels(true);
