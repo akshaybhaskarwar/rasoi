@@ -207,7 +207,7 @@ const PlannerPage = () => {
       {/* Personalized Recipe Stream - Cook with Your Stock */}
       <PersonalizedRecipeStream 
         onAddToPlan={async (recipe) => {
-          // If no date/meal type selected, use today's dinner
+          // Use today's dinner as default
           const today = new Date().toISOString().split('T')[0];
           try {
             await addMealPlan({
@@ -218,10 +218,15 @@ const PlannerPage = () => {
               youtube_thumbnail: recipe.thumbnail,
               ingredients_needed: recipe.ingredients || []
             });
-            alert(`Added "${recipe.title}" to today's dinner!`);
+            toast.success(`Added to today's dinner!`, {
+              description: recipe.title.substring(0, 50) + (recipe.title.length > 50 ? '...' : ''),
+              duration: 3000
+            });
           } catch (error) {
             console.error('Error adding recipe:', error);
-            alert('Failed to add recipe to meal plan');
+            toast.error('Failed to add recipe', {
+              description: 'Please try again'
+            });
           }
         }}
       />
