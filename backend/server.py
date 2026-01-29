@@ -1406,6 +1406,7 @@ async def delete_meal_plan(plan_id: str):
     
     # Remove reservations from inventory items
     reserved = plan.get('reserved_ingredients', [])
+    released_items = []
     for reservation in reserved:
         item_id = reservation.get('item_id')
         if item_id:
@@ -1413,6 +1414,7 @@ async def delete_meal_plan(plan_id: str):
                 {"id": item_id},
                 {"$pull": {"reserved_for": {"meal_plan_id": plan_id}}}
             )
+            released_items.append(reservation.get('item_name', item_id))
     
     # Delete the plan
     result = await db.meal_plans.delete_one({"id": plan_id})
@@ -1420,7 +1422,49 @@ async def delete_meal_plan(plan_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Plan not found")
     
-    return {"message": "Deleted successfully"}
+    return {
+        "message": "Deleted successfully",
+        "released_ingredients": released_items,
+        "plan_name": plan.get('meal_name', 'Recipe')
+    }
+
+@api_router.get("/meal-plans/suggestions")
+async def get_meal_suggestions():
+    """Get quick meal suggestions based on current inventory for empty slots"""
+    # Get available inventory items
+    inventory_items = await db.inventory.find(
+        {"stock_level": {"$ne": "empty"}},
+        {"name_en": 1, "_id": 0}
+    ).to_list(100)
+    available_items = [item["name_en"].lower() for item in inventory_items]
+    
+    if not available_items:
+        return {"suggestions": []}
+    
+    # Find recipes that match available ingredients
+    suggestions = []
+    for recipe in RECIPE_DATABASE:
+        recipe_ingredients = [ing.lower() for ing in recipe.get('ingredients', [])]
+        if not recipe_ingredients:
+            continue
+        
+        matched = sum(1 for ing in recipe_ingredients if any(avail in ing or ing in avail for avail in available_items))
+        match_percent = (matched / len(recipe_ingredients)) * 100 if recipe_ingredients else 0
+        
+        if match_percent >= 50:  # At least 50% ingredients available
+            suggestions.append({
+                "title": recipe['title'],
+                "video_id": recipe.get('video_id'),
+                "thumbnail": recipe.get('thumbnail'),
+                "source": recipe.get('source', 'Local'),
+                "match_percent": round(match_percent),
+                "prep_time": recipe.get('prep_time', ''),
+                "category": recipe.get('category', '')
+            })
+    
+    # Sort by match percent and take top 5
+    suggestions.sort(key=lambda x: x['match_percent'], reverse=True)
+    return {"suggestions": suggestions[:5]}
 
 @api_router.get("/meal-plans/check/{video_id}")
 async def check_video_planned(video_id: str):
