@@ -461,14 +461,14 @@ const PersonalizedRecipeStream = () => {
 
       {/* Recipe Feed */}
       {isLoadingFeed ? (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
           {[1, 2, 3, 4].map(i => (
             <VideoCardSkeleton key={i} />
           ))}
         </div>
       ) : feed.length > 0 ? (
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-4 pb-4">
+        <ScrollArea className="w-full">
+          <div className="flex gap-3 sm:gap-4 pb-4 snap-x snap-mandatory scroll-pl-4">
             {feed.map((video) => (
               <VideoCard 
                 key={video.video_id} 
