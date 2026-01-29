@@ -256,12 +256,12 @@ const PlannerPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="planner-page">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-4 md:py-6 pb-24 md:pb-6 space-y-4 md:space-y-6" data-testid="planner-page">
+      {/* Header - Mobile-friendly */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Meal Planner</h1>
-          <p className="text-gray-600 text-sm mt-1">Plan your weekly meals with recipes</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Meal Planner</h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-0.5 md:mt-1">Plan your weekly meals with recipes</p>
         </div>
       </div>
 
