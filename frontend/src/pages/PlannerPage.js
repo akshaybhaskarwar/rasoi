@@ -203,6 +203,28 @@ const PlannerPage = () => {
         <GapAnalysisSidebar isMobile={true} />
       </div>
 
+      {/* Personalized Recipe Stream - Cook with Your Stock */}
+      <PersonalizedRecipeStream 
+        onAddToPlan={async (recipe) => {
+          // If no date/meal type selected, use today's dinner
+          const today = new Date().toISOString().split('T')[0];
+          try {
+            await addMealPlan({
+              date: today,
+              meal_type: 'dinner',
+              meal_name: recipe.title,
+              youtube_video_id: recipe.video_id || null,
+              youtube_thumbnail: recipe.thumbnail,
+              ingredients_needed: recipe.ingredients || []
+            });
+            alert(`Added "${recipe.title}" to today's dinner!`);
+          } catch (error) {
+            console.error('Error adding recipe:', error);
+            alert('Failed to add recipe to meal plan');
+          }
+        }}
+      />
+
       {/* Favorite Channels Section - Inline */}
       <Card className="shadow-sm border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50" data-testid="favorite-channels-section">
         <CardContent className="p-4">
