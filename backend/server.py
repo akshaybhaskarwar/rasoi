@@ -1556,6 +1556,391 @@ async def extract_text_from_image(request: OCRRequest):
         raise HTTPException(status_code=500, detail=f"OCR failed: {str(e)}")
 
 
+# ============ YOUTUBE RECIPE DISCOVERY MODULE ============
+# Cache-First Architecture for Quota-Efficient YouTube Searching
+
+# Pydantic models for YouTube Discovery
+class YouTubeSearchRequest(BaseModel):
+    ingredients: List[str] = []
+    text_query: str = ""
+    max_results: int = 10
+
+class YouTubeVideoSubmission(BaseModel):
+    youtube_url: str
+
+# Static recommendations - Dadi's Picks (pre-fetched, no API calls)
+DADIS_RECOMMENDATIONS = [
+    {
+        "id": "dadi-1",
+        "video_id": "eJlZW7keg5I",
+        "title": "2 Kilo Pav Bhaji - Cooker Recipe",
+        "channel": "MadhurasRecipe Marathi",
+        "thumbnail": "https://i.ytimg.com/vi/eJlZW7keg5I/hqdefault.jpg",
+        "duration": "12:45",
+        "category": "festival_special",
+        "tag": "🎉 Festival Special"
+    },
+    {
+        "id": "dadi-2",
+        "video_id": "4xzt4Itmp2U",
+        "title": "Vegetable Pulao - One Pot Recipe",
+        "channel": "Madhura's Recipe Marathi",
+        "thumbnail": "https://i.ytimg.com/vi/4xzt4Itmp2U/hqdefault.jpg",
+        "duration": "10:30",
+        "category": "video_of_day",
+        "tag": "⭐ Video of the Day"
+    },
+    {
+        "id": "dadi-3",
+        "video_id": "U24aNCL0YdQ",
+        "title": "Authentic Misal Pav",
+        "channel": "Madhura's Recipe Marathi",
+        "thumbnail": "https://i.ytimg.com/vi/U24aNCL0YdQ/hqdefault.jpg",
+        "duration": "15:20",
+        "category": "trending",
+        "tag": "🔥 Trending"
+    },
+    {
+        "id": "dadi-4",
+        "video_id": "NF7Eo30RBDA",
+        "title": "Restaurant Style Dal Tadka",
+        "channel": "Ranveer Brar",
+        "thumbnail": "https://i.ytimg.com/vi/NF7Eo30RBDA/hqdefault.jpg",
+        "duration": "8:45",
+        "category": "quick_recipe",
+        "tag": "⚡ Quick Recipe"
+    },
+    {
+        "id": "dadi-5",
+        "video_id": "ClH7QI02fNc",
+        "title": "Instant Pav Bhaji in Pressure Cooker",
+        "channel": "MadhurasRecipe",
+        "thumbnail": "https://i.ytimg.com/vi/ClH7QI02fNc/hqdefault.jpg",
+        "duration": "9:15",
+        "category": "quick_recipe",
+        "tag": "⚡ Quick Recipe"
+    }
+]
+
+def extract_video_id(url: str) -> Optional[str]:
+    """Extract YouTube video ID from various URL formats"""
+    patterns = [
+        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})',
+        r'youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return None
+
+def calculate_inventory_match(recipe_ingredients: List[str], user_inventory: List[str]) -> dict:
+    """Calculate how many recipe ingredients the user has"""
+    if not recipe_ingredients:
+        return {"matched": 0, "total": 0, "percentage": 0, "matched_items": [], "missing_items": []}
+    
+    user_inv_lower = [i.lower() for i in user_inventory]
+    matched = []
+    missing = []
+    
+    for ing in recipe_ingredients:
+        ing_lower = ing.lower()
+        found = any(inv in ing_lower or ing_lower in inv for inv in user_inv_lower)
+        if found:
+            matched.append(ing)
+        else:
+            missing.append(ing)
+    
+    total = len(recipe_ingredients)
+    return {
+        "matched": len(matched),
+        "total": total,
+        "percentage": round((len(matched) / total) * 100) if total > 0 else 0,
+        "matched_items": matched,
+        "missing_items": missing
+    }
+
+@api_router.get("/youtube/recommendations")
+async def get_dadi_recommendations():
+    """Get pre-fetched Dadi's Recommended videos - NO API calls, 0 quota cost"""
+    return {
+        "recommendations": DADIS_RECOMMENDATIONS,
+        "source": "pre_fetched",
+        "quota_cost": 0
+    }
+
+@api_router.post("/youtube/search")
+async def youtube_recipe_search(request: YouTubeSearchRequest):
+    """
+    Cache-First YouTube Recipe Search
+    - Checks MongoDB cache first (24-hour TTL)
+    - Only calls YouTube API if cache miss
+    - Returns inventory match percentages
+    """
+    # Build cache key from search params
+    cache_key = f"{','.join(sorted(request.ingredients))}_{request.text_query}".lower().strip()
+    if not cache_key or cache_key == "_":
+        raise HTTPException(status_code=400, detail="Please provide ingredients or search text")
+    
+    # Check cache first
+    cached = await db.search_cache.find_one({
+        "cache_key": cache_key,
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    
+    if cached:
+        logger.info(f"Cache HIT for: {cache_key}")
+        # Get user inventory for match calculation
+        inventory_items = await db.inventory.find({}, {"name_en": 1, "_id": 0}).to_list(100)
+        user_inventory = [item["name_en"] for item in inventory_items]
+        
+        # Add inventory match to cached results
+        results_with_match = []
+        for video in cached.get("results", []):
+            match_info = calculate_inventory_match(video.get("ingredients", []), user_inventory)
+            results_with_match.append({**video, "inventory_match": match_info})
+        
+        return {
+            "results": results_with_match,
+            "total": len(results_with_match),
+            "source": "cache",
+            "quota_cost": 0,
+            "cache_expires": cached.get("expires_at").isoformat() if cached.get("expires_at") else None
+        }
+    
+    # Cache MISS - call YouTube API
+    logger.info(f"Cache MISS for: {cache_key}")
+    
+    try:
+        youtube = get_youtube_service()
+        
+        # Build search query
+        if request.ingredients:
+            search_query = f"{' '.join(request.ingredients)} recipe Indian"
+        else:
+            search_query = f"{request.text_query} recipe Indian"
+        
+        # Search YouTube (costs 100 quota units)
+        search_request = youtube.search().list(
+            part="snippet",
+            q=search_query,
+            type="video",
+            maxResults=request.max_results,
+            regionCode="IN",
+            relevanceLanguage="en"
+        )
+        search_response = search_request.execute()
+        
+        video_ids = [item['id']['videoId'] for item in search_response.get('items', [])]
+        
+        # Get video details including duration (costs 1 unit per batch of 50)
+        videos_with_details = []
+        if video_ids:
+            details_request = youtube.videos().list(
+                part="snippet,contentDetails",
+                id=",".join(video_ids)
+            )
+            details_response = details_request.execute()
+            
+            for item in details_response.get('items', []):
+                # Parse duration from ISO 8601 format
+                duration_iso = item['contentDetails']['duration']
+                duration_match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', duration_iso)
+                if duration_match:
+                    hours = int(duration_match.group(1) or 0)
+                    minutes = int(duration_match.group(2) or 0)
+                    seconds = int(duration_match.group(3) or 0)
+                    if hours > 0:
+                        duration_str = f"{hours}:{minutes:02d}:{seconds:02d}"
+                    else:
+                        duration_str = f"{minutes}:{seconds:02d}"
+                else:
+                    duration_str = "N/A"
+                
+                # Try to extract ingredients from description (basic extraction)
+                description = item['snippet'].get('description', '')
+                ingredients = extract_ingredients_from_description(description)
+                
+                videos_with_details.append({
+                    "video_id": item['id'],
+                    "title": item['snippet']['title'],
+                    "channel": item['snippet']['channelTitle'],
+                    "channel_id": item['snippet']['channelId'],
+                    "thumbnail": item['snippet']['thumbnails'].get('high', {}).get('url', 
+                                 item['snippet']['thumbnails'].get('medium', {}).get('url', '')),
+                    "duration": duration_str,
+                    "description": description[:500],  # First 500 chars
+                    "ingredients": ingredients,
+                    "published_at": item['snippet']['publishedAt']
+                })
+        
+        # Store in cache with 24-hour TTL
+        cache_doc = {
+            "cache_key": cache_key,
+            "search_query": search_query,
+            "results": videos_with_details,
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=24)
+        }
+        await db.search_cache.update_one(
+            {"cache_key": cache_key},
+            {"$set": cache_doc},
+            upsert=True
+        )
+        
+        # Get user inventory for match calculation
+        inventory_items = await db.inventory.find({}, {"name_en": 1, "_id": 0}).to_list(100)
+        user_inventory = [item["name_en"] for item in inventory_items]
+        
+        # Add inventory match to results
+        results_with_match = []
+        for video in videos_with_details:
+            match_info = calculate_inventory_match(video.get("ingredients", []), user_inventory)
+            results_with_match.append({**video, "inventory_match": match_info})
+        
+        return {
+            "results": results_with_match,
+            "total": len(results_with_match),
+            "source": "youtube_api",
+            "quota_cost": 101,  # 100 for search + 1 for video details
+            "cache_expires": cache_doc["expires_at"].isoformat()
+        }
+        
+    except HttpError as e:
+        if 'quotaExceeded' in str(e):
+            logger.error("YouTube API quota exceeded")
+            # Fall back to local recipe database
+            local_results = search_local_recipes(request.ingredients, False, [], request.text_query)
+            return {
+                "results": local_results[:request.max_results],
+                "total": len(local_results),
+                "source": "local_fallback",
+                "quota_cost": 0,
+                "error": "YouTube quota exceeded, showing local recipes"
+            }
+        raise HTTPException(status_code=500, detail=f"YouTube API error: {str(e)}")
+
+def extract_ingredients_from_description(description: str) -> List[str]:
+    """Basic ingredient extraction from video description"""
+    ingredients = []
+    common_ingredients = [
+        "onion", "tomato", "potato", "garlic", "ginger", "chili", "turmeric",
+        "cumin", "coriander", "garam masala", "salt", "oil", "ghee", "butter",
+        "rice", "dal", "paneer", "chicken", "mutton", "fish", "egg",
+        "carrot", "peas", "cauliflower", "capsicum", "spinach", "methi",
+        "milk", "cream", "curd", "yogurt", "coconut", "tamarind",
+        "mustard", "curry leaves", "bay leaf", "cinnamon", "cardamom", "cloves"
+    ]
+    
+    desc_lower = description.lower()
+    for ing in common_ingredients:
+        if ing in desc_lower:
+            ingredients.append(ing.title())
+    
+    return ingredients[:10]  # Limit to 10 ingredients
+
+@api_router.post("/youtube/add-video")
+async def add_user_video(submission: YouTubeVideoSubmission):
+    """
+    Add user-submitted YouTube video
+    Uses videos.list API (only 1 quota unit vs 100 for search)
+    """
+    video_id = extract_video_id(submission.youtube_url)
+    if not video_id:
+        raise HTTPException(status_code=400, detail="Invalid YouTube URL")
+    
+    # Check if already in user's saved videos
+    existing = await db.user_videos.find_one({"video_id": video_id})
+    if existing:
+        return {"success": True, "video": existing, "message": "Video already saved", "quota_cost": 0}
+    
+    try:
+        youtube = get_youtube_service()
+        
+        # Fetch video details (costs only 1 quota unit!)
+        request = youtube.videos().list(
+            part="snippet,contentDetails",
+            id=video_id
+        )
+        response = request.execute()
+        
+        if not response.get('items'):
+            raise HTTPException(status_code=404, detail="Video not found")
+        
+        item = response['items'][0]
+        
+        # Parse duration
+        duration_iso = item['contentDetails']['duration']
+        duration_match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', duration_iso)
+        if duration_match:
+            hours = int(duration_match.group(1) or 0)
+            minutes = int(duration_match.group(2) or 0)
+            seconds = int(duration_match.group(3) or 0)
+            duration_str = f"{hours}:{minutes:02d}:{seconds:02d}" if hours else f"{minutes}:{seconds:02d}"
+        else:
+            duration_str = "N/A"
+        
+        # Extract ingredients from description
+        description = item['snippet'].get('description', '')
+        ingredients = extract_ingredients_from_description(description)
+        
+        video_doc = {
+            "id": str(uuid.uuid4()),
+            "video_id": video_id,
+            "title": item['snippet']['title'],
+            "channel": item['snippet']['channelTitle'],
+            "channel_id": item['snippet']['channelId'],
+            "thumbnail": item['snippet']['thumbnails'].get('high', {}).get('url', ''),
+            "duration": duration_str,
+            "description": description[:500],
+            "ingredients": ingredients,
+            "source": "user_submitted",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.user_videos.insert_one(video_doc)
+        
+        # Remove _id before returning
+        video_doc.pop('_id', None)
+        
+        return {
+            "success": True,
+            "video": video_doc,
+            "message": "Video added successfully",
+            "quota_cost": 1
+        }
+        
+    except HttpError as e:
+        logger.error(f"YouTube API error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch video: {str(e)}")
+
+@api_router.get("/youtube/user-videos")
+async def get_user_videos():
+    """Get all user-submitted videos"""
+    videos = await db.user_videos.find({}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"videos": videos, "total": len(videos)}
+
+@api_router.delete("/youtube/user-videos/{video_id}")
+async def delete_user_video(video_id: str):
+    """Delete a user-submitted video"""
+    result = await db.user_videos.delete_one({"video_id": video_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return {"success": True, "message": "Video deleted"}
+
+@api_router.get("/youtube/cache-stats")
+async def get_cache_stats():
+    """Get cache statistics for monitoring"""
+    total_cached = await db.search_cache.count_documents({})
+    active_cached = await db.search_cache.count_documents({
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    return {
+        "total_cached_searches": total_cached,
+        "active_cache_entries": active_cached,
+        "cache_ttl_hours": 24
+    }
+
 @api_router.get("/")
 async def root():
     return {"message": "Rasoi-Sync API is running!"}
