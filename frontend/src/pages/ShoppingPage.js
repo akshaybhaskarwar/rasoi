@@ -272,29 +272,30 @@ const ShoppingPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="shopping-page">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-4 md:py-6 pb-28 md:pb-6 space-y-4 md:space-y-6 relative" data-testid="shopping-page">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Kirana-Connect</h1>
-          <p className="text-gray-600 text-sm mt-1">Your smart shopping assistant</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Kirana-Connect</h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-1">Your smart shopping assistant</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {getLowStockCount() > 0 && (
             <Button
               onClick={syncFromInventory}
               disabled={syncing}
-              className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-md"
+              className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-md text-sm h-9 md:h-10"
               data-testid="sync-inventory-btn"
             >
               {syncing ? (
                 <>
-                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Syncing...
+                  <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />
+                  <span className="hidden sm:inline">Syncing...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Sync {getLowStockCount()} Low Stock Items
+                  <Sparkles className="w-4 h-4 mr-1.5" />
+                  <span className="hidden sm:inline">Sync </span>{getLowStockCount()} Low
                 </>
               )}
             </Button>
@@ -302,11 +303,12 @@ const ShoppingPage = () => {
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full shadow-md"
+                className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full shadow-md text-sm h-9 md:h-10"
                 data-testid="add-shopping-item-btn"
               >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Item
+                <Plus className="w-4 h-4 mr-1.5" />
+                <span className="hidden sm:inline">Add Item</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
           <DialogContent data-testid="add-shopping-dialog">
