@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { GapAnalysisSidebar } from '@/components/GapAnalysisSidebar';
 import YouTubeRecipeDiscovery from '@/components/YouTubeRecipeDiscovery';
+import PersonalizedRecipeStream from '@/components/PersonalizedRecipeStream';
 
 const MEAL_TYPES = [
   { value: 'breakfast', label: '🌅 Breakfast', color: 'bg-yellow-50 border-yellow-200' },
