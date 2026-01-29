@@ -1478,12 +1478,17 @@ async def check_video_planned(video_id: str):
         # Format the date nicely
         plan_date = datetime.strptime(existing['date'], "%Y-%m-%d")
         day_name = plan_date.strftime("%A")
+        meal_type = existing.get('meal_type', 'meal')
+        
+        # Capitalize meal type for display
+        meal_display = meal_type.capitalize()
+        
         return {
             "is_planned": True,
             "plan_id": existing['id'],
             "date": existing['date'],
-            "meal_type": existing['meal_type'],
-            "display_text": f"Planned for {day_name}"
+            "meal_type": meal_type,
+            "display_text": f"{day_name}'s {meal_display}"
         }
     
     return {"is_planned": False}
