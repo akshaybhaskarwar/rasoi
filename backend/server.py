@@ -59,6 +59,7 @@ class InventoryItem(BaseModel):
     barcode: Optional[str] = None  # Product barcode if scanned
     monthly_quantity: Optional[int] = None  # Monthly usage quantity (numeric)
     monthly_unit: Optional[str] = None  # Unit for monthly quantity (g, kg, ml, L, pcs)
+    reserved_for: List[Dict[str, Any]] = []  # [{meal_plan_id, date, meal_type, qty, unit}]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class InventoryItemCreate(BaseModel):
