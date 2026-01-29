@@ -1941,6 +1941,346 @@ async def get_cache_stats():
         "cache_ttl_hours": 24
     }
 
+# ============ PERSONALIZED RECIPE STREAM ============
+# Fetches videos from favorite channels' upload playlists
+# Matches against user inventory with regex
+
+async def get_channel_upload_playlist(channel_name: str) -> Optional[Dict[str, Any]]:
+    """
+    Get channel info including upload playlist ID
+    Uses channels.list with part=contentDetails (costs 1 unit)
+    """
+    try:
+        youtube = get_youtube_service()
+        
+        # First search for channel by name
+        search_request = youtube.search().list(
+            part="snippet",
+            q=channel_name,
+            type="channel",
+            maxResults=1
+        )
+        search_response = search_request.execute()
+        
+        if not search_response.get('items'):
+            return None
+        
+        channel_id = search_response['items'][0]['snippet']['channelId']
+        channel_title = search_response['items'][0]['snippet']['title']
+        channel_thumbnail = search_response['items'][0]['snippet']['thumbnails'].get('default', {}).get('url', '')
+        
+        # Get channel details including upload playlist
+        channel_request = youtube.channels().list(
+            part="contentDetails,snippet",
+            id=channel_id
+        )
+        channel_response = channel_request.execute()
+        
+        if not channel_response.get('items'):
+            return None
+        
+        channel_data = channel_response['items'][0]
+        uploads_playlist_id = channel_data['contentDetails']['relatedPlaylists']['uploads']
+        
+        return {
+            "channel_id": channel_id,
+            "channel_name": channel_title,
+            "thumbnail": channel_thumbnail,
+            "uploads_playlist_id": uploads_playlist_id
+        }
+        
+    except HttpError as e:
+        logger.error(f"Error fetching channel info: {e}")
+        return None
+
+async def get_playlist_videos(playlist_id: str, max_results: int = 20) -> List[Dict[str, Any]]:
+    """
+    Get videos from a playlist (costs 1 unit per 50 videos)
+    Much cheaper than search!
+    """
+    try:
+        youtube = get_youtube_service()
+        
+        request = youtube.playlistItems().list(
+            part="snippet,contentDetails",
+            playlistId=playlist_id,
+            maxResults=max_results
+        )
+        response = request.execute()
+        
+        videos = []
+        for item in response.get('items', []):
+            snippet = item['snippet']
+            videos.append({
+                "video_id": snippet['resourceId']['videoId'],
+                "title": snippet['title'],
+                "description": snippet.get('description', '')[:500],
+                "channel": snippet['channelTitle'],
+                "channel_id": snippet['channelId'],
+                "thumbnail": snippet['thumbnails'].get('high', snippet['thumbnails'].get('medium', {})).get('url', ''),
+                "published_at": snippet['publishedAt']
+            })
+        
+        return videos
+        
+    except HttpError as e:
+        logger.error(f"Error fetching playlist videos: {e}")
+        return []
+
+def match_ingredients_in_text(text: str, inventory_items: List[str], min_matches: int = 2) -> Dict[str, Any]:
+    """
+    Case-insensitive regex match of inventory items against text
+    Returns match info only if min_matches threshold is met
+    """
+    text_lower = text.lower()
+    matched_items = []
+    
+    for item in inventory_items:
+        # Create flexible regex pattern
+        item_lower = item.lower()
+        # Match word boundaries for better accuracy
+        pattern = r'\b' + re.escape(item_lower) + r'\b'
+        if re.search(pattern, text_lower):
+            matched_items.append(item)
+            continue
+        # Also try without word boundaries for compound words
+        if item_lower in text_lower:
+            matched_items.append(item)
+    
+    match_count = len(matched_items)
+    
+    return {
+        "matched_count": match_count,
+        "matched_items": matched_items,
+        "meets_threshold": match_count >= min_matches,
+        "match_percentage": round((match_count / len(inventory_items)) * 100) if inventory_items else 0
+    }
+
+@api_router.get("/stream/channels")
+async def get_favorite_channels_with_info():
+    """
+    Get favorite channels with their YouTube info (avatars, etc.)
+    Caches channel info to avoid repeated API calls
+    """
+    # Get user's favorite channels
+    prefs = await db.preferences.find_one({}, {"_id": 0})
+    favorite_channels = prefs.get('favorite_channels', []) if prefs else []
+    
+    if not favorite_channels:
+        return {"channels": [], "message": "No favorite channels set"}
+    
+    channels_with_info = []
+    
+    for channel in favorite_channels:
+        channel_name = channel.get('name', '')
+        
+        # Check cache first
+        cached = await db.channel_info_cache.find_one({
+            "channel_name_lower": channel_name.lower(),
+            "expires_at": {"$gt": datetime.now(timezone.utc)}
+        })
+        
+        if cached:
+            channels_with_info.append({
+                "id": channel.get('id'),
+                "name": channel_name,
+                "channel_id": cached.get('channel_id'),
+                "thumbnail": cached.get('thumbnail'),
+                "uploads_playlist_id": cached.get('uploads_playlist_id')
+            })
+        else:
+            # Fetch from YouTube API
+            channel_info = await get_channel_upload_playlist(channel_name)
+            if channel_info:
+                # Cache for 7 days
+                cache_doc = {
+                    "channel_name_lower": channel_name.lower(),
+                    "channel_id": channel_info['channel_id'],
+                    "channel_name": channel_info['channel_name'],
+                    "thumbnail": channel_info['thumbnail'],
+                    "uploads_playlist_id": channel_info['uploads_playlist_id'],
+                    "created_at": datetime.now(timezone.utc),
+                    "expires_at": datetime.now(timezone.utc) + timedelta(days=7)
+                }
+                await db.channel_info_cache.update_one(
+                    {"channel_name_lower": channel_name.lower()},
+                    {"$set": cache_doc},
+                    upsert=True
+                )
+                
+                channels_with_info.append({
+                    "id": channel.get('id'),
+                    "name": channel_name,
+                    "channel_id": channel_info['channel_id'],
+                    "thumbnail": channel_info['thumbnail'],
+                    "uploads_playlist_id": channel_info['uploads_playlist_id']
+                })
+            else:
+                # Channel not found on YouTube, use placeholder
+                channels_with_info.append({
+                    "id": channel.get('id'),
+                    "name": channel_name,
+                    "channel_id": None,
+                    "thumbnail": None,
+                    "uploads_playlist_id": None
+                })
+    
+    return {"channels": channels_with_info}
+
+@api_router.get("/stream/feed")
+async def get_personalized_recipe_stream(
+    channel_filter: Optional[str] = None,
+    min_matches: int = 2,
+    max_videos_per_channel: int = 15
+):
+    """
+    Get personalized recipe feed from favorite channels
+    - Fetches from upload playlists (1 unit per channel vs 100 for search)
+    - Matches video title/description against user inventory
+    - Only returns videos with min_matches ingredients
+    """
+    # Get user inventory
+    inventory_items = await db.inventory.find(
+        {"stock_level": {"$ne": "empty"}},
+        {"name_en": 1, "_id": 0}
+    ).to_list(100)
+    user_inventory = [item["name_en"] for item in inventory_items]
+    
+    if not user_inventory:
+        return {
+            "feed": [],
+            "message": "Add items to your inventory to see personalized recipes",
+            "quota_cost": 0
+        }
+    
+    # Get favorite channels
+    prefs = await db.preferences.find_one({}, {"_id": 0})
+    favorite_channels = prefs.get('favorite_channels', []) if prefs else []
+    
+    if not favorite_channels:
+        return {
+            "feed": [],
+            "message": "Add favorite channels to see personalized recipes",
+            "quota_cost": 0
+        }
+    
+    # Filter to specific channel if requested
+    if channel_filter:
+        favorite_channels = [ch for ch in favorite_channels if ch.get('id') == channel_filter or ch.get('name', '').lower() == channel_filter.lower()]
+    
+    matched_videos = []
+    quota_used = 0
+    
+    for channel in favorite_channels:
+        channel_name = channel.get('name', '')
+        
+        # Get cached channel info
+        cached_info = await db.channel_info_cache.find_one({
+            "channel_name_lower": channel_name.lower()
+        })
+        
+        playlist_id = None
+        channel_thumbnail = None
+        
+        if cached_info and cached_info.get('uploads_playlist_id'):
+            playlist_id = cached_info['uploads_playlist_id']
+            channel_thumbnail = cached_info.get('thumbnail')
+        else:
+            # Fetch channel info (costs ~2 units)
+            channel_info = await get_channel_upload_playlist(channel_name)
+            quota_used += 2
+            if channel_info:
+                playlist_id = channel_info['uploads_playlist_id']
+                channel_thumbnail = channel_info['thumbnail']
+                # Cache it
+                await db.channel_info_cache.update_one(
+                    {"channel_name_lower": channel_name.lower()},
+                    {"$set": {
+                        **channel_info,
+                        "channel_name_lower": channel_name.lower(),
+                        "created_at": datetime.now(timezone.utc),
+                        "expires_at": datetime.now(timezone.utc) + timedelta(days=7)
+                    }},
+                    upsert=True
+                )
+        
+        if not playlist_id:
+            continue
+        
+        # Check video cache for this playlist
+        video_cache_key = f"playlist_{playlist_id}"
+        cached_videos = await db.playlist_video_cache.find_one({
+            "cache_key": video_cache_key,
+            "expires_at": {"$gt": datetime.now(timezone.utc)}
+        })
+        
+        if cached_videos:
+            videos = cached_videos.get('videos', [])
+        else:
+            # Fetch from playlist (costs 1 unit)
+            videos = await get_playlist_videos(playlist_id, max_videos_per_channel)
+            quota_used += 1
+            
+            # Cache for 6 hours
+            if videos:
+                await db.playlist_video_cache.update_one(
+                    {"cache_key": video_cache_key},
+                    {"$set": {
+                        "cache_key": video_cache_key,
+                        "playlist_id": playlist_id,
+                        "videos": videos,
+                        "created_at": datetime.now(timezone.utc),
+                        "expires_at": datetime.now(timezone.utc) + timedelta(hours=6)
+                    }},
+                    upsert=True
+                )
+        
+        # Match videos against inventory
+        for video in videos:
+            combined_text = f"{video['title']} {video.get('description', '')}"
+            match_info = match_ingredients_in_text(combined_text, user_inventory, min_matches)
+            
+            if match_info['meets_threshold']:
+                matched_videos.append({
+                    **video,
+                    "channel_thumbnail": channel_thumbnail,
+                    "inventory_match": {
+                        "matched_count": match_info['matched_count'],
+                        "matched_items": match_info['matched_items'],
+                        "total_inventory": len(user_inventory),
+                        "percentage": match_info['match_percentage']
+                    }
+                })
+    
+    # Sort by match percentage (highest first)
+    matched_videos.sort(key=lambda x: x['inventory_match']['percentage'], reverse=True)
+    
+    return {
+        "feed": matched_videos,
+        "total_matches": len(matched_videos),
+        "inventory_items_used": len(user_inventory),
+        "channels_checked": len(favorite_channels),
+        "quota_cost": quota_used
+    }
+
+@api_router.post("/stream/refresh")
+async def refresh_channel_feed(channel_name: Optional[str] = None):
+    """
+    Force refresh the feed cache for a channel or all channels
+    """
+    if channel_name:
+        # Clear specific channel cache
+        await db.channel_info_cache.delete_one({"channel_name_lower": channel_name.lower()})
+        # Clear associated playlist cache
+        cached_info = await db.channel_info_cache.find_one({"channel_name_lower": channel_name.lower()})
+        if cached_info and cached_info.get('uploads_playlist_id'):
+            await db.playlist_video_cache.delete_one({"playlist_id": cached_info['uploads_playlist_id']})
+        return {"message": f"Cache cleared for {channel_name}"}
+    else:
+        # Clear all stream caches
+        await db.playlist_video_cache.delete_many({})
+        return {"message": "All playlist caches cleared"}
+
 @api_router.get("/")
 async def root():
     return {"message": "Rasoi-Sync API is running!"}
