@@ -51,16 +51,32 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 #### Meal Planner
 - 7-day weekly calendar view
 - 4 daily sections: Breakfast, Lunch, Snacks, Dinner
-- **Local Recipe Database Search** (no YouTube API dependency)
-  - 25+ pre-built Indian recipes
-  - **Search by Name** - Full phrase text search (e.g., "Pav Bhaji") - Fixed Jan 28, 2025
-  - **Search by Ingredients** - Select from your pantry
-  - Filter: "All" or "Videos Only"
-  - Shows matching ingredients highlighted
-- **Favorite YouTube Channels**
-  - Inline collapsible section on Planner page
-  - For text search: All recipes shown, favorites prioritized (higher score)
-  - For ingredient search: Filter to favorites only when set
+- **Recipe Finder Dialog** with 3 search modes:
+  1. **Local Search** - Search local database by recipe name
+  2. **By Ingredients** - Select from pantry items
+  3. **YouTube Videos** - Cache-first YouTube API search
+
+#### YouTube Recipe Discovery Module - Added Jan 28, 2025
+- **Cache-First Architecture** - Minimizes API quota usage
+  - LocalStorage cache (24-hour TTL) - instant repeat searches
+  - MongoDB server cache - shared across sessions
+  - Quota indicator shows API units used per search
+- **"Dadi's Recommended" Carousel**
+  - Pre-fetched videos (0 API quota)
+  - Festival Specials, Video of the Day, Trending, Quick Recipes
+- **Ingredient-Based Video Search**
+  - Multi-select 2-5 ingredients from inventory
+  - Shows "You have X/Y ingredients" match percentage
+  - Missing ingredients displayed
+- **User-Submitted Videos**
+  - Paste any YouTube URL to save
+  - Uses `videos.list` API (1 unit vs 100 for search)
+  - Builds personal recipe collection
+
+#### Favorite YouTube Channels
+- Inline collapsible section on Planner page
+- For text search: All recipes shown, favorites prioritized (higher score)
+- For ingredient search: Filter to favorites only when set
 
 #### Home Page
 - Digital Dadi Widget with context-aware suggestions
@@ -70,13 +86,13 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 
 ### 🟠 Known Issues
 - **Translation API**: Currently MOCKED with static dictionary
-- **YouTube API Search**: Unreliable due to quota limits (local recipe DB is workaround)
 
 ### 🔵 Backlog (P2)
 - Community Kitchen (user-submitted recipes)
 - "Digital Dadi" enhanced with more dynamic suggestions
 - Freshness indicators & "Mummy's Secret Stash" icons
 - Expand local recipe database
+- Auto-sync favorite channels weekly (AI ingredient extraction)
 
 ## Tech Stack
 - **Frontend**: React, Tailwind CSS, shadcn/ui, Lucide icons
