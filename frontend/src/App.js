@@ -20,13 +20,13 @@ function App() {
   };
 
   return (
-    <div className="App bg-gray-50 min-h-screen">
+    <div className="App bg-gray-50 min-h-screen overflow-x-hidden">
       <BrowserRouter>
         <DualContextHeader onLanguageChange={handleLanguageChange} />
         
-        <div className="flex">
+        <div className="flex w-full max-w-full">
           {/* Main Content - with bottom padding for mobile nav */}
-          <main className="flex-1 pb-20 md:pb-0">
+          <main className="flex-1 pb-20 md:pb-0 min-w-0">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/inventory" element={<InventoryPage />} />
@@ -37,7 +37,7 @@ function App() {
           </main>
 
           {/* Gap Analysis Sidebar (Desktop Only) */}
-          <aside className="hidden xl:block w-80 p-4 sticky top-24 h-screen overflow-y-auto">
+          <aside className="hidden xl:block w-80 flex-shrink-0 p-4 sticky top-24 h-screen overflow-y-auto">
             <GapAnalysisSidebar />
           </aside>
         </div>
