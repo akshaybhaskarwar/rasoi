@@ -422,72 +422,144 @@ const PlannerPage = () => {
       </Card>
 
       {/* Weekly Calendar Grid */}
-      <div className="space-y-4">
-        {weekDates.map((dateInfo) => (
-          <Card key={dateInfo.dateStr} className="shadow-sm" data-testid={`date-card-${dateInfo.dateStr}`}>
-            <CardContent className="p-6">
-              {/* Date Header */}
-              <div className="mb-4 pb-3 border-b">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">{dateInfo.day}</h3>
-                    <p className="text-sm text-gray-600">{dateInfo.displayDate}</p>
+      <div className="space-y-4" ref={calendarRef}>
+        {weekDates.map((dateInfo) => {
+          const isCurrentDay = dateInfo.isToday;
+          
+          return (
+            <Card 
+              key={dateInfo.dateStr} 
+              ref={isCurrentDay ? todayCardRef : null}
+              className={`shadow-sm transition-all duration-300 ${
+                isCurrentDay 
+                  ? 'ring-2 ring-[#FF9933] ring-offset-2 border-[#FF9933] bg-gradient-to-r from-orange-50/50 to-white' 
+                  : ''
+              }`}
+              data-testid={`date-card-${dateInfo.dateStr}`}
+            >
+              <CardContent className="p-6">
+                {/* Date Header */}
+                <div className="mb-4 pb-3 border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* Today indicator */}
+                      {isCurrentDay && (
+                        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#FF9933] to-[#E68A2E] rounded-xl shadow-lg animate-pulse">
+                          <CalendarCheck className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className={`text-xl font-bold ${isCurrentDay ? 'text-[#FF9933]' : 'text-gray-800'}`}>
+                            {dateInfo.day}
+                          </h3>
+                          {isCurrentDay && (
+                            <Badge className="bg-[#FF9933] text-white text-xs px-2 py-0.5 animate-bounce">
+                              TODAY
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">{dateInfo.displayDate}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Quick summary for today */}
+                    {isCurrentDay && (
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">
+                          {getMealsForSlot(dateInfo.dateStr, 'breakfast').length + 
+                           getMealsForSlot(dateInfo.dateStr, 'lunch').length + 
+                           getMealsForSlot(dateInfo.dateStr, 'snacks').length + 
+                           getMealsForSlot(dateInfo.dateStr, 'dinner').length} meals planned
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* 4 Meal Sections */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {MEAL_TYPES.map((mealType) => {
-                  const meals = getMealsForSlot(dateInfo.dateStr, mealType.value);
-                  
-                  return (
-                    <div 
-                      key={mealType.value}
-                      className={`${mealType.color} rounded-xl p-4 border-2 min-h-[200px]`}
-                      data-testid={`meal-slot-${dateInfo.dateStr}-${mealType.value}`}
-                    >
-                      {/* Meal Type Header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-sm text-gray-800">{mealType.label}</h4>
-                        <Button
-                          size="sm"
-                          onClick={() => openRecipeFinder(dateInfo.dateStr, mealType.value)}
-                          className="h-7 px-2 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
-                          data-testid={`find-recipe-${dateInfo.dateStr}-${mealType.value}`}
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-
-                      {/* Meal Cards */}
-                      <div className="space-y-2">
-                        {meals.length === 0 ? (
-                          <div className="text-center py-6 text-gray-400">
-                            <ChefHat className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-xs">No meal planned</p>
+                {/* 4 Meal Sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {MEAL_TYPES.map((mealType) => {
+                    const meals = getMealsForSlot(dateInfo.dateStr, mealType.value);
+                    const isEmpty = meals.length === 0;
+                    const showSuggestion = isCurrentDay && isEmpty && suggestions.length > 0;
+                    
+                    return (
+                      <div 
+                        key={mealType.value}
+                        className={`${mealType.color} rounded-xl p-4 border-2 min-h-[200px] ${
+                          isCurrentDay && isEmpty ? 'border-dashed' : ''
+                        }`}
+                        data-testid={`meal-slot-${dateInfo.dateStr}-${mealType.value}`}
+                      >
+                        {/* Meal Type Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-bold text-sm text-gray-800">{mealType.label}</h4>
+                            <span className="text-[10px] text-gray-400">{mealType.time}</span>
                           </div>
-                        ) : (
-                          meals.map((meal) => (
-                            <div 
-                              key={meal.id}
-                              className="bg-white rounded-lg p-3 shadow-sm"
-                              data-testid={`meal-${meal.id}`}
-                            >
-                              {meal.youtube_thumbnail && (
-                                <div className="relative mb-2">
-                                  <img 
-                                    src={meal.youtube_thumbnail}
-                                    alt={meal.meal_name}
-                                    className="w-full h-24 object-cover rounded"
-                                  />
-                                  {meal.youtube_video_id && (
-                                    <button
-                                      onClick={() => window.open(`https://www.youtube.com/watch?v=${meal.youtube_video_id}`, '_blank')}
-                                      className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center group"
-                                      data-testid={`play-meal-${meal.id}`}
-                                    >
+                          <Button
+                            size="sm"
+                            onClick={() => openRecipeFinder(dateInfo.dateStr, mealType.value)}
+                            className="h-7 px-2 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs"
+                            data-testid={`find-recipe-${dateInfo.dateStr}-${mealType.value}`}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+
+                        {/* Meal Cards */}
+                        <div className="space-y-2">
+                          {isEmpty ? (
+                            <div className="text-center py-4">
+                              {showSuggestion ? (
+                                // Suggestion from favorites for empty today slots
+                                <div className="space-y-3">
+                                  <div className="text-gray-400">
+                                    <Sparkles className="w-6 h-6 mx-auto mb-1 text-amber-400" />
+                                    <p className="text-xs">No meal planned</p>
+                                  </div>
+                                  <button
+                                    onClick={() => openRecipeFinder(dateInfo.dateStr, mealType.value)}
+                                    className="w-full py-2 px-3 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg border border-amber-200 hover:border-amber-400 transition-colors"
+                                  >
+                                    <p className="text-xs font-medium text-amber-700 flex items-center justify-center gap-1">
+                                      <Star className="w-3 h-3" />
+                                      Quick picks available!
+                                    </p>
+                                    <p className="text-[10px] text-amber-600 mt-0.5">
+                                      {suggestions[0]?.title?.substring(0, 25)}...
+                                    </p>
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="text-gray-400 py-2">
+                                  <ChefHat className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                  <p className="text-xs">No meal planned</p>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            meals.map((meal) => (
+                              <div 
+                                key={meal.id}
+                                className="bg-white rounded-lg p-3 shadow-sm group relative"
+                                data-testid={`meal-${meal.id}`}
+                              >
+                                {meal.youtube_thumbnail && (
+                                  <div className="relative mb-2">
+                                    <img 
+                                      src={meal.youtube_thumbnail}
+                                      alt={meal.meal_name}
+                                      className="w-full h-24 object-cover rounded"
+                                    />
+                                    {meal.youtube_video_id && (
+                                      <button
+                                        onClick={() => window.open(`https://www.youtube.com/watch?v=${meal.youtube_video_id}`, '_blank')}
+                                        className="absolute inset-0 bg-black/40 hover:bg-black/60 transition-all flex items-center justify-center"
+                                        data-testid={`play-meal-${meal.id}`}
+                                      >
                                       <div className="w-12 h-12 bg-[#FF9933] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
                                       </div>
