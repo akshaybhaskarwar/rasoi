@@ -191,15 +191,15 @@ const VideoCard = ({ video, onAddToPlan }) => {
             <Button
               size="sm"
               className="flex-1 text-xs bg-[#138808] hover:bg-[#0d6606] text-white"
-              onClick={() => onAddToPlan({
-                title: video.title,
-                video_id: video.video_id,
-                thumbnail: video.thumbnail,
-                ingredients: video.inventory_match?.matched_items || []
-              })}
+              onClick={handleAddClick}
+              disabled={isAdding}
             >
-              <Plus className="w-3 h-3 mr-1" />
-              Add
+              {isAdding ? (
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              ) : (
+                <Plus className="w-3 h-3 mr-1" />
+              )}
+              {isAdding ? 'Adding...' : 'Add'}
             </Button>
           )}
         </div>
