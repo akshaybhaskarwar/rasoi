@@ -15,19 +15,21 @@ import { toast } from 'sonner';
 import { format, isToday, addDays, startOfDay } from 'date-fns';
 
 const MEAL_TYPES = [
-  { value: 'breakfast', label: '🌅 Breakfast', color: 'bg-yellow-50 border-yellow-200' },
-  { value: 'lunch', label: '🌞 Lunch', color: 'bg-orange-50 border-orange-200' },
-  { value: 'snacks', label: '☕ Evening Snacks', color: 'bg-pink-50 border-pink-200' },
-  { value: 'dinner', label: '🌙 Dinner', color: 'bg-indigo-50 border-indigo-200' }
+  { value: 'breakfast', label: '🌅 Breakfast', color: 'bg-yellow-50 border-yellow-200', time: '7:00 AM' },
+  { value: 'lunch', label: '🌞 Lunch', color: 'bg-orange-50 border-orange-200', time: '12:30 PM' },
+  { value: 'snacks', label: '☕ Snacks', color: 'bg-pink-50 border-pink-200', time: '5:00 PM' },
+  { value: 'dinner', label: '🌙 Dinner', color: 'bg-indigo-50 border-indigo-200', time: '8:00 PM' }
 ];
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
 const PlannerPage = () => {
-  const { mealPlans, addMealPlan, deleteMealPlan } = useMealPlanner();
+  const { mealPlans, addMealPlan, deleteMealPlan, suggestions, fetchSuggestions } = useMealPlanner();
   const { searchLocalRecipes } = useRecipes();
   const { inventory } = useInventory();
   const { favoriteChannels, addFavoriteChannel, removeFavoriteChannel } = useFavoriteChannels();
+  
+  // Refs for auto-scroll
+  const todayCardRef = useRef(null);
+  const calendarRef = useRef(null);
   
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMealType, setSelectedMealType] = useState('');
@@ -38,29 +40,50 @@ const PlannerPage = () => {
   const [previewVideo, setPreviewVideo] = useState(null);
   const [videosOnly, setVideosOnly] = useState(false);
   const [totalFound, setTotalFound] = useState(0);
-  const [textSearch, setTextSearch] = useState(''); // New: text search query
-  const [searchMode, setSearchMode] = useState('text'); // 'text' or 'ingredients'
+  const [textSearch, setTextSearch] = useState('');
+  const [searchMode, setSearchMode] = useState('text');
+  const [deletingMealId, setDeletingMealId] = useState(null);
   
   // Favorite channels state
   const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(false);
   const [newChannelInput, setNewChannelInput] = useState('');
 
-  // Get dates for next 7 days
+  // Get dates for next 7 days with enhanced formatting
   const getWeekDates = () => {
     const dates = [];
+    const today = startOfDay(new Date());
+    
     for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
+      const date = addDays(today, i);
+      const isCurrentDay = isToday(date);
+      
       dates.push({
-        dateStr: date.toISOString().split('T')[0],
-        day: DAYS[date.getDay()],
-        displayDate: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
+        dateStr: format(date, 'yyyy-MM-dd'),
+        day: format(date, 'EEEE'), // Full day name
+        shortDay: format(date, 'EEE'), // Short day name
+        displayDate: format(date, 'd MMM'), // "29 Jan"
+        fullDisplay: format(date, 'EEEE, d MMMM'), // "Thursday, 29 January"
+        isToday: isCurrentDay,
+        dayNum: format(date, 'd')
       });
     }
     return dates;
   };
 
   const weekDates = getWeekDates();
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  // Auto-scroll to today's card on mount
+  useEffect(() => {
+    if (todayCardRef.current) {
+      setTimeout(() => {
+        todayCardRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }, 500);
+    }
+  }, []);
 
   // Get meals for specific date and type
   const getMealsForSlot = (date, mealType) => {
