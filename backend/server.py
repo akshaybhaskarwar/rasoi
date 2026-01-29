@@ -2317,4 +2317,10 @@ async def startup_event():
     # User videos index
     await db.user_videos.create_index("video_id", unique=True)
     
+    # Personalized stream cache indexes
+    await db.channel_info_cache.create_index("channel_name_lower", unique=True)
+    await db.channel_info_cache.create_index("expires_at", expireAfterSeconds=0)
+    await db.playlist_video_cache.create_index("cache_key", unique=True)
+    await db.playlist_video_cache.create_index("expires_at", expireAfterSeconds=0)
+    
     logger.info("Rasoi-Sync backend started successfully!")
