@@ -279,8 +279,15 @@ const ShoppingPage = () => {
       {/* Header - Responsive */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Kirana-Connect</h1>
-          <p className="text-gray-600 text-xs md:text-sm mt-1">Your smart shopping assistant</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            {getLabel('shopping')}
+            {language !== 'en' && <span className="text-lg text-gray-500 font-normal ml-2">/ Shopping List</span>}
+          </h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-1">
+            {language === 'hi' ? 'आपका स्मार्ट खरीदारी सहायक' : 
+             language === 'mr' ? 'तुमचा स्मार्ट खरेदी सहाय्यक' : 
+             'Your smart shopping assistant'}
+          </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           {getLowStockCount() > 0 && (
