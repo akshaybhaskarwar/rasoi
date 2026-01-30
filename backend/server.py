@@ -28,11 +28,17 @@ db = client[os.environ['DB_NAME']]
 YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 EMERGENT_API_KEY = os.environ.get('EMERGENT_API_KEY')
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+GOOGLE_TRANSLATE_API_KEY = os.environ.get('GOOGLE_TRANSLATE_API_KEY', 'AIzaSyA3FWsJ4zdvXIm34KN3nWZKfDzsGnXc6FY')
 
-# Initialize translation client using Emergent API key
-# Create credentials from API key for Google Cloud Translate
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = ''  # Not needed with API key
-translation_client = None  # We'll use direct API calls with the key
+# Supported languages for translation
+SUPPORTED_LANGUAGES = {
+    "en": {"name": "English", "native": "English"},
+    "hi": {"name": "Hindi", "native": "हिन्दी"},
+    "mr": {"name": "Marathi", "native": "मराठी"}
+}
+
+# Community verification threshold
+COMMUNITY_VERIFY_THRESHOLD = 100
 
 # Create the main app
 app = FastAPI(title="Rasoi-Sync API")
