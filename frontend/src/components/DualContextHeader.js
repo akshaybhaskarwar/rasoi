@@ -16,7 +16,10 @@ const LANGUAGES = {
 };
 
 export const DualContextHeader = ({ onLanguageChange }) => {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(() => {
+    // Initialize from localStorage or default to 'en'
+    return localStorage.getItem('rasoi_language') || 'en';
+  });
 
   const handleLanguageChange = (value) => {
     setLanguage(value);
