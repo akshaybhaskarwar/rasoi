@@ -92,6 +92,7 @@ const STOCK_LEVELS = [
 
 const InventoryPage = () => {
   const { inventory, loading, addItem, updateItem, deleteItem } = useInventory();
+  const { language, getLabel, isEnglish } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStockLevel, setSelectedStockLevel] = useState('all'); // New state for stock filtering
