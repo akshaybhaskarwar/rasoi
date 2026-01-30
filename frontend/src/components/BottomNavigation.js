@@ -1,15 +1,17 @@
 import { Home, Package, ShoppingCart, Calendar } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { getLabel } = useLanguage();
 
   const navItems = [
-    { path: '/', icon: Home, label: 'Home', testId: 'nav-home' },
-    { path: '/inventory', icon: Package, label: 'Inventory', testId: 'nav-inventory' },
-    { path: '/planner', icon: Calendar, label: 'Planner', testId: 'nav-planner' },
-    { path: '/shopping', icon: ShoppingCart, label: 'Shop', testId: 'nav-shopping' },
+    { path: '/', icon: Home, labelKey: 'home', testId: 'nav-home' },
+    { path: '/inventory', icon: Package, labelKey: 'inventory', testId: 'nav-inventory' },
+    { path: '/planner', icon: Calendar, labelKey: 'planner', testId: 'nav-planner' },
+    { path: '/shopping', icon: ShoppingCart, labelKey: 'shopping', testId: 'nav-shopping' },
   ];
 
   return (
@@ -36,7 +38,7 @@ export const BottomNavigation = () => {
             >
               <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : ''}`} />
               <span className={`text-[10px] mt-1 ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                {item.label}
+                {getLabel(item.labelKey)}
               </span>
             </button>
           );
