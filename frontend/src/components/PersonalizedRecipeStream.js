@@ -348,8 +348,8 @@ const PersonalizedRecipeStream = () => {
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Cook with Your Stock</h2>
-            <p className="text-sm text-gray-500">Recipes from your favorite channels matching your pantry</p>
+            <h2 className="text-xl font-bold text-gray-900">{getLabel('cookWithYourStock')}</h2>
+            <p className="text-sm text-gray-500">{getLabel('recipesFromFavoriteChannels')}</p>
           </div>
         </div>
         
@@ -361,7 +361,7 @@ const PersonalizedRecipeStream = () => {
           className="gap-2"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          {getLabel('refresh')}
         </Button>
       </div>
 
@@ -371,7 +371,7 @@ const PersonalizedRecipeStream = () => {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-800 flex items-center gap-2">
               <Youtube className="w-5 h-5 text-red-500" />
-              Your Channels
+              {getLabel('favoriteChannels')}
             </h3>
             {selectedChannel && (
               <Button
@@ -381,7 +381,7 @@ const PersonalizedRecipeStream = () => {
                 className="text-xs text-gray-500 hover:text-gray-700"
               >
                 <X className="w-3 h-3 mr-1" />
-                Clear filter
+                {getLabel('clear')}
               </Button>
             )}
           </div>
