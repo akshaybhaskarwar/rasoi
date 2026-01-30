@@ -11,13 +11,18 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - **Live Translation**: Real-time translation using Google Cloud Translation API v3
 - **Bilingual Display**: All items show "English / [Translation]" format
 - **Language Selection**: Hindi (हिन्दी), Marathi (मराठी), English options
+- **Full UI Translation**: App name, headers, buttons, labels, navigation - all translated
+  - Header: App name "रसोई-सिंक", tagline, "Indian Kitchen" → "भारतीय रसोई/भारतीय स्वयंपाकघर"
+  - Navigation: Home, Inventory, Planner, Shopping - all translated
+  - Buttons: Add Item, Search, Filter, Save, Cancel, etc.
+  - Labels: Stock levels, categories, empty states
 - **Verification System**:
   - **AI Translated (Pending)**: Sparkle ✨ icon for new translations
   - **Looks Right Button**: Checkmark to verify translation is correct
   - **Community Verified (Gold)**: Badge when 100+ users verify a translation
   - **Dadi's Override**: Tap translation to edit with custom family term
 - **Smart Caching**: Translations cached in MongoDB to reduce API calls
-- **Static Pre-verified**: Common Indian ingredients pre-translated and marked as Gold
+- **LanguageContext**: App-wide language state management with localStorage persistence
 
 #### Inventory Management
 - Bilingual item display (English/Hindi/Marathi)
