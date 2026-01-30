@@ -437,8 +437,13 @@ const ShoppingPage = () => {
                         >
                           <div className="flex-1">
                             <p className="font-medium text-gray-800 bilingual-text">
-                              {item.name_en}
-                              {item.name_mr && <span className="text-gray-600"> <span className="text-[#FF9933]">/</span> <span className="font-semibold">{item.name_mr}</span></span>}
+                              <TranslatedLabel 
+                                textEn={item.name_en}
+                                textRegional={language === 'hi' ? item.name_hi : item.name_mr}
+                                targetLanguage={language}
+                                showVerification={false}
+                                size="sm"
+                              />
                             </p>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               {/* Stock level badge */}
