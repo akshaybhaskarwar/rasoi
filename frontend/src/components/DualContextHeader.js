@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MapPin, Globe, Menu } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Globe } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -7,24 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-// Supported languages
-const LANGUAGES = {
-  en: { name: 'English', native: 'English', flag: '🇬🇧' },
-  hi: { name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
-  mr: { name: 'Marathi', native: 'मराठी', flag: '🇮🇳' }
-};
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const DualContextHeader = ({ onLanguageChange }) => {
-  const [language, setLanguage] = useState(() => {
-    // Initialize from localStorage or default to 'en'
-    return localStorage.getItem('rasoi_language') || 'en';
-  });
+  const { language, changeLanguage, getLabel } = useLanguage();
 
   const handleLanguageChange = (value) => {
-    setLanguage(value);
-    // Store in localStorage for persistence
-    localStorage.setItem('rasoi_language', value);
+    changeLanguage(value);
     if (onLanguageChange) {
       onLanguageChange(value);
     }
@@ -43,7 +32,7 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <div className="w-8 h-8 rounded-full masala-gradient flex items-center justify-center text-white font-bold text-sm">
               RS
             </div>
-            <span className="font-bold text-lg text-gray-800">Rasoi-Sync</span>
+            <span className="font-bold text-lg text-gray-800">{getLabel('appName')}</span>
           </div>
           
           {/* Mobile: Location + Language compact */}
@@ -81,7 +70,10 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <div className="w-10 h-10 rounded-full masala-gradient flex items-center justify-center text-white font-bold text-lg">
               RS
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">Rasoi-Sync</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">{getLabel('appName')}</h1>
+              <p className="text-xs text-gray-500">{getLabel('appTagline')}</p>
+            </div>
           </div>
 
           {/* Location & Culture Badge */}
@@ -93,7 +85,7 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <div className="w-px h-4 bg-gray-300" />
             <div className="flex items-center gap-2 text-sm">
               <span className="text-xl">🍛</span>
-              <span className="font-medium">Indian Kitchen</span>
+              <span className="font-medium">{getLabel('indianKitchen')}</span>
             </div>
           </div>
 
