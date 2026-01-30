@@ -101,8 +101,8 @@ class ShoppingItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name_en: str
-    name_gu: Optional[str] = None
-    name_mr: Optional[str] = None
+    name_hi: Optional[str] = None  # Hindi translation
+    name_mr: Optional[str] = None  # Marathi translation
     category: str
     quantity: str
     stock_level: Optional[str] = None  # empty, low - synced from inventory
@@ -113,6 +113,7 @@ class ShoppingItem(BaseModel):
 class ShoppingItemCreate(BaseModel):
     name_en: str
     name_mr: Optional[str] = None  # Accept Marathi name directly
+    name_hi: Optional[str] = None  # Accept Hindi name directly
     category: str
     quantity: str
     stock_level: Optional[str] = None  # empty, low - synced from inventory
