@@ -8,11 +8,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Supported languages
+const LANGUAGES = {
+  en: { name: 'English', native: 'English', flag: '🇬🇧' },
+  hi: { name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
+  mr: { name: 'Marathi', native: 'मराठी', flag: '🇮🇳' }
+};
+
 export const DualContextHeader = ({ onLanguageChange }) => {
   const [language, setLanguage] = useState('en');
 
   const handleLanguageChange = (value) => {
     setLanguage(value);
+    // Store in localStorage for persistence
+    localStorage.setItem('rasoi_language', value);
     if (onLanguageChange) {
       onLanguageChange(value);
     }
@@ -45,16 +54,16 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             {/* Language toggle - compact */}
             <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger 
-                className="w-[70px] h-8 border-[#FF9933] focus:ring-[#FF9933] text-xs px-2"
+                className="w-[80px] h-8 border-[#FF9933] focus:ring-[#FF9933] text-xs px-2"
                 data-testid="language-selector-mobile"
               >
                 <Globe className="w-3 h-3 mr-1" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en" className="text-xs">EN</SelectItem>
-                <SelectItem value="gu" className="text-xs">ગુજ</SelectItem>
-                <SelectItem value="mr" className="text-xs">मरा</SelectItem>
+                <SelectItem value="en" className="text-xs">🇬🇧 EN</SelectItem>
+                <SelectItem value="hi" className="text-xs">🇮🇳 हिं</SelectItem>
+                <SelectItem value="mr" className="text-xs">🇮🇳 मरा</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -81,7 +90,7 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <div className="w-px h-4 bg-gray-300" />
             <div className="flex items-center gap-2 text-sm">
               <span className="text-xl">🍛</span>
-              <span className="font-medium">Gujarati Home</span>
+              <span className="font-medium">Indian Kitchen</span>
             </div>
           </div>
 
@@ -90,15 +99,21 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <Globe className="w-5 h-5 text-gray-600" />
             <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger 
-                className="w-[140px] border-[#FF9933] focus:ring-[#FF9933]"
+                className="w-[160px] border-[#FF9933] focus:ring-[#FF9933]"
                 data-testid="language-selector"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en" data-testid="lang-en">English</SelectItem>
-                <SelectItem value="gu" data-testid="lang-gu">ગુજરાતી</SelectItem>
-                <SelectItem value="mr" data-testid="lang-mr">मराठी</SelectItem>
+                <SelectItem value="en" data-testid="lang-en">
+                  <span className="flex items-center gap-2">🇬🇧 English</span>
+                </SelectItem>
+                <SelectItem value="hi" data-testid="lang-hi">
+                  <span className="flex items-center gap-2">🇮🇳 हिन्दी (Hindi)</span>
+                </SelectItem>
+                <SelectItem value="mr" data-testid="lang-mr">
+                  <span className="flex items-center gap-2">🇮🇳 मराठी (Marathi)</span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
