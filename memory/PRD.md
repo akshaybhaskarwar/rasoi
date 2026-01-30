@@ -189,6 +189,7 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - **Barcode Scanning**: @zxing/browser
 - **OCR**: Tesseract.js (installed, not implemented)
 - **Product Lookup**: Open Food Facts API
+- **Translation**: Google Cloud Translation API v3
 
 ## Key API Endpoints
 - `/api/inventory` - Inventory CRUD (with expiry_date, barcode fields)
@@ -197,17 +198,27 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - `/api/recipes/search` - Local recipe search by ingredients
 - `/api/gap-analysis` - Compare meal plan vs inventory
 - `/api/preferences/favorite-channels` - GET/POST/DELETE favorites
+- `/api/translate` - Translate text to multiple languages (POST)
+- `/api/translate/batch` - Batch translate multiple texts (POST)
+- `/api/translate/verify` - User verifies a translation (POST)
+- `/api/translate/edit` - User provides custom "Dadi Override" (POST)
+- `/api/translate/community-verified` - Get all Gold translations (GET)
 
 ## Data Models
 
 ### Inventory Item
 ```
-{id, name_en, name_mr, category, stock_level, expiry_date?, barcode?, created_at}
+{id, name_en, name_hi?, name_mr?, category, stock_level, expiry_date?, barcode?, created_at}
 ```
 
 ### Shopping Item
 ```
-{id, name_en, name_mr, category, quantity, stock_level?, monthly_quantity?, store_type, created_at}
+{id, name_en, name_hi?, name_mr?, category, quantity, stock_level?, monthly_quantity?, store_type, created_at}
+```
+
+### Translation Entry
+```
+{id, source_text, target_language, translated_text, is_ai_generated, user_verified, community_verified, user_verified_count, custom_labels: {user_id: custom_label}, created_at, updated_at}
 ```
 
 ### Meal Plan
@@ -216,4 +227,4 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 ```
 
 ---
-*Last updated: January 29, 2025*
+*Last updated: January 30, 2025*
