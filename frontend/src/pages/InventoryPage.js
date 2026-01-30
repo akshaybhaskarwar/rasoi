@@ -554,17 +554,15 @@ const InventoryPage = () => {
                           {/* Header with Secret Stash */}
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 min-w-0">
-                              {/* Bilingual Item Name - with proper text wrapping */}
-                              <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 break-words">
-                                <span className="block sm:inline">{item.name_en}</span>
-                                {(item.name_gu || item.name_mr) && (
-                                  <>
-                                    <span className="text-[#FF9933] mx-1 sm:mx-2 hidden sm:inline">/</span>
-                                    <span className="text-gray-600 font-medium text-sm sm:text-base block sm:inline mt-0.5 sm:mt-0">
-                                      {item.name_mr || item.name_gu}
-                                    </span>
-                                  </>
-                                )}
+                              {/* Bilingual Item Name - Using TranslatedLabel */}
+                              <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 break-words group">
+                                <TranslatedLabel 
+                                  textEn={item.name_en}
+                                  textRegional={language === 'hi' ? item.name_hi : item.name_mr}
+                                  targetLanguage={language}
+                                  showVerification={true}
+                                  size="md"
+                                />
                               </h3>
                               
                               {/* Category Badge */}
