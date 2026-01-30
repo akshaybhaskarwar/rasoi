@@ -1,4 +1,5 @@
 import { useGapAnalysis } from '@/hooks/useRasoiSync';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AlertTriangle, ChevronDown, ChevronUp, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
   const { analysis, loading } = useGapAnalysis();
   const [isExpanded, setIsExpanded] = useState(!isMobile);
   const navigate = useNavigate();
+  const { getLabel } = useLanguage();
 
   if (loading || !analysis || analysis.missing_ingredients.length === 0) {
     return null;
@@ -40,12 +42,12 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
               </div>
               <div>
                 <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                  Gap Analysis
+                  {getLabel('gapAnalysis')}
                   <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                     {analysis.missing_ingredients.length}
                   </span>
                 </h3>
-                <p className="text-xs text-gray-600">Missing ingredients for planned meals</p>
+                <p className="text-xs text-gray-600">{getLabel('missingIngredientsForMeals')}</p>
               </div>
             </div>
             <Button variant="ghost" size="sm">
