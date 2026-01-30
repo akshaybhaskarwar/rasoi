@@ -424,8 +424,8 @@ const ShoppingPage = () => {
           {Object.keys(groupedByCategory).length === 0 ? (
             <Card className="p-12 text-center">
               <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">Your shopping list is empty</p>
-              <p className="text-sm text-gray-500">Add items to get started</p>
+              <p className="text-gray-600 mb-2">{getLabel('emptyShoppingList')}</p>
+              <p className="text-sm text-gray-500">{getLabel('addItemsToStart')}</p>
             </Card>
           ) : (
             <>
