@@ -175,7 +175,7 @@ const VideoCard = ({ video, onOpenModal, plannedInfo, labels }) => {
             onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, '_blank')}
           >
             <Play className="w-3 h-3 mr-1" />
-            Watch
+            {labels?.watchVideo || 'Watch'}
           </Button>
           
           {isPlanned ? (
@@ -186,7 +186,7 @@ const VideoCard = ({ video, onOpenModal, plannedInfo, labels }) => {
               disabled
             >
               <Check className="w-3 h-3 mr-1" />
-              {plannedInfo.display_text || 'Planned'}
+              {plannedInfo.display_text || (labels?.addToPlan ? labels.addToPlan.replace('Add to ', '').replace('योजनेत जोडा', 'नियोजित').replace('योजना में जोड़ें', 'योजित') : 'Planned')}
             </Button>
           ) : (
             <Button
@@ -195,7 +195,7 @@ const VideoCard = ({ video, onOpenModal, plannedInfo, labels }) => {
               onClick={() => onOpenModal(video)}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Add
+              {labels?.addToPlan || 'Add to Plan'}
             </Button>
           )}
         </div>
