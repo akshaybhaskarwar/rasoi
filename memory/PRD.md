@@ -1,14 +1,26 @@
 # Rasoi-Sync - Indian Kitchen Manager
 
 ## Overview
-A mobile-first web application for intelligent Indian kitchen management with bilingual support (English/Marathi).
+A mobile-first web application for intelligent Indian kitchen management with bilingual support (English/Hindi/Marathi).
 
 ## Core Features
 
 ### ✅ Implemented
 
+#### Google Cloud Translation API Integration - Added Jan 30, 2025
+- **Live Translation**: Real-time translation using Google Cloud Translation API v3
+- **Bilingual Display**: All items show "English / [Translation]" format
+- **Language Selection**: Hindi (हिन्दी), Marathi (मराठी), English options
+- **Verification System**:
+  - **AI Translated (Pending)**: Sparkle ✨ icon for new translations
+  - **Looks Right Button**: Checkmark to verify translation is correct
+  - **Community Verified (Gold)**: Badge when 100+ users verify a translation
+  - **Dadi's Override**: Tap translation to edit with custom family term
+- **Smart Caching**: Translations cached in MongoDB to reduce API calls
+- **Static Pre-verified**: Common Indian ingredients pre-translated and marked as Gold
+
 #### Inventory Management
-- Bilingual item display (English/Marathi)
+- Bilingual item display (English/Hindi/Marathi)
 - Card-based UI with category grouping
 - Stock level filtering (Full, Half, Low, Empty)
 - CRUD operations for items
