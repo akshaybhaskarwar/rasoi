@@ -86,7 +86,7 @@ const InventoryMatchBadge = ({ match }) => {
 };
 
 // Video card component
-const VideoCard = ({ video, onOpenModal, plannedInfo }) => {
+const VideoCard = ({ video, onOpenModal, plannedInfo, labels }) => {
   const isPlanned = plannedInfo?.is_planned;
   
   return (
@@ -122,7 +122,7 @@ const VideoCard = ({ video, onOpenModal, plannedInfo }) => {
         {isPlanned && (
           <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
             <Check className="w-3 h-3" />
-            Planned
+            {labels?.addToPlan ? labels.addToPlan.replace('Add to ', '').replace('जोडा', 'नियोजित').replace('जोड़ें', 'नियोजित') : 'Planned'}
           </div>
         )}
       </div>
