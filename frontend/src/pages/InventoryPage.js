@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar, Minus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
 import { BarcodeScanner } from '@/components/BarcodeScanner';
 import { Badge } from '@/components/ui/badge';
+import TranslatedLabel from '@/components/TranslatedLabel';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
