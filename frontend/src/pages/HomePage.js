@@ -1,4 +1,5 @@
 import { useInventory, useMealPlanner, useGapAnalysis } from '@/hooks/useRasoiSync';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Package2, Calendar, ShoppingCart, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DigitalDadiWidget } from '@/components/DigitalDadiWidget';
@@ -9,11 +10,12 @@ const HomePage = () => {
   const { mealPlans } = useMealPlanner();
   const { analysis } = useGapAnalysis();
   const navigate = useNavigate();
+  const { getLabel } = useLanguage();
 
   const stats = [
     {
       icon: Package2,
-      label: 'Items in Stock',
+      labelKey: 'itemsInStock',
       value: inventory.filter(i => i.stock_level === 'full' || i.stock_level === 'half').length,
       color: 'text-[#77DD77]',
       bg: 'bg-[#77DD77]/10',
@@ -21,7 +23,7 @@ const HomePage = () => {
     },
     {
       icon: ShoppingCart,
-      label: 'Low Stock Items',
+      labelKey: 'lowStockItems',
       value: inventory.filter(i => i.stock_level === 'low').length,
       color: 'text-[#FF9933]',
       bg: 'bg-[#FF9933]/10',
@@ -29,7 +31,7 @@ const HomePage = () => {
     },
     {
       icon: Calendar,
-      label: 'Meals Planned',
+      labelKey: 'mealsPlanned',
       value: mealPlans.length,
       color: 'text-[#FFCC00]',
       bg: 'bg-[#FFCC00]/10',
@@ -37,7 +39,7 @@ const HomePage = () => {
     },
     {
       icon: AlertCircle,
-      label: 'Missing Items',
+      labelKey: 'missingItems',
       value: analysis?.missing_ingredients?.length || 0,
       color: 'text-red-500',
       bg: 'bg-red-50',
@@ -49,8 +51,8 @@ const HomePage = () => {
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="home-page">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-[#FF9933] to-[#FFCC00] rounded-2xl p-6 text-white shadow-lg">
-        <h2 className="text-3xl font-bold mb-2">Welcome to Rasoi-Sync</h2>
-        <p className="text-white/90">Your intelligent kitchen companion</p>
+        <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeTo')} {getLabel('appName')}</h2>
+        <p className="text-white/90">{getLabel('intelligentKitchenCompanion')}</p>
       </div>
 
       {/* Digital Dadi Widget */}
@@ -72,23 +74,56 @@ const HomePage = () => {
                   <Icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
                 <div className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-sm text-gray-600">{getLabel(stat.labelKey)}</div>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
+      {/* Missing Ingredients Section */}
+      {analysis?.missing_ingredients?.length > 0 && (
+        <Card className="shadow-sm border-red-200 bg-red-50/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-red-700">{getLabel('missingIngredients')}</h3>
+              <button 
+                onClick={() => navigate('/shopping')}
+                className="text-sm text-red-600 hover:underline"
+              >
+                {getLabel('viewAll')} →
+              </button>
+            </div>
+            <div className="space-y-3">
+              {analysis.missing_ingredients.slice(0, 3).map((item, idx) => (
+                <div 
+                  key={idx}
+                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-red-100"
+                >
+                  <div>
+                    <p className="font-medium text-gray-800">{item.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {getLabel('forMeal')}: {item.needed_for} | {getLabel('onDate')}: {item.date}
+                    </p>
+                  </div>
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent Activity */}
       <Card className="shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Recent Updates</h3>
+            <h3 className="text-xl font-bold">{getLabel('recentUpdates')}</h3>
             <button 
               onClick={() => navigate('/inventory')}
               className="text-sm text-[#FF9933] hover:underline"
             >
-              View All →
+              {getLabel('viewAll')} →
             </button>
           </div>
           <div className="space-y-3">
@@ -111,7 +146,7 @@ const HomePage = () => {
                   item.stock_level === 'low' ? 'bg-[#FF9933]/20 text-[#FF9933]' :
                   'bg-gray-200 text-gray-600'
                 }`}>
-                  {item.stock_level}
+                  {getLabel(item.stock_level)}
                 </div>
               </div>
             ))}
