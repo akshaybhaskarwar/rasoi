@@ -260,12 +260,75 @@ class TranslationRequest(BaseModel):
     source_language: str = "en"
     target_languages: List[str]
 
+class TranslationVerifyRequest(BaseModel):
+    source_text: str
+    target_language: str
+    translated_text: str
+
+class TranslationEditRequest(BaseModel):
+    source_text: str
+    target_language: str
+    custom_label: str
+
+class TranslationEntry(BaseModel):
+    """Model for translation cache entries with verification status"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    source_text: str
+    source_language: str = "en"
+    target_language: str
+    translated_text: str
+    is_ai_generated: bool = True
+    user_verified: bool = False
+    user_verified_count: int = 0  # For community verification
+    community_verified: bool = False  # True when count >= 100
+    custom_labels: Dict[str, str] = {}  # user_id -> custom_label
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class FestivalAlert(BaseModel):
     date: str
     name: str
     message: str
     ingredients_needed: List[str] = []
     ingredients_in_stock: List[str] = []
+
+# ============ GOOGLE TRANSLATION API SERVICE ============
+
+async def google_translate_api(text: str, target_lang: str, source_lang: str = "en") -> Optional[str]:
+    """
+    Call Google Cloud Translation API v3 (Basic/Advanced)
+    Uses REST API with API key authentication
+    """
+    if not GOOGLE_TRANSLATE_API_KEY:
+        logger.warning("Google Translate API key not configured")
+        return None
+    
+    # Map our language codes to Google's
+    lang_map = {"hi": "hi", "mr": "mr", "en": "en"}
+    google_target = lang_map.get(target_lang, target_lang)
+    
+    url = f"https://translation.googleapis.com/language/translate/v2"
+    params = {
+        "key": GOOGLE_TRANSLATE_API_KEY,
+        "q": text,
+        "target": google_target,
+        "source": source_lang,
+        "format": "text"
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, params=params, timeout=10.0)
+            response.raise_for_status()
+            data = response.json()
+            
+            if data.get("data", {}).get("translations"):
+                return data["data"]["translations"][0]["translatedText"]
+            return None
+    except Exception as e:
+        logger.error(f"Google Translate API error: {e}")
+        return None
 
 # ============ TRANSLATION SERVICE ============
 
