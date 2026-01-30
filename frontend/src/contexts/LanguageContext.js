@@ -112,13 +112,41 @@ export const UI_LABELS = {
     goldVerified: 'Gold Verified',
     
     // Common phrases
-    itemsInStock: 'items in stock',
+    itemsInStock: 'Items in Stock',
     itemsTotal: 'items total',
     lastUpdated: 'Last updated',
     selectLanguage: 'Select Language',
     manageYourKitchen: 'Manage your kitchen stock',
     quickPicks: 'Quick picks available!',
-    mealsPlanned: 'meals planned',
+    mealsPlanned: 'Meals Planned',
+    
+    // Home page
+    welcomeTo: 'Welcome to',
+    intelligentKitchenCompanion: 'Your intelligent kitchen companion',
+    lowStockItems: 'Low Stock Items',
+    missingItems: 'Missing Items',
+    missingIngredients: 'Missing Ingredients',
+    recentUpdates: 'Recent Updates',
+    viewAll: 'View All',
+    forMeal: 'For',
+    onDate: 'On',
+    
+    // Planner page
+    planYourWeeklyMeals: 'Plan your weekly meals with recipes',
+    gapAnalysis: 'Gap Analysis',
+    missingIngredientsForMeals: 'Missing ingredients for planned meals',
+    cookWithYourStock: 'Cook with Your Stock',
+    recipesFromFavoriteChannels: 'Recipes from your favorite channels matching your pantry',
+    recipesFromChannelsAppearFirst: 'Recipes from these channels appear first',
+    
+    // Days
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday',
     
     // Categories
     grains: 'Grains & Rice',
