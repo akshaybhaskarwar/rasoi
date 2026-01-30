@@ -213,6 +213,7 @@ const PersonalizedRecipeStream = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [feedStats, setFeedStats] = useState({ total: 0, quotaCost: 0 });
   const [minMatches, setMinMatches] = useState(1);
+  const { getLabel } = useLanguage();
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
