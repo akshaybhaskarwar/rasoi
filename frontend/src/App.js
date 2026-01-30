@@ -1,28 +1,24 @@
-import { useState } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { DualContextHeader } from "@/components/DualContextHeader";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { GapAnalysisSidebar } from "@/components/GapAnalysisSidebar";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import HomePage from "@/pages/HomePage";
 import InventoryPage from "@/pages/InventoryPage";
 import ShoppingPage from "@/pages/ShoppingPage";
 import PlannerPage from "@/pages/PlannerPage";
 import CommunityPage from "@/pages/CommunityPage";
 
-function App() {
-  const [language, setLanguage] = useState('en');
-
-  const handleLanguageChange = (newLanguage) => {
-    setLanguage(newLanguage);
-    // You can add translation logic here if needed
-  };
+// Inner component that uses language context
+function AppContent() {
+  const { changeLanguage } = useLanguage();
 
   return (
     <div className="App bg-gray-50 min-h-screen overflow-x-hidden">
       <BrowserRouter>
-        <DualContextHeader onLanguageChange={handleLanguageChange} />
+        <DualContextHeader onLanguageChange={changeLanguage} />
         
         <div className="flex w-full max-w-full">
           {/* Main Content - with bottom padding for mobile nav */}
@@ -46,6 +42,14 @@ function App() {
         <Toaster position="top-center" className="md:bottom-4" />
       </BrowserRouter>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 
