@@ -445,9 +445,9 @@ const InventoryPage = () => {
               <div className="text-3xl font-bold">
                 {inventory.filter(i => i.stock_level === 'half').length}
               </div>
-              <div className="text-sm opacity-90">Half Stock</div>
+              <div className="text-sm opacity-90">{getLabel('halfStock')}</div>
               {selectedStockLevel === 'half' && (
-                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+                <div className="text-xs mt-2 font-medium">✓ {getLabel('filter')}</div>
               )}
             </CardContent>
           </Card>
@@ -464,9 +464,9 @@ const InventoryPage = () => {
               <div className="text-3xl font-bold">
                 {inventory.filter(i => i.stock_level === 'low').length}
               </div>
-              <div className="text-sm opacity-90">Low Stock</div>
+              <div className="text-sm opacity-90">{getLabel('lowStock')}</div>
               {selectedStockLevel === 'low' && (
-                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+                <div className="text-xs mt-2 font-medium">✓ {getLabel('filter')}</div>
               )}
             </CardContent>
           </Card>
@@ -483,9 +483,9 @@ const InventoryPage = () => {
               <div className="text-3xl font-bold">
                 {inventory.filter(i => i.stock_level === 'empty').length}
               </div>
-              <div className="text-sm opacity-90">Empty</div>
+              <div className="text-sm opacity-90">{getLabel('emptyStock')}</div>
               {selectedStockLevel === 'empty' && (
-                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+                <div className="text-xs mt-2 font-medium">✓ {getLabel('filter')}</div>
               )}
             </CardContent>
           </Card>
@@ -496,8 +496,8 @@ const InventoryPage = () => {
           <div className="flex items-center justify-between bg-[#FFFBF0] border border-[#FFCC00] rounded-xl p-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">
-                Showing only <span className="font-bold text-[#FF9933]">
-                  {selectedStockLevel.charAt(0).toUpperCase() + selectedStockLevel.slice(1)} Stock
+                {getLabel('filter')}: <span className="font-bold text-[#FF9933]">
+                  {getLabel(selectedStockLevel + 'Stock')}
                 </span> items ({filteredInventory.length} items)
               </span>
             </div>
