@@ -265,8 +265,8 @@ const PlannerPage = () => {
       {/* Header - Mobile-friendly */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Meal Planner</h1>
-          <p className="text-gray-600 text-xs md:text-sm mt-0.5 md:mt-1">Plan your weekly meals with recipes</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{getLabel('mealPlanner')}</h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-0.5 md:mt-1">{getLabel('planYourWeeklyMeals')}</p>
         </div>
       </div>
 
@@ -294,9 +294,9 @@ const PlannerPage = () => {
               <div>
                 <h3 className="font-bold text-gray-800 flex items-center gap-2">
                   <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
-                  Favorite Channels
+                  {getLabel('favoriteChannels')}
                 </h3>
-                <p className="text-xs text-gray-500">Recipes from these channels appear first</p>
+                <p className="text-xs text-gray-500">{getLabel('recipesFromChannelsAppearFirst')}</p>
               </div>
             </div>
             
