@@ -418,13 +418,41 @@ export const UI_LABELS = {
     goldVerified: 'गोल्ड सत्यापित',
     
     // Common phrases
-    itemsInStock: 'वस्तू साठ्यात',
+    itemsInStock: 'साठ्यातील वस्तू',
     itemsTotal: 'एकूण वस्तू',
     lastUpdated: 'शेवटचे अपडेट',
     selectLanguage: 'भाषा निवडा',
     manageYourKitchen: 'तुमच्या स्वयंपाकघराचा साठा व्यवस्थापित करा',
     quickPicks: 'जलद निवड उपलब्ध!',
     mealsPlanned: 'जेवण नियोजित',
+    
+    // Home page
+    welcomeTo: 'स्वागत आहे',
+    intelligentKitchenCompanion: 'तुमचा बुद्धिमान स्वयंपाकघर साथीदार',
+    lowStockItems: 'कमी साठ्याच्या वस्तू',
+    missingItems: 'गहाळ वस्तू',
+    missingIngredients: 'गहाळ साहित्य',
+    recentUpdates: 'अलीकडील अपडेट्स',
+    viewAll: 'सर्व पहा',
+    forMeal: 'साठी',
+    onDate: 'दिनांक',
+    
+    // Planner page
+    planYourWeeklyMeals: 'पाककृतींसह तुमच्या साप्ताहिक जेवणाचे नियोजन करा',
+    gapAnalysis: 'तफावत विश्लेषण',
+    missingIngredientsForMeals: 'नियोजित जेवणांसाठी गहाळ साहित्य',
+    cookWithYourStock: 'तुमच्या साठ्यातून शिजवा',
+    recipesFromFavoriteChannels: 'तुमच्या आवडीच्या चॅनेलवरील पाककृती तुमच्या साठ्याशी जुळणाऱ्या',
+    recipesFromChannelsAppearFirst: 'या चॅनेलवरील पाककृती प्रथम दिसतात',
+    
+    // Days
+    monday: 'सोमवार',
+    tuesday: 'मंगळवार',
+    wednesday: 'बुधवार',
+    thursday: 'गुरुवार',
+    friday: 'शुक्रवार',
+    saturday: 'शनिवार',
+    sunday: 'रविवार',
     
     // Categories
     grains: 'धान्य आणि तांदूळ',
