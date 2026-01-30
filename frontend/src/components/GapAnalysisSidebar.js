@@ -99,7 +99,7 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-[#FF9933]" />
-          <h3 className="font-bold text-lg text-gray-800">Missing Ingredients</h3>
+          <h3 className="font-bold text-lg text-gray-800">{getLabel('missingIngredients')}</h3>
         </div>
 
         <div className="space-y-3">
@@ -111,10 +111,10 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
             >
               <p className="font-medium text-gray-800 text-sm mb-1">{item.ingredient}</p>
               <p className="text-xs text-gray-600">
-                For: <span className="font-medium">{item.meal}</span>
+                {getLabel('forMeal')}: <span className="font-medium">{item.meal}</span>
               </p>
               <p className="text-xs text-gray-500">
-                On: {new Date(item.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
+                {getLabel('onDate')}: {new Date(item.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
               </p>
             </div>
           ))}
@@ -126,7 +126,7 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
           data-testid="desktop-add-to-shopping-btn"
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
-          Add All to Shopping
+          {getLabel('addToShoppingList')}
         </Button>
       </CardContent>
     </Card>
