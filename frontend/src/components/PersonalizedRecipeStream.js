@@ -477,6 +477,10 @@ const PersonalizedRecipeStream = () => {
                 video={video} 
                 onOpenModal={handleOpenModal}
                 plannedInfo={plannedVideos[video.video_id]}
+                labels={{
+                  watchVideo: getLabel('watchVideo'),
+                  addToPlan: getLabel('addToPlan')
+                }}
               />
             ))}
           </div>
@@ -488,11 +492,11 @@ const PersonalizedRecipeStream = () => {
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
               <Youtube className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="font-semibold text-gray-700 mb-2">No Matching Recipes</h3>
+            <h3 className="font-semibold text-gray-700 mb-2">{getLabel('noItems')}</h3>
             <p className="text-sm text-gray-500 max-w-md mx-auto">
               {channels.length === 0 
-                ? "Add some favorite YouTube channels to see personalized recipes here."
-                : "Try adding more items to your inventory, or lower the minimum match threshold."}
+                ? getLabel('recipesFromFavoriteChannels')
+                : getLabel('addItemsToStart')}
             </p>
           </CardContent>
         </Card>
