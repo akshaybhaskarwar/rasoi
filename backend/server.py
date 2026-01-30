@@ -1214,12 +1214,12 @@ async def create_inventory_item(item: InventoryItemCreate, background_tasks: Bac
     if item.name_mr:
         inventory_item.name_mr = item.name_mr
     else:
-        name_mr = await translate_text(item.name_en, "mr")
+        name_mr = await translate_text_simple(item.name_en, "mr")
         inventory_item.name_mr = name_mr
     
-    # Translate to Gujarati
-    name_gu = await translate_text(item.name_en, "gu")
-    inventory_item.name_gu = name_gu
+    # Translate to Hindi as well
+    name_hi = await translate_text_simple(item.name_en, "hi")
+    inventory_item.name_hi = name_hi
     
     doc = inventory_item.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
