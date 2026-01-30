@@ -446,27 +446,24 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
             </Button>
           </div>
           
-          {/* User's saved videos */}
+          {/* User's saved videos - Now with Add to Plan buttons */}
           {userVideos.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs text-gray-500 mb-2">Your saved videos:</p>
-              <div className="flex flex-wrap gap-2">
-                {userVideos.slice(0, 5).map((video) => (
-                  <button
-                    key={video.video_id}
-                    onClick={() => window.open(`https://www.youtube.com/watch?v=${video.video_id}`, '_blank')}
-                    className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 hover:border-purple-400 text-xs"
-                  >
-                    <Youtube className="w-3 h-3 text-red-500" />
-                    <span className="max-w-[150px] truncate">{video.title}</span>
-                  </button>
+              <p className="text-xs text-gray-600 mb-3 font-medium">Your saved videos:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {userVideos.slice(0, 4).map((video) => (
+                  <VideoCard 
+                    key={video.video_id} 
+                    video={video} 
+                    showMatchBadge={false}
+                  />
                 ))}
-                {userVideos.length > 5 && (
-                  <span className="text-xs text-gray-400 px-2 py-1.5">
-                    +{userVideos.length - 5} more
-                  </span>
-                )}
               </div>
+              {userVideos.length > 4 && (
+                <p className="text-xs text-center text-gray-400 mt-3">
+                  +{userVideos.length - 4} more videos saved
+                </p>
+              )}
             </div>
           )}
         </CardContent>
