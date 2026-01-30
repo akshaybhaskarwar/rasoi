@@ -27,6 +27,7 @@ const PlannerPage = () => {
   const { searchLocalRecipes } = useRecipes();
   const { inventory } = useInventory();
   const { favoriteChannels, addFavoriteChannel, removeFavoriteChannel } = useFavoriteChannels();
+  const { getLabel } = useLanguage();
   
   // Refs for auto-scroll
   const todayCardRef = useRef(null);
