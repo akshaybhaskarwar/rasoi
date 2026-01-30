@@ -1295,12 +1295,12 @@ async def create_shopping_item(item: ShoppingItemCreate):
     if item.name_mr:
         shopping_item.name_mr = item.name_mr
     else:
-        name_mr = await translate_text(item.name_en, "mr")
+        name_mr = await translate_text_simple(item.name_en, "mr")
         shopping_item.name_mr = name_mr
     
-    # Auto-translate to Gujarati
-    name_gu = await translate_text(item.name_en, "gu")
-    shopping_item.name_gu = name_gu
+    # Auto-translate to Hindi
+    name_hi = await translate_text_simple(item.name_en, "hi")
+    shopping_item.name_hi = name_hi
     
     # Set stock_level from input if provided
     if item.stock_level:
