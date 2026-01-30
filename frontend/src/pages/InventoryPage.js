@@ -392,17 +392,17 @@ const InventoryPage = () => {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search inventory by name..."
+            placeholder={`${getLabel('search')}...`}
             className="pl-10 border-gray-300"
             data-testid="search-input"
           />
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="md:w-64 border-gray-300" data-testid="filter-category">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue placeholder={getLabel('allCategories')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">📋 All Categories</SelectItem>
+            <SelectItem value="all">📋 {getLabel('allCategories')}</SelectItem>
             {CATEGORIES.map(cat => (
               <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
             ))}
@@ -426,9 +426,9 @@ const InventoryPage = () => {
               <div className="text-3xl font-bold">
                 {inventory.filter(i => i.stock_level === 'full').length}
               </div>
-              <div className="text-sm opacity-90">Full Stock</div>
+              <div className="text-sm opacity-90">{getLabel('fullStock')}</div>
               {selectedStockLevel === 'full' && (
-                <div className="text-xs mt-2 font-medium">✓ Filtered</div>
+                <div className="text-xs mt-2 font-medium">✓ {getLabel('filter')}</div>
               )}
             </CardContent>
           </Card>
