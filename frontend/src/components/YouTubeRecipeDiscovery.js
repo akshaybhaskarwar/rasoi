@@ -345,7 +345,7 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
       </Card>
 
       {/* Recipe Search - Text Only */}
-      <Card className="border-2 border-gray-200">
+      {/* <Card className="border-2 border-gray-200">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
@@ -355,10 +355,10 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
               <h3 className="font-bold text-gray-800">Search Recipes</h3>
               <p className="text-xs text-gray-500">Find recipes by name on YouTube</p>
             </div>
-          </div>
+          </div> */}
 
           {/* Text search input */}
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <Input
               placeholder="Search recipe (e.g., 'Dal Tadka', 'Pav Bhaji')"
               value={textQuery}
@@ -379,10 +379,10 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
                 <Search className="w-5 h-5" />
               )}
             </Button>
-          </div>
+          </div> */}
           
           {/* Search source indicator */}
-          {searchSource && (
+          {/* {searchSource && (
             <p className="text-xs text-center text-gray-500 mt-3">
               {searchSource === 'local_cache' && '⚡ Instant result from cache (0 API units)'}
               {searchSource === 'cache' && '⚡ Result from server cache (0 API units)'}
@@ -391,10 +391,10 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
             </p>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Search Results */}
-      {isSearching ? (
+      {/* {isSearching ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <ShimmerCard key={i} />
@@ -412,7 +412,7 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
             ))}
           </div>
         </div>
-      ) : null}
+      ) : null} */}
 
       {/* User-Submitted Video Section */}
       <Card className="border-2 border-dashed border-gray-300 bg-gray-50">

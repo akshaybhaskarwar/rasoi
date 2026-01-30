@@ -860,7 +860,7 @@ const PlannerPage = () => {
             )}
 
             {/* Text Search Section */}
-            {searchMode === 'text' && (
+            {/* {searchMode === 'text' && (
               <div className="space-y-3">
                 <Label className="text-base font-bold">Search Recipe by Name</Label>
                 <div className="flex gap-2">
@@ -883,7 +883,7 @@ const PlannerPage = () => {
                 </div>
                 <p className="text-xs text-gray-500">Type a recipe name and press Enter or click Search</p>
               </div>
-            )}
+            )} */}
 
             {/* Ingredient Selection - Only show when in ingredients mode */}
             {searchMode === 'ingredients' && (
