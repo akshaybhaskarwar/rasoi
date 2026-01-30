@@ -48,6 +48,7 @@ const CATEGORY_TO_STORE = {
 const ShoppingPage = () => {
   const { shoppingList, addItem, deleteItem, clearList, updateItem } = useShoppingList();
   const { inventory } = useInventory();
+  const { language, getLabel } = useLanguage();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('grocery');
   const [syncing, setSyncing] = useState(false);
