@@ -904,35 +904,120 @@ def search_local_recipes(ingredients: List[str], videos_only: bool = False, favo
     
     return results
 
-async def translate_text(text: str, target_lang: str) -> str:
-    """Translate text using static dictionary"""
+async def translate_text(text: str, target_lang: str, user_id: str = None) -> Dict[str, Any]:
+    """
+    Translate text using Google Cloud Translation API with caching and verification
+    Returns: {translated_text, is_ai_generated, user_verified, community_verified, custom_label}
+    """
     try:
-        # Check cache first
-        cached = await db.translation_cache.find_one({
-            "source_text": text,
+        text_normalized = text.strip()
+        
+        # Check for existing translation in the enhanced cache
+        cached = await db.translations.find_one({
+            "source_text": {"$regex": f"^{re.escape(text_normalized)}$", "$options": "i"},
             "target_language": target_lang
         })
         
         if cached:
-            return cached['translated_text']
+            # Check if user has a custom label
+            custom_label = None
+            if user_id and cached.get("custom_labels", {}).get(user_id):
+                custom_label = cached["custom_labels"][user_id]
+            
+            return {
+                "translated_text": custom_label or cached["translated_text"],
+                "is_ai_generated": cached.get("is_ai_generated", True),
+                "user_verified": cached.get("user_verified", False),
+                "community_verified": cached.get("community_verified", False),
+                "user_verified_count": cached.get("user_verified_count", 0),
+                "custom_label": custom_label
+            }
         
-        # Use static translations
-        text_lower = text.lower().strip()
-        translated = TRANSLATIONS.get(target_lang, {}).get(text_lower, text)
+        # Try static translations first (for common ingredients)
+        text_lower = text_normalized.lower()
+        static_translation = TRANSLATIONS.get(target_lang, {}).get(text_lower)
         
-        # Cache the translation
-        await db.translation_cache.insert_one({
-            "source_text": text,
-            "target_language": target_lang,
-            "translated_text": translated,
-            "created_at": datetime.now(timezone.utc)
-        })
+        if static_translation:
+            # Static translations are pre-verified
+            translation_doc = {
+                "id": str(uuid.uuid4()),
+                "source_text": text_normalized,
+                "source_language": "en",
+                "target_language": target_lang,
+                "translated_text": static_translation,
+                "is_ai_generated": False,
+                "user_verified": True,
+                "community_verified": True,
+                "user_verified_count": COMMUNITY_VERIFY_THRESHOLD,
+                "custom_labels": {},
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            await db.translations.insert_one(translation_doc)
+            
+            return {
+                "translated_text": static_translation,
+                "is_ai_generated": False,
+                "user_verified": True,
+                "community_verified": True,
+                "user_verified_count": COMMUNITY_VERIFY_THRESHOLD,
+                "custom_label": None
+            }
         
-        return translated
+        # Call Google Translate API
+        api_translation = await google_translate_api(text_normalized, target_lang)
+        
+        if api_translation:
+            translation_doc = {
+                "id": str(uuid.uuid4()),
+                "source_text": text_normalized,
+                "source_language": "en",
+                "target_language": target_lang,
+                "translated_text": api_translation,
+                "is_ai_generated": True,
+                "user_verified": False,
+                "community_verified": False,
+                "user_verified_count": 0,
+                "custom_labels": {},
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            await db.translations.insert_one(translation_doc)
+            
+            return {
+                "translated_text": api_translation,
+                "is_ai_generated": True,
+                "user_verified": False,
+                "community_verified": False,
+                "user_verified_count": 0,
+                "custom_label": None
+            }
+        
+        # Fallback: return original text
+        return {
+            "translated_text": text_normalized,
+            "is_ai_generated": False,
+            "user_verified": False,
+            "community_verified": False,
+            "user_verified_count": 0,
+            "custom_label": None
+        }
             
     except Exception as e:
         logger.error(f"Translation error: {e}")
-        return text
+        return {
+            "translated_text": text,
+            "is_ai_generated": False,
+            "user_verified": False,
+            "community_verified": False,
+            "user_verified_count": 0,
+            "custom_label": None
+        }
+
+async def translate_text_simple(text: str, target_lang: str) -> str:
+    """Simple translate that returns just the text (for backward compatibility)"""
+    result = await translate_text(text, target_lang)
+    return result["translated_text"]
 
 # ============ YOUTUBE SERVICE ============
 
