@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, Edit2, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import TranslatedLabel from '@/components/TranslatedLabel';
 
 const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery'];
 
