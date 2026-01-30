@@ -386,8 +386,8 @@ const ShoppingPage = () => {
             className="flex flex-col py-3 data-[state=active]:bg-[#FF9933] data-[state=active]:text-white"
           >
             <span className="text-lg">🏪</span>
-            <span className="font-bold">Grocery Store {groceryCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{groceryCount}</span>}</span>
-            <span className="text-[10px] opacity-80">Grains, Spices, Dairy, Oils</span>
+            <span className="font-bold">{getLabel('groceryStore')} {groceryCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{groceryCount}</span>}</span>
+            <span className="text-[10px] opacity-80">{getLabel('grains')}, {getLabel('spices')}</span>
           </TabsTrigger>
           <TabsTrigger 
             value="mandi" 
@@ -395,8 +395,8 @@ const ShoppingPage = () => {
             className="flex flex-col py-3 data-[state=active]:bg-[#138808] data-[state=active]:text-white"
           >
             <span className="text-lg">🥬</span>
-            <span className="font-bold">Local Mandi {mandiCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{mandiCount}</span>}</span>
-            <span className="text-[10px] opacity-80">Vegetables & Fruits</span>
+            <span className="font-bold">{getLabel('localMandi')} {mandiCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{mandiCount}</span>}</span>
+            <span className="text-[10px] opacity-80">{getLabel('vegetables')} & {getLabel('fruits')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -410,7 +410,7 @@ const ShoppingPage = () => {
                 data-testid={`whatsapp-${activeTab}`}
               >
                 <Send className="w-4 h-4 mr-2" />
-                Send {activeTab === 'grocery' ? 'Grocery' : 'Mandi'} List to WhatsApp
+                {getLabel('sendToWhatsApp')}
               </Button>
               <Button
                 onClick={handleCopyToClipboard}
