@@ -265,13 +265,41 @@ export const UI_LABELS = {
     goldVerified: 'गोल्ड सत्यापित',
     
     // Common phrases
-    itemsInStock: 'वस्तुएं स्टॉक में',
+    itemsInStock: 'स्टॉक में वस्तुएं',
     itemsTotal: 'कुल वस्तुएं',
     lastUpdated: 'अंतिम अपडेट',
     selectLanguage: 'भाषा चुनें',
     manageYourKitchen: 'अपने रसोई के सामान का प्रबंधन करें',
     quickPicks: 'त्वरित चयन उपलब्ध!',
     mealsPlanned: 'भोजन योजित',
+    
+    // Home page
+    welcomeTo: 'आपका स्वागत है',
+    intelligentKitchenCompanion: 'आपका बुद्धिमान रसोई साथी',
+    lowStockItems: 'कम स्टॉक वस्तुएं',
+    missingItems: 'गायब वस्तुएं',
+    missingIngredients: 'गायब सामग्री',
+    recentUpdates: 'हाल के अपडेट',
+    viewAll: 'सभी देखें',
+    forMeal: 'के लिए',
+    onDate: 'तारीख',
+    
+    // Planner page
+    planYourWeeklyMeals: 'रेसिपी के साथ अपने साप्ताहिक भोजन की योजना बनाएं',
+    gapAnalysis: 'गैप विश्लेषण',
+    missingIngredientsForMeals: 'योजित भोजन के लिए गायब सामग्री',
+    cookWithYourStock: 'अपने सामान से पकाएं',
+    recipesFromFavoriteChannels: 'आपके पसंदीदा चैनलों की रेसिपी जो आपके रसोई से मेल खाती हैं',
+    recipesFromChannelsAppearFirst: 'इन चैनलों की रेसिपी पहले दिखाई देती हैं',
+    
+    // Days
+    monday: 'सोमवार',
+    tuesday: 'मंगलवार',
+    wednesday: 'बुधवार',
+    thursday: 'गुरुवार',
+    friday: 'शुक्रवार',
+    saturday: 'शनिवार',
+    sunday: 'रविवार',
     
     // Categories
     grains: 'अनाज और चावल',
