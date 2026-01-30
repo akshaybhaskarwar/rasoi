@@ -273,9 +273,18 @@ const InventoryPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold text-gray-800">
-            Bilingual Inventory
+            {getLabel('inventory')}
+            {!isEnglish && (
+              <span className="text-2xl text-gray-500 font-normal ml-2">/ Inventory</span>
+            )}
           </h1>
-          <p className="text-gray-600 mt-1">Manage your kitchen stock in English - मराठी</p>
+          <p className="text-gray-600 mt-1">
+            {language === 'hi' 
+              ? 'अपने रसोई के सामान को अंग्रेजी / हिंदी में प्रबंधित करें'
+              : language === 'mr'
+              ? 'आपला रसोई साठा इंग्रजी / मराठी मध्ये व्यवस्थापित करा'
+              : 'Manage your kitchen stock with bilingual labels'}
+          </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button 
