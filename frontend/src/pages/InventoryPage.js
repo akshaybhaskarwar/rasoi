@@ -274,16 +274,9 @@ const InventoryPage = () => {
         <div>
           <h1 className="text-4xl font-bold text-gray-800">
             {getLabel('inventory')}
-            {!isEnglish && (
-              <span className="text-2xl text-gray-500 font-normal ml-2">/ Inventory</span>
-            )}
           </h1>
           <p className="text-gray-600 mt-1">
-            {language === 'hi' 
-              ? 'अपने रसोई के सामान को अंग्रेजी / हिंदी में प्रबंधित करें'
-              : language === 'mr'
-              ? 'आपला रसोई साठा इंग्रजी / मराठी मध्ये व्यवस्थापित करा'
-              : 'Manage your kitchen stock with bilingual labels'}
+            {getLabel('manageYourKitchen')}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -293,8 +286,8 @@ const InventoryPage = () => {
             data-testid="pantry-template-btn"
           >
             <Sparkles className="w-5 h-5 mr-2" />
-            <span className="hidden md:inline">Indian Pantry Template</span>
-            <span className="md:hidden">Template</span>
+            <span className="hidden md:inline">{getLabel('indianPantryTemplate')}</span>
+            <span className="md:hidden">{getLabel('browseTemplate')}</span>
           </Button>
           <Button 
             onClick={() => setIsScannerOpen(true)}
@@ -302,7 +295,7 @@ const InventoryPage = () => {
             data-testid="scan-item-btn"
           >
             <Camera className="w-5 h-5 mr-2" />
-            Scan Item
+            {getLabel('scanProduct')}
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -311,16 +304,16 @@ const InventoryPage = () => {
                 data-testid="add-item-btn"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Add Item
+                {getLabel('addItem')}
               </Button>
             </DialogTrigger>
             <DialogContent data-testid="add-item-dialog">
               <DialogHeader>
-                <DialogTitle>Add New Item</DialogTitle>
+                <DialogTitle>{getLabel('addNewItem')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Item Name (English)</Label>
+                  <Label>{getLabel('itemName')} (English)</Label>
                   <Input
                     value={newItem.name_en}
                     onChange={(e) => setNewItem({ ...newItem, name_en: e.target.value })}
