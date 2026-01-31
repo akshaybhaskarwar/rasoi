@@ -184,7 +184,12 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - All links and buttons working
 
 ### 🟠 Known Issues
-- **Translation API**: Currently MOCKED with static dictionary
+- **YouTube API Quota**: Daily quota limits apply. Mitigated via cache-first architecture.
+
+### 🟡 Pending Tasks (P1)
+- Translate "Minimum ingredients match:" text in PersonalizedRecipeStream.js
+- Translate meal type labels (Breakfast, Lunch, Dinner, Snacks) in planner cards
+- Voice input for adding inventory items
 
 ### 🔵 Backlog (P2)
 - Community Kitchen (user-submitted recipes)
