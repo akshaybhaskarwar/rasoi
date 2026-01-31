@@ -490,7 +490,7 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
             </Button>
           </div>
           
-          {/* User's saved videos - Now with Add to Plan buttons */}
+          {/* User's saved videos - Now with Add to Plan and Delete buttons */}
           {userVideos.length > 0 && (
             <div className="mt-4">
               <p className="text-xs text-gray-600 mb-3 font-medium">Your saved videos:</p>
@@ -500,6 +500,8 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
                     key={video.video_id} 
                     video={video} 
                     showMatchBadge={false}
+                    showDeleteButton={true}
+                    onDelete={handleDeleteVideo}
                   />
                 ))}
               </div>
