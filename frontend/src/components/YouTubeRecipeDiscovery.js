@@ -220,12 +220,12 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
     
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group relative">
-        {/* Delete button for user videos */}
+        {/* Delete button for user videos - Always visible on mobile, hover on desktop */}
         {showDeleteButton && (
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="absolute top-2 right-2 z-10 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-all opacity-0 group-hover:opacity-100"
+            className="absolute top-2 right-2 z-10 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
             data-testid={`delete-video-${video.video_id}`}
           >
             {isDeleting ? (
