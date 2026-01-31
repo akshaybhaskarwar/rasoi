@@ -165,12 +165,26 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
       if (response.data.success) {
         setUserVideos(prev => [response.data.video, ...prev]);
         setVideoUrl('');
-        alert(response.data.message);
+        toast.success(response.data.message || 'Video added successfully!');
       }
     } catch (error) {
-      alert(error.response?.data?.detail || 'Failed to add video');
+      toast.error(error.response?.data?.detail || 'Failed to add video');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Delete user video
+  const handleDeleteVideo = async (videoId) => {
+    try {
+      const response = await axios.delete(`${API}/youtube/user-videos/${videoId}`);
+      
+      if (response.data.success) {
+        setUserVideos(prev => prev.filter(v => v.video_id !== videoId));
+        toast.success('Video removed successfully');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to remove video');
     }
   };
 
