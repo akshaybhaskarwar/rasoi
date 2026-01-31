@@ -188,11 +188,40 @@ const YouTubeRecipeDiscovery = ({ inventory = [], onAddToPlan, selectedDate, sel
   };
 
   // Video card component
-  const VideoCard = ({ video, showMatchBadge = true }) => {
+  const VideoCard = ({ video, showMatchBadge = true, showDeleteButton = false, onDelete }) => {
     const match = video.inventory_match;
+    const [isDeleting, setIsDeleting] = useState(false);
+    
+    const handleDelete = async (e) => {
+      e.stopPropagation();
+      if (!onDelete) return;
+      
+      setIsDeleting(true);
+      try {
+        await onDelete(video.video_id);
+      } finally {
+        setIsDeleting(false);
+      }
+    };
     
     return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group relative">
+        {/* Delete button for user videos */}
+        {showDeleteButton && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="absolute top-2 right-2 z-10 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-all opacity-0 group-hover:opacity-100"
+            data-testid={`delete-video-${video.video_id}`}
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Trash2 className="w-3 h-3" />
+            )}
+          </button>
+        )}
+        
         {/* Thumbnail with duration badge */}
         <div className="relative aspect-video">
           <img 
