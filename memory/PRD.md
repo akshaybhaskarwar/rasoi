@@ -166,8 +166,10 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - Paste any YouTube URL to save
   - Uses `videos.list` API (1 unit vs 100 for search)
   - Builds personal recipe collection
-  - ✅ **Remove Video Feature**: Delete button (trash icon) on hover to remove saved videos
-    - Red circular delete button appears on video card hover
+  - ✅ **Remove Video Feature**: Delete button (trash icon) to remove saved videos
+    - Red circular delete button in top-right corner of video card
+    - **Mobile**: Always visible (no hover needed)
+    - **Desktop**: Shows on hover for cleaner UI
     - Calls `DELETE /api/youtube/user-videos/{video_id}`
     - Shows success toast notification
     - Instantly removes video from UI
