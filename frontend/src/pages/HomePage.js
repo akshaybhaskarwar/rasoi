@@ -51,7 +51,7 @@ const HomePage = () => {
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="home-page">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-[#FF9933] to-[#FFCC00] rounded-2xl p-6 text-white shadow-lg">
-        <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeTo')} {getLabel('appName')}</h2>
+        <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeMessage')}</h2>
         <p className="text-white/90">{getLabel('intelligentKitchenCompanion')}</p>
       </div>
 
