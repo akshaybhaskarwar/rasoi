@@ -427,8 +427,8 @@ export const UI_LABELS = {
     mealsPlanned: 'जेवण नियोजित',
     
     // Home page
-    welcomeTo: 'स्वागत आहे',
-    intelligentKitchenCompanion: 'तुमचा बुद्धिमान स्वयंपाकघर साथीदार',
+    welcomeTo: 'Rasoi-Sync मध्ये आपले स्वागत आहे',
+    intelligentKitchenCompanion: 'तुमचा बुद्धिमान किचन साथीदार',
     lowStockItems: 'कमी साठ्याच्या वस्तू',
     missingItems: 'गहाळ वस्तू',
     missingIngredients: 'गहाळ साहित्य',
