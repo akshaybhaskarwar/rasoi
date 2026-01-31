@@ -162,10 +162,15 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - Multi-select 2-5 ingredients from inventory
   - Shows "You have X/Y ingredients" match percentage
   - Missing ingredients displayed
-- **User-Submitted Videos**
+- **User-Submitted Videos** - Enhanced Jan 31, 2025
   - Paste any YouTube URL to save
   - Uses `videos.list` API (1 unit vs 100 for search)
   - Builds personal recipe collection
+  - ✅ **Remove Video Feature**: Delete button (trash icon) on hover to remove saved videos
+    - Red circular delete button appears on video card hover
+    - Calls `DELETE /api/youtube/user-videos/{video_id}`
+    - Shows success toast notification
+    - Instantly removes video from UI
 
 #### Favorite YouTube Channels
 - Inline collapsible section on Planner page
