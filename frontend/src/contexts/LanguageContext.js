@@ -122,6 +122,7 @@ export const UI_LABELS = {
     
     // Home page
     welcomeTo: 'Welcome to',
+    welcomeMessage: 'Welcome to Rasoi-Sync',
     intelligentKitchenCompanion: 'Your intelligent kitchen companion',
     lowStockItems: 'Low Stock Items',
     missingItems: 'Missing Items',
