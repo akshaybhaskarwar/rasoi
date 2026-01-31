@@ -276,7 +276,8 @@ export const UI_LABELS = {
     
     // Home page
     welcomeTo: 'आपका स्वागत है',
-    intelligentKitchenCompanion: 'आपका बुद्धिमान रसोई साथी',
+    welcomeMessage: 'Rasoi-Sync में आपका स्वागत है',
+    intelligentKitchenCompanion: 'आपका बुद्धिमान किचन साथी',
     lowStockItems: 'कम स्टॉक वस्तुएं',
     missingItems: 'गायब वस्तुएं',
     missingIngredients: 'गायब सामग्री',
