@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Youtube, Search, Filter, Clock, Play, Plus, X, Link2, ChevronLeft, ChevronRight, Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Youtube, Search, Filter, Clock, Play, Plus, X, Link2, ChevronLeft, ChevronRight, Loader2, Sparkles, TrendingUp, Zap, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
