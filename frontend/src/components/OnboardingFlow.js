@@ -490,10 +490,10 @@ const OnboardingFlow = ({ onComplete }) => {
                       <span className="ml-2">🙏</span>
                     </h2>
                     <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-                      Welcome to <span className="font-semibold text-orange-600">Rasoi-Sync</span>
+                      {t.welcomeTo} <span className="font-semibold text-orange-600">{t.appName}</span>
                     </p>
                     <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
-                      Your intelligent Indian kitchen manager
+                      {t.appTagline}
                     </p>
                   </div>
 
@@ -501,7 +501,7 @@ const OnboardingFlow = ({ onComplete }) => {
                     <div>
                       <Label className="text-xs sm:text-sm font-medium flex items-center gap-2 mb-2">
                         <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
-                        Choose your language
+                        {t.chooseLanguage}
                       </Label>
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         {LANGUAGES.map(lang => (
@@ -524,7 +524,7 @@ const OnboardingFlow = ({ onComplete }) => {
                     <div>
                       <Label className="text-xs sm:text-sm font-medium flex items-center gap-2 mb-2">
                         <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
-                        Your city
+                        {t.yourCity}
                       </Label>
                       <Select value={selectedCity} onValueChange={setSelectedCity}>
                         <SelectTrigger className="h-9 sm:h-10">
