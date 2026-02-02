@@ -1239,6 +1239,10 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
                 raise HTTPException(status_code=429, detail="YouTube API quota exceeded. Please try again later.")
             raise
         
+        # Log API usage - search.list costs 100 units per call
+        if search_count > 0:
+            await log_api_usage(db, "youtube", "search.list", 100 * search_count, household_id, user_id)
+        
         return all_results[:max_results]
         
     except HttpError as e:
