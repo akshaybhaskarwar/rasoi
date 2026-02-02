@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Home, Users, ChevronDown, Plus, LogOut, Settings, Copy, Check, UserPlus } from 'lucide-react';
+import { Home, Users, ChevronDown, Plus, LogOut, Settings, Copy, Check, UserPlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +16,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
