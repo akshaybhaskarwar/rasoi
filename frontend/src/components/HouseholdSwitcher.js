@@ -371,10 +371,25 @@ const HouseholdSwitcher = () => {
                   <div className="space-y-2">
                     {activeHousehold.members?.map((member, idx) => (
                       <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{member.name}</span>
-                        <Badge variant={member.role === 'owner' ? 'default' : 'outline'} className="text-xs">
-                          {member.role}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{member.name}</span>
+                          <Badge variant={member.role === 'owner' ? 'default' : 'outline'} className="text-xs">
+                            {member.role}
+                          </Badge>
+                        </div>
+                        {/* Show delete button for owner to remove non-owner members */}
+                        {activeHousehold.is_owner && member.role !== 'owner' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => confirmRemoveMember(member)}
+                            className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            title={`Remove ${member.name}`}
+                            data-testid={`remove-member-${member.user_id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
