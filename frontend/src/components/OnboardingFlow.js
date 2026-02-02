@@ -618,11 +618,11 @@ const OnboardingFlow = ({ onComplete }) => {
                         <div className="space-y-4">
                           <div className="p-4 bg-blue-50 rounded-xl text-center">
                             <p className="text-sm text-gray-600">
-                              👨‍👩‍👧‍👦 Enter the 6-digit code shared by your family member
+                              {t.joinKitchenInfo}
                             </p>
                           </div>
                           <div>
-                            <Label>Kitchen Code</Label>
+                            <Label>{t.kitchenCode}</Label>
                             <Input
                               placeholder="ABC123"
                               value={kitchenCode}
@@ -636,7 +636,7 @@ const OnboardingFlow = ({ onComplete }) => {
                             className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
                             disabled={loading || kitchenCode.length !== 6}
                           >
-                            {loading ? 'Joining...' : 'Join Kitchen'}
+                            {loading ? '...' : t.joinKitchen}
                           </Button>
                         </div>
                       )}
@@ -648,8 +648,8 @@ const OnboardingFlow = ({ onComplete }) => {
                         <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
                           <Check className="w-6 h-6 text-white" />
                         </div>
-                        <h3 className="font-bold text-green-800 mb-2">Kitchen Created! 🎉</h3>
-                        <p className="text-sm text-green-700 mb-3">Share this code with family:</p>
+                        <h3 className="font-bold text-green-800 mb-2">{t.kitchenCreated}</h3>
+                        <p className="text-sm text-green-700 mb-3">{t.shareCode}</p>
                         <div className="bg-white p-3 rounded-lg border-2 border-dashed border-green-300 inline-block">
                           <p className="text-3xl font-mono font-bold tracking-widest text-green-600">
                             {createdCode}
@@ -675,7 +675,7 @@ const OnboardingFlow = ({ onComplete }) => {
                       <Package className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
                     <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-                      Quick Pantry Setup
+                      {t.quickPantrySetup}
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Select items you usually have at home
