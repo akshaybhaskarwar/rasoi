@@ -430,13 +430,13 @@ const OnboardingFlow = ({ onComplete }) => {
           <div className="px-6 pt-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-500 font-medium">
-                Step {currentStep + 1} of {STEPS.length}
+                {t.stepOf.replace('{current}', currentStep + 1).replace('{total}', STEPS.length)}
               </span>
               <button 
                 onClick={handleSkip}
                 className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Skip setup
+                {t.skipSetup}
               </button>
             </div>
             <Progress value={progress} className="h-1.5" />
