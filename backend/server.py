@@ -1121,12 +1121,15 @@ async def translate_text_simple(text: str, target_lang: str) -> str:
 def get_youtube_service():
     return build('youtube', 'v3', developerKey=YOUTUBE_API_KEY, cache_discovery=False)
 
-async def fetch_video_details(video_id: str) -> Dict[str, Any]:
+async def fetch_video_details(video_id: str, household_id: str = None, user_id: str = None) -> Dict[str, Any]:
     """Fetch YouTube video details"""
     try:
         youtube = get_youtube_service()
         request = youtube.videos().list(part="snippet", id=video_id)
         response = request.execute()
+        
+        # Log API usage - videos.list costs 1 unit
+        await log_api_usage(db, "youtube", "videos.list", 1, household_id, user_id)
         
         if response.get('items'):
             item = response['items'][0]
