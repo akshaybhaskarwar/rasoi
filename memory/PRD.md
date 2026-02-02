@@ -1,11 +1,46 @@
 # Rasoi-Sync - Indian Kitchen Manager
 
 ## Overview
-A mobile-first web application for intelligent Indian kitchen management with bilingual support (English/Hindi/Marathi).
+A mobile-first web application for intelligent Indian kitchen management with bilingual support (English/Hindi/Marathi) and **multi-user household synchronization**.
 
 ## Core Features
 
 ### ✅ Implemented
+
+#### 👤 User Authentication & Household System - Added Feb 2, 2025
+- **Email/Password Authentication**:
+  - Sign up with email, password, name, home language, and city
+  - Login with email/password
+  - Password visibility toggle (show/hide)
+  - Forgot password flow (reset via token)
+  - JWT-based session tokens (7-day expiry)
+  - Protected routes - redirects to /auth if not logged in
+
+- **Household ("Kitchen") Management**:
+  - Create a new kitchen → get unique 6-digit Kitchen Code
+  - Join existing kitchen using shared code
+  - Max 4 members per household
+  - Users can belong to multiple households (home, hostel, etc.)
+  - Switch between households via dropdown in header
+  - Owner/Member roles with transfer ownership option
+  - "Invite Family Member" dialog with copy-to-clipboard code
+  
+- **Real-time Shopping Sync (SSE)**:
+  - Shopping item status flow: **Pending → In-Cart → Bought**
+  - "Claimed by" indicator prevents double-buying
+  - SSE endpoint for live updates across devices
+  - Mark as bought moves item to inventory automatically
+
+- **Data Isolation**:
+  - All inventory, shopping, and meal plan items linked to `household_id`
+  - Users only see data for their active household
+  - Switching households loads appropriate data
+
+- **Basic Admin Dashboard**:
+  - API quota monitoring (YouTube, Translation)
+  - Translation moderation (approve/reject community suggestions)
+  - Festival management for Digital Dadi alerts
+  - Usage statistics dashboard
 
 #### Google Cloud Translation API Integration - Added Jan 30, 2025
 - **Live Translation**: Real-time translation using Google Cloud Translation API v3
