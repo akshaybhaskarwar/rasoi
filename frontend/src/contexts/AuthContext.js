@@ -243,6 +243,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const removeMember = async (householdId, memberUserId) => {
+    try {
+      const response = await axios.delete(`${API}/households/${householdId}/member/${memberUserId}`);
+      await fetchHouseholds();
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.detail || 'Failed to remove member'
+      };
+    }
+  };
+
   const value = {
     user,
     token,
