@@ -284,55 +284,55 @@ const OnboardingFlow = ({ onComplete }) => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
+                  className="space-y-4 sm:space-y-6"
                 >
                   <div className="text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <ChefHat className="w-10 h-10 text-white" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                      <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                       {LANGUAGES.find(l => l.value === selectedLanguage)?.greeting || 'Hello!'} 
                       <span className="ml-2">🙏</span>
                     </h2>
-                    <p className="text-gray-600 mt-2">
+                    <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
                       Welcome to <span className="font-semibold text-orange-600">Rasoi-Sync</span>
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
                       Your intelligent Indian kitchen manager
                     </p>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <Label className="text-sm font-medium flex items-center gap-2 mb-2">
-                        <Globe className="w-4 h-4 text-orange-500" />
+                      <Label className="text-xs sm:text-sm font-medium flex items-center gap-2 mb-2">
+                        <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
                         Choose your language
                       </Label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         {LANGUAGES.map(lang => (
                           <button
                             key={lang.value}
                             onClick={() => handleLanguageSelect(lang.value)}
-                            className={`p-3 rounded-xl border-2 transition-all ${
+                            className={`p-2 sm:p-3 rounded-xl border-2 transition-all ${
                               selectedLanguage === lang.value
                                 ? 'border-orange-500 bg-orange-50 shadow-md'
                                 : 'border-gray-200 hover:border-orange-300'
                             }`}
                           >
-                            <span className="text-2xl">{lang.flag}</span>
-                            <p className="text-sm font-medium mt-1">{lang.label}</p>
+                            <span className="text-xl sm:text-2xl">{lang.flag}</span>
+                            <p className="text-xs sm:text-sm font-medium mt-0.5 sm:mt-1">{lang.label}</p>
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <Label className="text-sm font-medium flex items-center gap-2 mb-2">
-                        <MapPin className="w-4 h-4 text-orange-500" />
+                      <Label className="text-xs sm:text-sm font-medium flex items-center gap-2 mb-2">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
                         Your city
                       </Label>
                       <Select value={selectedCity} onValueChange={setSelectedCity}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-9 sm:h-10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
