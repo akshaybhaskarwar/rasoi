@@ -139,6 +139,28 @@ const HouseholdSwitcher = () => {
     }
   };
 
+  const handleRemoveMember = async () => {
+    if (!memberToRemove || !activeHousehold) return;
+    
+    setLoading(true);
+    const result = await removeMember(activeHousehold.id, memberToRemove.user_id);
+    
+    if (result.success) {
+      toast.success(result.data.message || `${memberToRemove.name} removed`);
+      setShowRemoveConfirm(false);
+      setMemberToRemove(null);
+      window.location.reload();
+    } else {
+      toast.error(result.error);
+    }
+    setLoading(false);
+  };
+
+  const confirmRemoveMember = (member) => {
+    setMemberToRemove(member);
+    setShowRemoveConfirm(true);
+  };
+
   return (
     <>
       <DropdownMenu>
