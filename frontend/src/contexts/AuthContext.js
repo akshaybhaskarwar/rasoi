@@ -274,6 +274,7 @@ export const AuthProvider = ({ children }) => {
     joinHousehold,
     switchHousehold,
     leaveHousehold,
+    removeMember,
     fetchHouseholds
   };
 
