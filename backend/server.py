@@ -3049,8 +3049,18 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-# Include router
+# Initialize auth, household, SSE, and admin routes with database access
+create_auth_routes(db)
+create_household_routes(db, decode_token)
+create_sse_routes(db, decode_token)
+create_admin_routes(db, decode_token)
+
+# Include all routers
 app.include_router(api_router)
+app.include_router(auth_router)
+app.include_router(household_router)
+app.include_router(sse_router)
+app.include_router(admin_router)
 
 app.add_middleware(
     CORSMiddleware,
