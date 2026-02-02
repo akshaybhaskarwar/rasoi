@@ -107,18 +107,6 @@ const AdminPage = () => {
     }
   };
 
-  const handleMakeAdmin = async (userId) => {
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.post(`${API}/api/admin/make-admin/${userId}`, {}, { headers });
-      toast.success('Admin privileges granted');
-      setShowMakeAdminDialog(false);
-      setSelectedUser(null);
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to grant admin privileges');
-    }
-  };
-
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
