@@ -111,6 +111,7 @@ DEFAULT_MONTHLY_QUANTITIES = {
 class ShoppingItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    household_id: Optional[str] = None  # Links to household for multi-user sync
     name_en: str
     name_hi: Optional[str] = None  # Hindi translation
     name_mr: Optional[str] = None  # Marathi translation
@@ -119,6 +120,11 @@ class ShoppingItem(BaseModel):
     stock_level: Optional[str] = None  # empty, low - synced from inventory
     monthly_quantity: Optional[str] = None  # e.g., "2 kg", "500 g", "1 L"
     store_type: str = "grocery"  # grocery or mandi
+    # Shopping status for real-time sync
+    shopping_status: str = "pending"  # pending, in_cart, bought
+    claimed_by: Optional[str] = None  # User ID who is buying this
+    claimed_by_name: Optional[str] = None  # User name for display
+    bought_at: Optional[datetime] = None  # When it was marked as bought
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ShoppingItemCreate(BaseModel):
@@ -134,6 +140,7 @@ class ShoppingItemCreate(BaseModel):
 class MealPlan(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    household_id: Optional[str] = None  # Links to household
     date: str
     meal_type: str = "lunch"  # breakfast, lunch, snacks, dinner - default for legacy data
     meal_name: str
