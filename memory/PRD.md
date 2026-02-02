@@ -85,7 +85,12 @@ A mobile-first web application for intelligent Indian kitchen management with bi
     - 🧼 Dish & Laundry Cleaning: Vim, Rin, Surf Excel, Ujala, Odopic, etc.
     - 🚿 Personal Care & Bath: Shampoo, Bath Soap, Hair Oil, Body Oil, etc.
     - 🚽 Bathroom & Floor Cleaning: Harpic, Phenyl, Lizol, Floor Cleaner
-    - ✨ Other Essentials: Colin, Matchsticks, Garbage Bags, Foil, etc.
+    - ✨ Other Essentials: Colin, Matchsticks, Garbage Bags, Foil, **Naphthalene Balls**, **Camphor (Kapoor)**
+  - **Extended Grains & Millets** - Added Feb 2, 2025
+    - Jowar (Sorghum), Bajra (Pearl Millet), Ragi (Finger Millet)
+    - Barley, Oats, Quinoa, Buckwheat
+    - Millets: Foxtail (Kangni), Little (Kutki), Kodo, Barnyard, Proso
+    - Corn Flour (Makai Atta), Amaranth (Rajgira)
 - **Expiry Date Tracking**
   - Optional expiry date for each item
   - "Items Expiring Soon!" alert banner (30-day threshold)
