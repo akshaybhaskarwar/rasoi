@@ -260,15 +260,6 @@ const TOUR_HIGHLIGHTS = [
     color: 'bg-purple-500'
   },
 ];
-  },
-  {
-    icon: Sparkles,
-    title: 'Digital Dadi',
-    titleMr: 'डिजिटल दादी',
-    description: 'Your AI kitchen assistant with smart suggestions',
-    color: 'bg-purple-500'
-  },
-];
 
 const OnboardingFlow = ({ onComplete }) => {
   const { user, updateProfile, createHousehold, joinHousehold } = useAuth();
@@ -285,6 +276,13 @@ const OnboardingFlow = ({ onComplete }) => {
   const [createdCode, setCreatedCode] = useState('');
   const [selectedPantryItems, setSelectedPantryItems] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Get translations for current language
+  const t = TRANSLATIONS[selectedLanguage] || TRANSLATIONS.en;
+  const STEPS = STEPS_CONFIG.map(step => ({
+    ...step,
+    title: t.steps[step.key]
+  }));
 
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
@@ -309,7 +307,12 @@ const OnboardingFlow = ({ onComplete }) => {
   const handleComplete = () => {
     localStorage.setItem('onboarding_completed', 'true');
     setIsVisible(false);
-    toast.success('🎉 Welcome to Rasoi-Sync! Your kitchen is ready.');
+    const successMsg = selectedLanguage === 'hi' 
+      ? '🎉 रसोई-सिंक में आपका स्वागत है! आपका किचन तैयार है।'
+      : selectedLanguage === 'mr'
+        ? '🎉 रसोई-सिंक मध्ये स्वागत! तुमचे किचन तयार आहे।'
+        : '🎉 Welcome to Rasoi-Sync! Your kitchen is ready.';
+    toast.success(successMsg);
     onComplete?.();
   };
 
