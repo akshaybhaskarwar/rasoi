@@ -29,6 +29,11 @@ A mobile-first web application for intelligent Indian kitchen management with bi
     - Trash icon button next to each non-owner member
     - Confirmation dialog before removal
     - Removed member loses access to household data
+  - **Delete Kitchen** - Added Feb 2, 2025
+    - Owner can permanently delete kitchen after removing all other members
+    - Deletes all associated data (inventory, shopping list, meal plans)
+    - "Danger Zone" section in members dialog shows delete option
+    - Blocked if other members exist (shows count of members to remove first)
   
 - **Multi-Step Interactive Onboarding Flow** - Added Feb 2, 2025
   - **Guided Overlay (Spotlight)**: Dimmed background with focused modal
