@@ -555,10 +555,10 @@ const OnboardingFlow = ({ onComplete }) => {
                       <Home className="w-8 h-8 text-white" />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800">
-                      Set Up Your Kitchen
+                      {t.setUpKitchen}
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      Create a new kitchen or join your family's
+                      {t.setUpKitchenDesc}
                     </p>
                   </div>
 
@@ -575,7 +575,7 @@ const OnboardingFlow = ({ onComplete }) => {
                           }`}
                         >
                           <Home className="w-4 h-4" />
-                          Create New
+                          {t.createNew}
                         </button>
                         <button
                           onClick={() => setHouseholdMode('join')}
@@ -586,7 +586,7 @@ const OnboardingFlow = ({ onComplete }) => {
                           }`}
                         >
                           <Users className="w-4 h-4" />
-                          Join Family
+                          {t.joinFamily}
                         </button>
                       </div>
 
@@ -594,13 +594,13 @@ const OnboardingFlow = ({ onComplete }) => {
                         <div className="space-y-4">
                           <div className="p-4 bg-orange-50 rounded-xl text-center">
                             <p className="text-sm text-gray-600">
-                              🏠 Create your digital kitchen and get a code to share with family
+                              {t.createKitchenInfo}
                             </p>
                           </div>
                           <div>
-                            <Label>Kitchen Name</Label>
+                            <Label>{t.kitchenName}</Label>
                             <Input
-                              placeholder="e.g., Sharma Family Kitchen"
+                              placeholder={t.kitchenNamePlaceholder}
                               value={householdName}
                               onChange={(e) => setHouseholdName(e.target.value)}
                               className="mt-1"
@@ -611,7 +611,7 @@ const OnboardingFlow = ({ onComplete }) => {
                             className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                             disabled={loading || !householdName.trim()}
                           >
-                            {loading ? 'Creating...' : 'Create Kitchen'}
+                            {loading ? '...' : t.createKitchen}
                           </Button>
                         </div>
                       ) : (
