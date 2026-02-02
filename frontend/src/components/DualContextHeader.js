@@ -40,8 +40,17 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <span className="font-bold text-lg text-gray-800">{getLabel('appName')}</span>
           </div>
           
-          {/* Mobile: Household Switcher + Language */}
+          {/* Mobile: Household Switcher + Admin + Language */}
           <div className="flex items-center gap-2">
+            {/* Admin Link - Mobile */}
+            {isAuthenticated && user?.is_admin && (
+              <Link to="/admin">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Shield className="w-4 h-4 text-purple-600" />
+                </Button>
+              </Link>
+            )}
+            
             {isAuthenticated && <HouseholdSwitcher />}
             
             {/* Language toggle - compact */}
