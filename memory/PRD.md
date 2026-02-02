@@ -106,6 +106,11 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - "Items Expiring Soon!" alert banner (30-day threshold)
   - Visual warnings on item cards (amber for soon, red for urgent/expired)
   - Suggestion to use expiring items in recipes
+  - **Update Expiry Date** - Added Feb 2, 2025
+    - "Update" button on items with expiry dates (inline editing)
+    - "Add expiry date" button for items without expiry dates
+    - Useful when buying fresh stock to replace expired items
+    - Clear expiry option to remove date entirely
 - **Product Scanner (AI-Powered OCR)** - Jan 27, 2025
   - **📸 AI Photo Scan** (Primary - recommended):
     - Step 1: Take photo of product → AI extracts product name
