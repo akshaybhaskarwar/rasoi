@@ -215,6 +215,27 @@ const InventoryPage = () => {
     }
   };
 
+  const handleUpdateExpiryDate = async (itemId) => {
+    try {
+      await updateItem(itemId, { expiry_date: newExpiryDate || null });
+      setEditingExpiryItemId(null);
+      setNewExpiryDate('');
+    } catch (error) {
+      console.error('Error updating expiry date:', error);
+      alert('Failed to update expiry date. Please try again.');
+    }
+  };
+
+  const startEditingExpiry = (item) => {
+    setEditingExpiryItemId(item.id);
+    setNewExpiryDate(item.expiry_date || '');
+  };
+
+  const cancelEditingExpiry = () => {
+    setEditingExpiryItemId(null);
+    setNewExpiryDate('');
+  };
+
   const getCategoryInfo = (categoryValue) => {
     return CATEGORIES.find(c => c.value === categoryValue) || CATEGORIES[CATEGORIES.length - 1];
   };
