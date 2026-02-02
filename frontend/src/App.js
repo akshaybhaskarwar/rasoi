@@ -1,4 +1,5 @@
 import "@/App.css";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { DualContextHeader } from "@/components/DualContextHeader";
@@ -6,6 +7,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { GapAnalysisSidebar } from "@/components/GapAnalysisSidebar";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import OnboardingFlow from "@/components/OnboardingFlow";
 import HomePage from "@/pages/HomePage";
 import InventoryPage from "@/pages/InventoryPage";
 import ShoppingPage from "@/pages/ShoppingPage";
@@ -15,7 +17,19 @@ import AuthPage from "@/pages/AuthPage";
 
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, households } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  useEffect(() => {
+    // Show onboarding if user is authenticated but hasn't completed onboarding
+    // and doesn't have any households yet
+    if (isAuthenticated && !loading) {
+      const onboardingCompleted = localStorage.getItem('onboarding_completed');
+      if (!onboardingCompleted && households.length === 0) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [isAuthenticated, loading, households]);
   
   if (loading) {
     return (
@@ -32,7 +46,14 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/auth" replace />;
   }
   
-  return children;
+  return (
+    <>
+      {showOnboarding && (
+        <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
+      )}
+      {children}
+    </>
+  );
 }
 
 // Inner component that uses language context
