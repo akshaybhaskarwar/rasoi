@@ -580,14 +580,14 @@ const OnboardingFlow = ({ onComplete }) => {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="px-6 pb-6 flex gap-3">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 flex gap-2 sm:gap-3 border-t bg-white flex-shrink-0">
             {currentStep > 0 && (
               <Button
                 variant="outline"
                 onClick={handleBack}
-                className="flex-1"
+                className="flex-1 h-10 sm:h-11 text-sm"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Back
               </Button>
             )}
@@ -595,25 +595,27 @@ const OnboardingFlow = ({ onComplete }) => {
             {currentStep < STEPS.length - 1 ? (
               <Button
                 onClick={currentStep === 2 ? addPantryItems : handleNext}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                className="flex-1 h-10 sm:h-11 text-sm bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                 disabled={loading || (currentStep === 1 && !createdCode && householdMode === 'create')}
               >
                 {loading ? 'Please wait...' : (
                   <>
-                    {currentStep === 2 
-                      ? (selectedPantryItems.length > 0 ? 'Add & Continue' : 'Skip for now')
-                      : 'Continue'
-                    }
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <span className="truncate">
+                      {currentStep === 2 
+                        ? (selectedPantryItems.length > 0 ? 'Add & Continue' : 'Skip')
+                        : 'Continue'
+                      }
+                    </span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 flex-shrink-0" />
                   </>
                 )}
               </Button>
             ) : (
               <Button
                 onClick={handleComplete}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                className="flex-1 h-10 sm:h-11 text-sm bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
               >
-                <Heart className="w-4 h-4 mr-2" />
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Start Cooking!
               </Button>
             )}
