@@ -25,6 +25,19 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - Owner/Member roles with transfer ownership option
   - "Invite Family Member" dialog with copy-to-clipboard code
   
+- **Multi-Step Interactive Onboarding Flow** - Added Feb 2, 2025
+  - **Guided Overlay (Spotlight)**: Dimmed background with focused modal
+  - **4 Steps**: Welcome → Your Kitchen → Stock Pantry → Quick Tour
+  - **Progress Indicator**: "Step 1 of 4" bar with step icons
+  - **Culturally Warm Tone**: "Hello! 🙏", Dadi's Tips
+  - **Language Selection**: English, Hindi, Marathi with flags
+  - **City Selection**: For regional market/translation logic
+  - **Household Setup**: Create new kitchen (get 6-digit code) or join existing
+  - **Quick Pantry Setup**: Pre-selected common Indian items (Rice, Dal, Spices, Oils)
+  - **Feature Tour**: Highlights Inventory, Shopping, Meal Planner, Digital Dadi
+  - **Skip Option**: Users can skip and set up later
+  - **Mobile-First**: Fully responsive design
+
 - **Real-time Shopping Sync (SSE)**:
   - Shopping item status flow: **Pending → In-Cart → Bought**
   - "Claimed by" indicator prevents double-buying
