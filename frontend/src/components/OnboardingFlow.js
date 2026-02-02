@@ -229,7 +229,7 @@ const OnboardingFlow = ({ onComplete }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         >
           {/* Progress Bar */}
           <div className="px-6 pt-4">
