@@ -79,7 +79,7 @@ export const DualContextHeader = ({ onLanguageChange }) => {
           <div className="flex items-center gap-4 bg-[#FFFBF0] px-4 py-2 rounded-full border border-[#FFCC00]/30">
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="w-4 h-4 text-[#FF9933]" />
-              <span className="font-medium">Pune, MH</span>
+              <span className="font-medium">{user?.city || 'Pune'}, MH</span>
             </div>
             <div className="w-px h-4 bg-gray-300" />
             <div className="flex items-center gap-2 text-sm">
@@ -88,28 +88,34 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             </div>
           </div>
 
-          {/* Language Toggle */}
-          <div className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-gray-600" />
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger 
-                className="w-[160px] border-[#FF9933] focus:ring-[#FF9933]"
-                data-testid="language-selector"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en" data-testid="lang-en">
-                  <span className="flex items-center gap-2">🇬🇧 English</span>
-                </SelectItem>
-                <SelectItem value="hi" data-testid="lang-hi">
-                  <span className="flex items-center gap-2">🇮🇳 हिन्दी (Hindi)</span>
-                </SelectItem>
-                <SelectItem value="mr" data-testid="lang-mr">
-                  <span className="flex items-center gap-2">🇮🇳 मराठी (Marathi)</span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Right side: Household + Language */}
+          <div className="flex items-center gap-4">
+            {/* Household Switcher */}
+            {isAuthenticated && <HouseholdSwitcher />}
+            
+            {/* Language Toggle */}
+            <div className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-gray-600" />
+              <Select value={language} onValueChange={handleLanguageChange}>
+                <SelectTrigger 
+                  className="w-[160px] border-[#FF9933] focus:ring-[#FF9933]"
+                  data-testid="language-selector"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en" data-testid="lang-en">
+                    <span className="flex items-center gap-2">🇬🇧 English</span>
+                  </SelectItem>
+                  <SelectItem value="hi" data-testid="lang-hi">
+                    <span className="flex items-center gap-2">🇮🇳 हिन्दी (Hindi)</span>
+                  </SelectItem>
+                  <SelectItem value="mr" data-testid="lang-mr">
+                    <span className="flex items-center gap-2">🇮🇳 मराठी (Marathi)</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
