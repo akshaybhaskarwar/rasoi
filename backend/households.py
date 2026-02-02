@@ -432,4 +432,64 @@ def create_household_routes(db, decode_token_func):
         
         return {"message": "Ownership transferred successfully"}
     
+    @household_router.delete("/{household_id}/member/{member_user_id}")
+    async def remove_member(
+        household_id: str,
+        member_user_id: str,
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+        """Remove a member from the household. Only the owner can remove members."""
+        user = await get_user_from_token(credentials)
+        
+        household = await db.households.find_one({"id": household_id})
+        if not household:
+            raise HTTPException(status_code=404, detail="Household not found")
+        
+        # Only owner can remove members
+        if household["created_by"] != user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Only the owner can remove members"
+            )
+        
+        # Can't remove the owner themselves via this endpoint
+        if member_user_id == household["created_by"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Owner cannot be removed. Transfer ownership first or delete the kitchen."
+            )
+        
+        # Check if member exists in household
+        member_exists = any(m["user_id"] == member_user_id for m in household["members"])
+        if not member_exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Member not found in this household"
+            )
+        
+        # Get member name for response
+        member_name = next((m["name"] for m in household["members"] if m["user_id"] == member_user_id), "Member")
+        
+        # Remove from household members
+        await db.households.update_one(
+            {"id": household_id},
+            {"$pull": {"members": {"user_id": member_user_id}}}
+        )
+        
+        # Remove from user's households list
+        member_user = await db.users.find_one({"id": member_user_id})
+        if member_user:
+            remaining_households = [h for h in member_user.get("households", []) if h != household_id]
+            new_active = remaining_households[0] if remaining_households else None
+            
+            await db.users.update_one(
+                {"id": member_user_id},
+                {
+                    "$pull": {"households": household_id},
+                    "$set": {"active_household": new_active}
+                }
+            )
+        
+        return {"message": f"{member_name} has been removed from the kitchen"}
+    
     return household_router
