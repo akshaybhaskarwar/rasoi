@@ -29,7 +29,15 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - Card-based UI with category grouping
 - Stock level filtering (Full, Half, Low, Empty)
 - CRUD operations for items
-- Indian Pantry Template for quick population
+- **Indian Pantry Template** for quick population - Enhanced Jan 31, 2025
+  - 🛒 Grocery (किराणा): Grains, Pulses, Spices, Masalas, Oils, Fasting items
+  - 🥕 Mandi (भाजी मंडई): Vegetables, Leafy veggies, Fruits
+  - 🍞 Bakery & Ready Cook: Bread, Pasta, Pizza items
+  - 🧹 **Cleaning & Household (सफाई)** - NEW
+    - 🧼 Dish & Laundry Cleaning: Vim, Rin, Surf Excel, Ujala, Odopic, etc.
+    - 🚿 Personal Care & Bath: Shampoo, Bath Soap, Hair Oil, Body Oil, etc.
+    - 🚽 Bathroom & Floor Cleaning: Harpic, Phenyl, Lizol, Floor Cleaner
+    - ✨ Other Essentials: Colin, Matchsticks, Garbage Bags, Foil, etc.
 - **Expiry Date Tracking**
   - Optional expiry date for each item
   - "Items Expiring Soon!" alert banner (30-day threshold)
