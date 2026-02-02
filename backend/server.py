@@ -3093,4 +3093,29 @@ async def startup_event():
     await db.playlist_video_cache.create_index("cache_key", unique=True)
     await db.playlist_video_cache.create_index("expires_at", expireAfterSeconds=0)
     
+    # User authentication indexes
+    await db.users.create_index("email", unique=True)
+    await db.users.create_index("id", unique=True)
+    await db.password_resets.create_index("token", unique=True)
+    await db.password_resets.create_index("expires_at", expireAfterSeconds=0)
+    
+    # Household indexes
+    await db.households.create_index("id", unique=True)
+    await db.households.create_index("kitchen_code", unique=True)
+    await db.households.create_index("members.user_id")
+    
+    # Inventory and shopping with household_id
+    await db.inventory.create_index("household_id")
+    await db.shopping_list.create_index("household_id")
+    await db.meal_plans.create_index("household_id")
+    
+    # API usage tracking
+    await db.api_usage.create_index("timestamp")
+    await db.api_usage.create_index([("api_name", 1), ("timestamp", 1)])
+    await db.api_usage.create_index("household_id")
+    
+    # Festivals
+    await db.festivals.create_index("date")
+    await db.festivals.create_index("id", unique=True)
+    
     logger.info("Rasoi-Sync backend started successfully!")
