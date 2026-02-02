@@ -24,11 +24,6 @@ const AdminPage = () => {
   const [apiUsage, setApiUsage] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [pendingTranslations, setPendingTranslations] = useState([]);
-  const [festivals, setFestivals] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const [userSearch, setUserSearch] = useState('');
-  const [showMakeAdminDialog, setShowMakeAdminDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     stats: true,
     apiUsage: true,
