@@ -8,9 +8,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import HouseholdSwitcher from '@/components/HouseholdSwitcher';
 
 export const DualContextHeader = ({ onLanguageChange }) => {
   const { language, changeLanguage, getLabel } = useLanguage();
+  const { isAuthenticated, user } = useAuth();
 
   const handleLanguageChange = (value) => {
     changeLanguage(value);
@@ -35,13 +38,9 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             <span className="font-bold text-lg text-gray-800">{getLabel('appName')}</span>
           </div>
           
-          {/* Mobile: Location + Language compact */}
+          {/* Mobile: Household Switcher + Language */}
           <div className="flex items-center gap-2">
-            {/* Location badge - compact */}
-            <div className="flex items-center gap-1 bg-[#FFFBF0] px-2 py-1 rounded-full text-xs">
-              <MapPin className="w-3 h-3 text-[#FF9933]" />
-              <span className="font-medium">Pune</span>
-            </div>
+            {isAuthenticated && <HouseholdSwitcher />}
             
             {/* Language toggle - compact */}
             <Select value={language} onValueChange={handleLanguageChange}>
