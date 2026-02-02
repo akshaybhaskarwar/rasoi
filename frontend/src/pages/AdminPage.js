@@ -480,7 +480,7 @@ const AdminPage = () => {
                         </Badge>
                       </div>
                       {f.dadi_message && (
-                        <p className="text-xs text-purple-600 mt-2 italic">"{f.dadi_message}"</p>
+                        <p className="text-xs text-purple-600 mt-2 italic">&ldquo;{f.dadi_message}&rdquo;</p>
                       )}
                     </div>
                   ))}
