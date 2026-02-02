@@ -678,14 +678,14 @@ const OnboardingFlow = ({ onComplete }) => {
                       {t.quickPantrySetup}
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                      Select items you usually have at home
+                      {t.selectItems}
                     </p>
                   </div>
 
                   <div className="space-y-2 sm:space-y-3 max-h-[180px] sm:max-h-[220px] overflow-y-auto pr-1 sm:pr-2">
                     {QUICK_PANTRY_ITEMS.map((category) => (
-                      <div key={category.category} className="space-y-1.5 sm:space-y-2">
-                        <p className="text-xs sm:text-sm font-medium text-gray-700">{category.category}</p>
+                      <div key={category.categoryKey} className="space-y-1.5 sm:space-y-2">
+                        <p className="text-xs sm:text-sm font-medium text-gray-700">{t[category.categoryKey]}</p>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
                           {category.items.map((item) => (
                             <button
@@ -710,10 +710,10 @@ const OnboardingFlow = ({ onComplete }) => {
 
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-xs sm:text-sm text-gray-500">
-                      {selectedPantryItems.length} items selected
+                      {t.itemsSelected.replace('{count}', selectedPantryItems.length)}
                     </span>
                     <Badge variant="outline" className="text-[10px] sm:text-xs">
-                      Add more later
+                      {t.addMoreLater}
                     </Badge>
                   </div>
                 </motion.div>
@@ -733,17 +733,17 @@ const OnboardingFlow = ({ onComplete }) => {
                       <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
                     <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-                      You're All Set! 🎉
+                      {t.allSet}
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                      Here's what you can do with Rasoi-Sync
+                      {t.hereIsWhatYouCanDo}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {TOUR_HIGHLIGHTS.map((item, idx) => (
                       <motion.div
-                        key={item.title}
+                        key={item.titleKey}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
