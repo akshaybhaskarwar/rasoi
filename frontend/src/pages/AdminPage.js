@@ -4,22 +4,13 @@ import { Navigate } from 'react-router-dom';
 import { 
   Shield, Users, Home, Package, Languages, Calendar, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
-  RefreshCw, ChevronDown, ChevronUp, Crown, Search,
+  RefreshCw, ChevronDown, ChevronUp, Crown,
   BarChart3, Activity
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import axios from 'axios';
 
