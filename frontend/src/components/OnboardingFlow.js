@@ -473,37 +473,37 @@ const OnboardingFlow = ({ onComplete }) => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4"
+                  className="space-y-3 sm:space-y-4"
                 >
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                      <Package className="w-8 h-8 text-white" />
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
+                      <Package className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
                       Quick Pantry Setup
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Select items you usually have at home
                     </p>
                   </div>
 
-                  <div className="space-y-3 max-h-[240px] overflow-y-auto pr-2">
+                  <div className="space-y-2 sm:space-y-3 max-h-[180px] sm:max-h-[220px] overflow-y-auto pr-1 sm:pr-2">
                     {QUICK_PANTRY_ITEMS.map((category) => (
-                      <div key={category.category} className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700">{category.category}</p>
-                        <div className="flex flex-wrap gap-2">
+                      <div key={category.category} className="space-y-1.5 sm:space-y-2">
+                        <p className="text-xs sm:text-sm font-medium text-gray-700">{category.category}</p>
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
                           {category.items.map((item) => (
                             <button
                               key={item}
                               onClick={() => togglePantryItem(item)}
-                              className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm transition-all ${
                                 selectedPantryItems.includes(item)
                                   ? 'bg-green-500 text-white shadow-md'
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                               }`}
                             >
                               {selectedPantryItems.includes(item) && (
-                                <Check className="w-3 h-3 inline mr-1" />
+                                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-0.5 sm:mr-1" />
                               )}
                               {item}
                             </button>
@@ -514,11 +514,11 @@ const OnboardingFlow = ({ onComplete }) => {
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-xs sm:text-sm text-gray-500">
                       {selectedPantryItems.length} items selected
                     </span>
-                    <Badge variant="outline" className="text-xs">
-                      You can add more later
+                    <Badge variant="outline" className="text-[10px] sm:text-xs">
+                      Add more later
                     </Badge>
                   </div>
                 </motion.div>
