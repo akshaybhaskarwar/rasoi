@@ -255,6 +255,72 @@ const PANTRY_TEMPLATE = {
         { en: 'Baking Powder', mr: 'बेकिंग पावडर' }
       ]
     }
+  },
+  '🧹 CLEANING & HOUSEHOLD (सफाई)': {
+    '🧼 Dish & Laundry Cleaning': {
+      color: 'bg-blue-50',
+      items: [
+        { en: 'Dish Soap', mr: 'भांडी साबण' },
+        { en: 'Dishwashing Liquid (Vim)', mr: 'विम बार / लिक्विड' },
+        { en: 'Dishwashing Bar', mr: 'भांडी धुण्याची बार' },
+        { en: 'Scrubber / Scotch-Brite', mr: 'स्क्रबर' },
+        { en: 'Steel Wool', mr: 'लोखंडी जाळी' },
+        { en: 'Cloth Soap', mr: 'कपडे धुण्याचा साबण' },
+        { en: 'Detergent Powder', mr: 'डिटर्जंट पावडर' },
+        { en: 'Detergent (Rin)', mr: 'रिन' },
+        { en: 'Detergent (Surf Excel)', mr: 'सर्फ एक्सेल' },
+        { en: 'Fabric Softener', mr: 'फॅब्रिक सॉफ्टनर' },
+        { en: 'Fabric Whitener (Ujala)', mr: 'उजाला' },
+        { en: 'Odopic', mr: 'ओडोपिक' }
+      ]
+    },
+    '🚿 Personal Care & Bath': {
+      color: 'bg-cyan-50',
+      items: [
+        { en: 'Bath Soap', mr: 'आंघोळीचा साबण' },
+        { en: 'Handwash', mr: 'हँडवॉश' },
+        { en: 'Shampoo', mr: 'शाम्पू' },
+        { en: 'Conditioner', mr: 'कंडिशनर' },
+        { en: 'Body Oil', mr: 'अंगाला लावायचे तेल' },
+        { en: 'Hair Oil', mr: 'केसांचे तेल' },
+        { en: 'Coconut Oil (Body)', mr: 'खोबरेल तेल' },
+        { en: 'Body Lotion', mr: 'बॉडी लोशन' },
+        { en: 'Face Wash', mr: 'फेस वॉश' },
+        { en: 'Toothpaste', mr: 'टूथपेस्ट' },
+        { en: 'Toothbrush', mr: 'टूथब्रश' }
+      ]
+    },
+    '🚽 Bathroom & Floor Cleaning': {
+      color: 'bg-teal-50',
+      items: [
+        { en: 'Bathroom Cleaner', mr: 'बाथरूम क्लीनर' },
+        { en: 'Harpic', mr: 'हार्पिक' },
+        { en: 'Floor Cleaner', mr: 'फ्लोर क्लीनर' },
+        { en: 'Phenyl', mr: 'फिनाइल' },
+        { en: 'Lizol', mr: 'लिझॉल' },
+        { en: 'Toilet Cleaner Brush', mr: 'टॉयलेट ब्रश' },
+        { en: 'Mop', mr: 'पोछा' },
+        { en: 'Broom', mr: 'झाडू' },
+        { en: 'Dustpan', mr: 'कचरा उचलणारे' }
+      ]
+    },
+    '✨ Other Household Essentials': {
+      color: 'bg-indigo-50',
+      items: [
+        { en: 'Glass Cleaner (Colin)', mr: 'कॉलिन' },
+        { en: 'Surface Cleaner', mr: 'सर्फेस क्लीनर' },
+        { en: 'Air Freshener', mr: 'एअर फ्रेशनर' },
+        { en: 'Insect Killer Spray', mr: 'कीटकनाशक स्प्रे' },
+        { en: 'Mosquito Repellent', mr: 'मच्छर अगरबत्ती' },
+        { en: 'Matchsticks', mr: 'काडेपेटी' },
+        { en: 'Candles', mr: 'मेणबत्ती' },
+        { en: 'Garbage Bags', mr: 'कचरा पिशव्या' },
+        { en: 'Aluminum Foil', mr: 'अल्युमिनियम फॉइल' },
+        { en: 'Cling Wrap', mr: 'क्लिंग रॅप' },
+        { en: 'Paper Napkins', mr: 'पेपर नॅपकिन' },
+        { en: 'Tissues', mr: 'टिश्यू पेपर' }
+      ]
+    }
   }
 };
 
