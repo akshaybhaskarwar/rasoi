@@ -1451,6 +1451,189 @@ async def clear_shopping_list():
     await db.shopping_list.delete_many({})
     return {"message": "Shopping list cleared"}
 
+# ============ SHOPPING STATUS ENDPOINTS (for real-time sync) ============
+
+class ShoppingStatusUpdate(BaseModel):
+    status: str  # pending, in_cart, bought
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+
+@api_router.put("/shopping/{item_id}/status")
+async def update_shopping_status(item_id: str, status_update: ShoppingStatusUpdate):
+    """
+    Update shopping item status for real-time sync
+    Status flow: pending → in_cart → bought
+    """
+    item = await db.shopping_list.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    valid_statuses = ["pending", "in_cart", "bought"]
+    if status_update.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    update_data = {"shopping_status": status_update.status}
+    
+    if status_update.status == "in_cart":
+        update_data["claimed_by"] = status_update.user_id
+        update_data["claimed_by_name"] = status_update.user_name
+    elif status_update.status == "bought":
+        update_data["bought_at"] = datetime.now(timezone.utc)
+    elif status_update.status == "pending":
+        # Reset claim
+        update_data["claimed_by"] = None
+        update_data["claimed_by_name"] = None
+        update_data["bought_at"] = None
+    
+    result = await db.shopping_list.update_one(
+        {"id": item_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Get updated item for broadcast
+    updated_item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+    
+    # Broadcast to household if household_id exists
+    if item.get("household_id"):
+        await notify_shopping_change(
+            item["household_id"], 
+            "status", 
+            updated_item, 
+            status_update.user_name
+        )
+    
+    return updated_item
+
+@api_router.post("/shopping/{item_id}/claim")
+async def claim_shopping_item(item_id: str, user_id: str, user_name: str):
+    """Claim an item (mark as 'I'm buying this')"""
+    item = await db.shopping_list.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Check if already claimed by someone else
+    if item.get("shopping_status") == "in_cart" and item.get("claimed_by") != user_id:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Already being bought by {item.get('claimed_by_name', 'someone')}"
+        )
+    
+    await db.shopping_list.update_one(
+        {"id": item_id},
+        {"$set": {
+            "shopping_status": "in_cart",
+            "claimed_by": user_id,
+            "claimed_by_name": user_name
+        }}
+    )
+    
+    updated_item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+    
+    # Broadcast
+    if item.get("household_id"):
+        await notify_shopping_change(item["household_id"], "status", updated_item, user_name)
+    
+    return {"message": f"{user_name} is buying this", "item": updated_item}
+
+@api_router.post("/shopping/{item_id}/unclaim")
+async def unclaim_shopping_item(item_id: str, user_id: str):
+    """Release claim on an item"""
+    item = await db.shopping_list.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Only the claimer can unclaim
+    if item.get("claimed_by") and item.get("claimed_by") != user_id:
+        raise HTTPException(status_code=403, detail="You didn't claim this item")
+    
+    await db.shopping_list.update_one(
+        {"id": item_id},
+        {"$set": {
+            "shopping_status": "pending",
+            "claimed_by": None,
+            "claimed_by_name": None
+        }}
+    )
+    
+    updated_item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+    
+    # Broadcast
+    if item.get("household_id"):
+        await notify_shopping_change(item["household_id"], "status", updated_item)
+    
+    return {"message": "Item released", "item": updated_item}
+
+@api_router.post("/shopping/{item_id}/mark-bought")
+async def mark_item_bought(item_id: str, user_id: str, user_name: str, move_to_inventory: bool = True):
+    """
+    Mark item as bought and optionally move to inventory
+    """
+    item = await db.shopping_list.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Update status
+    await db.shopping_list.update_one(
+        {"id": item_id},
+        {"$set": {
+            "shopping_status": "bought",
+            "bought_at": datetime.now(timezone.utc),
+            "claimed_by": user_id,
+            "claimed_by_name": user_name
+        }}
+    )
+    
+    result = {"message": f"Marked as bought by {user_name}"}
+    
+    # Optionally move to inventory
+    if move_to_inventory:
+        # Check if item already exists in inventory
+        existing = await db.inventory.find_one({
+            "name_en": item["name_en"],
+            "household_id": item.get("household_id")
+        })
+        
+        if existing:
+            # Update stock level to full
+            await db.inventory.update_one(
+                {"id": existing["id"]},
+                {"$set": {"stock_level": "full", "last_updated_by": user_id}}
+            )
+            result["inventory_action"] = "updated_existing"
+        else:
+            # Create new inventory item
+            new_item = {
+                "id": str(uuid.uuid4()),
+                "household_id": item.get("household_id"),
+                "name_en": item["name_en"],
+                "name_hi": item.get("name_hi"),
+                "name_mr": item.get("name_mr"),
+                "category": item.get("category", "other"),
+                "stock_level": "full",
+                "unit": "kg",
+                "last_updated_by": user_id,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.inventory.insert_one(new_item)
+            result["inventory_action"] = "created_new"
+            
+            # Broadcast inventory change
+            if item.get("household_id"):
+                await notify_inventory_change(item["household_id"], "add", new_item, user_name)
+        
+        # Remove from shopping list
+        await db.shopping_list.delete_one({"id": item_id})
+        result["removed_from_shopping"] = True
+    
+    # Broadcast shopping change
+    if item.get("household_id"):
+        await notify_shopping_change(item["household_id"], "status", {**item, "shopping_status": "bought"}, user_name)
+    
+    return result
+
 # ============ MEAL PLANNER ENDPOINTS ============
 
 def estimate_ingredient_quantity(ingredient_name: str, serving_size: str = "family_4") -> Dict[str, Any]:
