@@ -163,6 +163,26 @@ const HouseholdSwitcher = () => {
     setShowRemoveConfirm(true);
   };
 
+  const handleDeleteKitchen = async () => {
+    if (!activeHousehold) return;
+    
+    setLoading(true);
+    const result = await deleteHousehold(activeHousehold.id);
+    
+    if (result.success) {
+      toast.success(result.data.message || 'Kitchen deleted');
+      setShowDeleteKitchenConfirm(false);
+      setShowDialog(false);
+      window.location.reload();
+    } else {
+      toast.error(result.error);
+    }
+    setLoading(false);
+  };
+
+  // Check if owner can delete kitchen (only when they are the only member)
+  const canDeleteKitchen = activeHousehold?.is_owner && activeHousehold?.member_count === 1;
+
   return (
     <>
       <DropdownMenu>
