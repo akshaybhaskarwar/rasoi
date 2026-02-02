@@ -24,6 +24,11 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - Switch between households via dropdown in header
   - Owner/Member roles with transfer ownership option
   - "Invite Family Member" dialog with copy-to-clipboard code
+  - **Remove Family Member** - Added Feb 2, 2025
+    - Owner can remove non-owner members from the household
+    - Trash icon button next to each non-owner member
+    - Confirmation dialog before removal
+    - Removed member loses access to household data
   
 - **Multi-Step Interactive Onboarding Flow** - Added Feb 2, 2025
   - **Guided Overlay (Spotlight)**: Dimmed background with focused modal
