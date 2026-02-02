@@ -40,6 +40,7 @@ const HouseholdSwitcher = () => {
     switchHousehold, 
     createHousehold, 
     joinHousehold,
+    removeMember,
     logout 
   } = useAuth();
   
@@ -49,6 +50,8 @@ const HouseholdSwitcher = () => {
   const [householdName, setHouseholdName] = useState('');
   const [kitchenCode, setKitchenCode] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   if (!user) return null;
 
