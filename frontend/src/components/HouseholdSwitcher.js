@@ -306,14 +306,20 @@ const HouseholdSwitcher = () => {
                 <div className="p-4 bg-orange-50 rounded-lg text-center">
                   <p className="text-sm text-gray-600 mb-2">Kitchen Code</p>
                   <div className="flex items-center justify-center gap-2">
-                    <p className="text-3xl font-mono font-bold tracking-widest text-orange-600">
-                      {activeHousehold.kitchen_code}
-                    </p>
+                    <input
+                      type="text"
+                      readOnly
+                      value={activeHousehold.kitchen_code}
+                      onClick={(e) => e.target.select()}
+                      className="text-3xl font-mono font-bold tracking-widest text-orange-600 bg-transparent border-none text-center w-40 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                      title="Click to select code"
+                    />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={copyKitchenCode}
                       className="ml-2"
+                      title="Copy to clipboard"
                     >
                       {codeCopied ? (
                         <Check className="w-4 h-4 text-green-500" />
@@ -322,6 +328,7 @@ const HouseholdSwitcher = () => {
                       )}
                     </Button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">Click code to select, then Ctrl+C to copy</p>
                 </div>
                 
                 <div className="space-y-2">
