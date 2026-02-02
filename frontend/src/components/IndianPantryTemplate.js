@@ -447,15 +447,37 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }
       const allSelectedItems = [];
       
       Object.entries(selectedItems).forEach(([key, items]) => {
-        const [mainCategory] = key.split('::');
+        const [mainCategory, subCategory] = key.split('::');
         items.forEach(item => {
+          // Map categories properly
+          let category = 'other';
+          if (mainCategory.includes('GROCERY')) {
+            if (subCategory.includes('Grains') || subCategory.includes('Rava')) category = 'grains';
+            else if (subCategory.includes('Pulses') || subCategory.includes('Chana')) category = 'pulses';
+            else if (subCategory.includes('Spices')) category = 'spices';
+            else if (subCategory.includes('Masalas')) category = 'spices';
+            else if (subCategory.includes('Oils') || subCategory.includes('Sweeteners')) category = 'oils';
+            else if (subCategory.includes('Upvas') || subCategory.includes('Fasting')) category = 'fasting';
+            else if (subCategory.includes('Instant')) category = 'snacks';
+            else if (subCategory.includes('Poha') || subCategory.includes('Puffed')) category = 'snacks';
+            else if (subCategory.includes('Tea') || subCategory.includes('Coffee')) category = 'beverages';
+            else category = 'grains';
+          } else if (mainCategory.includes('MANDI')) {
+            if (subCategory.includes('Vegetable') || subCategory.includes('Leafy') || subCategory.includes('Mushroom')) category = 'vegetables';
+            else if (subCategory.includes('Fruit')) category = 'fruits';
+            else category = 'vegetables';
+          } else if (mainCategory.includes('BAKERY')) {
+            category = 'bakery';
+          } else if (mainCategory.includes('CLEANING') || mainCategory.includes('HOUSEHOLD')) {
+            category = 'household';
+          }
+          
           allSelectedItems.push({
             name_en: item.en,
             name_mr: item.mr,  // Include Marathi translation
-            category: mainCategory.includes('GROCERY') ? 'grocery' : 
-                     mainCategory.includes('MANDI') ? 'mandi' : 'bakery',
+            category: category,
             stock_level: 'empty',
-            unit: 'kg'
+            unit: category === 'household' ? 'pcs' : 'kg'
           });
         });
       });
