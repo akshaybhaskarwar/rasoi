@@ -46,11 +46,6 @@ const AdminPage = () => {
     users: false
   });
 
-  // Redirect non-admin users
-  if (user && !user.is_admin) {
-    return <Navigate to="/" replace />;
-  }
-
   const fetchDashboardData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
@@ -94,24 +89,19 @@ const AdminPage = () => {
     }
   };
 
-  const fetchAllUsers = async () => {
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get(`${API}/api/admin/users`, { headers });
-      setAllUsers(res.data.users || []);
-    } catch (error) {
-      // Endpoint might not exist, ignore
-      console.log('Users endpoint not available');
-    }
-  };
-
   useEffect(() => {
     if (token && user?.is_admin) {
       fetchDashboardData();
       fetchTranslations();
       fetchFestivals();
     }
-  }, [token, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user?.is_admin]);
+
+  // Redirect non-admin users
+  if (user && !user.is_admin) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true);
