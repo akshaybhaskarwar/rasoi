@@ -618,36 +618,111 @@ const InventoryPage = () => {
                             </div>
                           )}
 
-                          {/* Expiry Date Display */}
-                          {item.expiry_date && (() => {
-                            const expStatus = getExpiryStatus(item.expiry_date);
-                            return (
-                              <div className={`mb-3 p-2 rounded-lg ${
-                                expStatus.status === 'expired' ? 'bg-red-100 border border-red-300' :
-                                expStatus.status === 'today' ? 'bg-red-50 border border-red-200' :
-                                expStatus.status === 'soon' ? 'bg-amber-50 border border-amber-200' :
-                                'bg-gray-50 border border-gray-200'
-                              }`}>
+                          {/* Expiry Date Display & Editor */}
+                          {editingExpiryItemId === item.id ? (
+                            <div className="mb-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                              <div className="flex flex-col gap-2">
+                                <Label className="text-xs font-medium text-blue-800">Update Expiry Date</Label>
                                 <div className="flex items-center gap-2">
-                                  {(expStatus.status === 'expired' || expStatus.status === 'today' || expStatus.status === 'soon') && (
-                                    <AlertTriangle className={`w-4 h-4 ${
-                                      expStatus.status === 'expired' ? 'text-red-500' :
-                                      expStatus.status === 'today' ? 'text-red-400' :
-                                      'text-amber-500'
-                                    }`} />
-                                  )}
-                                  <span className={`text-xs font-medium ${
-                                    expStatus.status === 'expired' ? 'text-red-700' :
-                                    expStatus.status === 'today' ? 'text-red-600' :
-                                    expStatus.status === 'soon' ? 'text-amber-700' :
-                                    'text-gray-600'
-                                  }`}>
-                                    {expStatus.message}
-                                  </span>
+                                  <Input
+                                    type="date"
+                                    value={newExpiryDate}
+                                    onChange={(e) => setNewExpiryDate(e.target.value)}
+                                    className="flex-1 h-9 text-sm"
+                                    data-testid={`edit-expiry-input-${item.id}`}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleUpdateExpiryDate(item.id)}
+                                    className="h-9 px-3 bg-green-600 hover:bg-green-700"
+                                    data-testid={`save-expiry-${item.id}`}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={cancelEditingExpiry}
+                                    className="h-9 px-3"
+                                    data-testid={`cancel-expiry-${item.id}`}
+                                  >
+                                    Cancel
+                                  </Button>
                                 </div>
+                                {newExpiryDate && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setNewExpiryDate('')}
+                                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
+                                  >
+                                    Clear expiry date
+                                  </Button>
+                                )}
                               </div>
-                            );
-                          })()}
+                            </div>
+                          ) : item.expiry_date ? (
+                            (() => {
+                              const expStatus = getExpiryStatus(item.expiry_date);
+                              return (
+                                <div className={`mb-3 p-2 rounded-lg ${
+                                  expStatus.status === 'expired' ? 'bg-red-100 border border-red-300' :
+                                  expStatus.status === 'today' ? 'bg-red-50 border border-red-200' :
+                                  expStatus.status === 'soon' ? 'bg-amber-50 border border-amber-200' :
+                                  'bg-gray-50 border border-gray-200'
+                                }`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      {(expStatus.status === 'expired' || expStatus.status === 'today' || expStatus.status === 'soon') && (
+                                        <AlertTriangle className={`w-4 h-4 ${
+                                          expStatus.status === 'expired' ? 'text-red-500' :
+                                          expStatus.status === 'today' ? 'text-red-400' :
+                                          'text-amber-500'
+                                        }`} />
+                                      )}
+                                      <span className={`text-xs font-medium ${
+                                        expStatus.status === 'expired' ? 'text-red-700' :
+                                        expStatus.status === 'today' ? 'text-red-600' :
+                                        expStatus.status === 'soon' ? 'text-amber-700' :
+                                        'text-gray-600'
+                                      }`}>
+                                        {expStatus.message}
+                                      </span>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => startEditingExpiry(item)}
+                                      className={`h-7 px-2 text-xs ${
+                                        expStatus.status === 'expired' ? 'text-red-600 hover:bg-red-200' :
+                                        expStatus.status === 'today' ? 'text-red-500 hover:bg-red-100' :
+                                        expStatus.status === 'soon' ? 'text-amber-600 hover:bg-amber-100' :
+                                        'text-gray-500 hover:bg-gray-100'
+                                      }`}
+                                      title="Update expiry date (bought fresh stock?)"
+                                      data-testid={`edit-expiry-btn-${item.id}`}
+                                    >
+                                      <Edit className="w-3 h-3 mr-1" />
+                                      Update
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <div className="mb-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditingExpiry(item)}
+                                className="w-full h-8 text-xs text-gray-500 border-dashed"
+                                data-testid={`add-expiry-btn-${item.id}`}
+                              >
+                                <Calendar className="w-3 h-3 mr-1" />
+                                Add expiry date
+                              </Button>
+                            </div>
+                          )}
 
                           {/* Stock Level Display */}
                           <div className="mb-3">
