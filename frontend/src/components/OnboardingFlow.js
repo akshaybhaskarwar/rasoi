@@ -255,27 +255,27 @@ const OnboardingFlow = ({ onComplete }) => {
                     idx <= currentStep ? 'text-orange-600' : 'text-gray-300'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
                     idx < currentStep 
                       ? 'bg-green-500 text-white' 
                       : idx === currentStep 
-                        ? 'bg-orange-500 text-white ring-4 ring-orange-100' 
+                        ? 'bg-orange-500 text-white ring-2 sm:ring-4 ring-orange-100' 
                         : 'bg-gray-100'
                   }`}>
                     {idx < currentStep ? (
-                      <Check className="w-4 h-4" />
+                      <Check className="w-3 h-3 sm:w-4 sm:h-4" />
                     ) : (
-                      <step.icon className="w-4 h-4" />
+                      <step.icon className="w-3 h-3 sm:w-4 sm:h-4" />
                     )}
                   </div>
-                  <span className="text-[10px] font-medium hidden sm:block">{step.title}</span>
+                  <span className="text-[9px] sm:text-[10px] font-medium hidden xs:block">{step.title}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Step Content */}
-          <div className="p-6 min-h-[380px]">
+          <div className="p-4 sm:p-6 flex-1 overflow-y-auto min-h-0">
             <AnimatePresence mode="wait">
               {/* Step 1: Welcome */}
               {currentStep === 0 && (
