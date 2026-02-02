@@ -20,12 +20,199 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Onboarding steps configuration
-const STEPS = [
-  { id: 'welcome', title: 'Welcome', icon: ChefHat },
-  { id: 'household', title: 'Your Kitchen', icon: Home },
-  { id: 'pantry', title: 'Stock Pantry', icon: Package },
-  { id: 'tour', title: 'Quick Tour', icon: Sparkles },
+// Translations for onboarding flow
+const TRANSLATIONS = {
+  en: {
+    // Step indicators
+    stepOf: 'Step {current} of {total}',
+    skipSetup: 'Skip setup',
+    steps: {
+      welcome: 'Welcome',
+      household: 'Your Kitchen',
+      pantry: 'Stock Pantry',
+      tour: 'Quick Tour'
+    },
+    // Step 1: Welcome
+    welcomeTo: 'Welcome to',
+    appName: 'Rasoi-Sync',
+    appTagline: 'Your intelligent Indian kitchen manager',
+    chooseLanguage: 'Choose your language',
+    yourCity: 'Your city',
+    // Step 2: Household
+    setUpKitchen: 'Set Up Your Kitchen',
+    setUpKitchenDesc: 'Create a new kitchen or join your family\'s',
+    createNew: 'Create New',
+    joinFamily: 'Join Family',
+    createKitchenInfo: '🏠 Create your digital kitchen and get a code to share with family',
+    joinKitchenInfo: '👨‍👩‍👧‍👦 Enter the 6-digit code shared by your family member',
+    kitchenName: 'Kitchen Name',
+    kitchenNamePlaceholder: 'e.g., Sharma Family Kitchen',
+    createKitchen: 'Create Kitchen',
+    kitchenCode: 'Kitchen Code',
+    joinKitchen: 'Join Kitchen',
+    kitchenCreated: 'Kitchen Created! 🎉',
+    shareCode: 'Share this code with family:',
+    // Step 3: Pantry
+    quickPantrySetup: 'Quick Pantry Setup',
+    selectItems: 'Select items you usually have at home',
+    itemsSelected: '{count} items selected',
+    addMoreLater: 'Add more later',
+    // Step 4: Tour
+    allSet: 'You\'re All Set! 🎉',
+    hereIsWhatYouCanDo: 'Here\'s what you can do with Rasoi-Sync',
+    dadiTip: 'Dadi\'s Tip',
+    dadiMessage: '"Start by adding items you use daily. I\'ll help track expiry dates and suggest recipes!"',
+    // Tour highlights
+    inventory: 'Inventory',
+    inventoryDesc: 'Track what\'s in your kitchen with smart stock levels',
+    shoppingList: 'Shopping List',
+    shoppingListDesc: 'Auto-generated lists synced with family members',
+    mealPlanner: 'Meal Planner',
+    mealPlannerDesc: 'Plan weekly meals with YouTube recipe integration',
+    digitalDadi: 'Digital Dadi',
+    digitalDadiDesc: 'Your AI kitchen assistant with smart suggestions',
+    // Buttons
+    continue: 'Continue',
+    back: 'Back',
+    skip: 'Skip',
+    addAndContinue: 'Add & Continue',
+    startCooking: 'Start Cooking!',
+    // Pantry categories
+    grains: '🌾 Grains',
+    pulses: '🫘 Pulses',
+    spices: '🌶️ Spices',
+    oils: '🧴 Oils'
+  },
+  hi: {
+    // Step indicators
+    stepOf: 'चरण {current} / {total}',
+    skipSetup: 'छोड़ें',
+    steps: {
+      welcome: 'स्वागत',
+      household: 'आपका किचन',
+      pantry: 'राशन भरें',
+      tour: 'परिचय'
+    },
+    // Step 1: Welcome
+    welcomeTo: 'आपका स्वागत है',
+    appName: 'रसोई-सिंक',
+    appTagline: 'आपका बुद्धिमान भारतीय रसोई प्रबंधक',
+    chooseLanguage: 'अपनी भाषा चुनें',
+    yourCity: 'आपका शहर',
+    // Step 2: Household
+    setUpKitchen: 'अपना किचन सेट करें',
+    setUpKitchenDesc: 'नया किचन बनाएं या परिवार से जुड़ें',
+    createNew: 'नया बनाएं',
+    joinFamily: 'परिवार से जुड़ें',
+    createKitchenInfo: '🏠 अपना डिजिटल किचन बनाएं और परिवार के साथ कोड शेयर करें',
+    joinKitchenInfo: '👨‍👩‍👧‍👦 परिवार के सदस्य द्वारा शेयर किया गया 6-अंकों का कोड दर्ज करें',
+    kitchenName: 'किचन का नाम',
+    kitchenNamePlaceholder: 'जैसे: शर्मा परिवार का किचन',
+    createKitchen: 'किचन बनाएं',
+    kitchenCode: 'किचन कोड',
+    joinKitchen: 'किचन से जुड़ें',
+    kitchenCreated: 'किचन बन गया! 🎉',
+    shareCode: 'यह कोड परिवार के साथ शेयर करें:',
+    // Step 3: Pantry
+    quickPantrySetup: 'जल्दी राशन सेटअप',
+    selectItems: 'जो सामान आमतौर पर घर में होता है उसे चुनें',
+    itemsSelected: '{count} सामान चुने गए',
+    addMoreLater: 'बाद में और जोड़ें',
+    // Step 4: Tour
+    allSet: 'सब तैयार है! 🎉',
+    hereIsWhatYouCanDo: 'रसोई-सिंक में आप यह कर सकते हैं',
+    dadiTip: 'दादी की सलाह',
+    dadiMessage: '"रोज़ाना इस्तेमाल होने वाली चीज़ें पहले जोड़ें। मैं एक्सपायरी डेट और रेसिपी में मदद करूंगी!"',
+    // Tour highlights
+    inventory: 'स्टॉक',
+    inventoryDesc: 'किचन में क्या है, स्मार्ट तरीके से ट्रैक करें',
+    shoppingList: 'खरीदारी सूची',
+    shoppingListDesc: 'परिवार के साथ ऑटो-सिंक होने वाली सूची',
+    mealPlanner: 'भोजन योजना',
+    mealPlannerDesc: 'YouTube रेसिपी के साथ साप्ताहिक मेन्यू',
+    digitalDadi: 'डिजिटल दादी',
+    digitalDadiDesc: 'स्मार्ट सुझाव देने वाली AI सहायक',
+    // Buttons
+    continue: 'आगे बढ़ें',
+    back: 'वापस',
+    skip: 'छोड़ें',
+    addAndContinue: 'जोड़ें और आगे बढ़ें',
+    startCooking: 'खाना बनाना शुरू करें!',
+    // Pantry categories
+    grains: '🌾 अनाज',
+    pulses: '🫘 दालें',
+    spices: '🌶️ मसाले',
+    oils: '🧴 तेल'
+  },
+  mr: {
+    // Step indicators
+    stepOf: 'पायरी {current} / {total}',
+    skipSetup: 'वगळा',
+    steps: {
+      welcome: 'स्वागत',
+      household: 'तुमचे किचन',
+      pantry: 'साठा भरा',
+      tour: 'ओळख'
+    },
+    // Step 1: Welcome
+    welcomeTo: 'स्वागत आहे',
+    appName: 'रसोई-सिंक',
+    appTagline: 'तुमचा हुशार भारतीय स्वयंपाकघर व्यवस्थापक',
+    chooseLanguage: 'तुमची भाषा निवडा',
+    yourCity: 'तुमचे शहर',
+    // Step 2: Household
+    setUpKitchen: 'तुमचे किचन सेट करा',
+    setUpKitchenDesc: 'नवीन किचन तयार करा किंवा कुटुंबात सामील व्हा',
+    createNew: 'नवीन तयार करा',
+    joinFamily: 'कुटुंबात सामील व्हा',
+    createKitchenInfo: '🏠 तुमचे डिजिटल किचन तयार करा आणि कुटुंबासोबत कोड शेअर करा',
+    joinKitchenInfo: '👨‍👩‍👧‍👦 कुटुंबातील सदस्याने शेअर केलेला 6-अंकी कोड टाका',
+    kitchenName: 'किचनचे नाव',
+    kitchenNamePlaceholder: 'उदा: शर्मा कुटुंबाचे किचन',
+    createKitchen: 'किचन तयार करा',
+    kitchenCode: 'किचन कोड',
+    joinKitchen: 'किचनमध्ये सामील व्हा',
+    kitchenCreated: 'किचन तयार झाले! 🎉',
+    shareCode: 'हा कोड कुटुंबासोबत शेअर करा:',
+    // Step 3: Pantry
+    quickPantrySetup: 'जलद साठा सेटअप',
+    selectItems: 'सहसा घरी असलेल्या वस्तू निवडा',
+    itemsSelected: '{count} वस्तू निवडल्या',
+    addMoreLater: 'नंतर अधिक जोडा',
+    // Step 4: Tour
+    allSet: 'सगळं तयार आहे! 🎉',
+    hereIsWhatYouCanDo: 'रसोई-सिंक मध्ये तुम्ही हे करू शकता',
+    dadiTip: 'आजीची टीप',
+    dadiMessage: '"रोज वापरल्या जाणाऱ्या गोष्टी आधी जोडा. मी एक्सपायरी डेट आणि रेसिपीमध्ये मदत करेन!"',
+    // Tour highlights
+    inventory: 'साठा',
+    inventoryDesc: 'किचनमध्ये काय आहे, स्मार्ट पद्धतीने ट्रॅक करा',
+    shoppingList: 'खरेदी यादी',
+    shoppingListDesc: 'कुटुंबासोबत ऑटो-सिंक होणारी यादी',
+    mealPlanner: 'जेवण नियोजन',
+    mealPlannerDesc: 'YouTube रेसिपीसह साप्ताहिक मेनू',
+    digitalDadi: 'डिजिटल आजी',
+    digitalDadiDesc: 'स्मार्ट सूचना देणारी AI सहाय्यक',
+    // Buttons
+    continue: 'पुढे चला',
+    back: 'मागे',
+    skip: 'वगळा',
+    addAndContinue: 'जोडा आणि पुढे चला',
+    startCooking: 'स्वयंपाक सुरू करा!',
+    // Pantry categories
+    grains: '🌾 धान्य',
+    pulses: '🫘 कडधान्ये',
+    spices: '🌶️ मसाले',
+    oils: '🧴 तेल'
+  }
+};
+
+// Onboarding steps configuration (will be translated)
+const STEPS_CONFIG = [
+  { id: 'welcome', key: 'welcome', icon: ChefHat },
+  { id: 'household', key: 'household', icon: Home },
+  { id: 'pantry', key: 'pantry', icon: Package },
+  { id: 'tour', key: 'tour', icon: Sparkles },
 ];
 
 const LANGUAGES = [
@@ -41,33 +228,38 @@ const CITIES = [
 
 // Quick pantry essentials for onboarding
 const QUICK_PANTRY_ITEMS = [
-  { category: '🌾 Grains', items: ['Rice (चावल)', 'Wheat Flour (गेहूं आटा)', 'Rava (रवा)'] },
-  { category: '🫘 Pulses', items: ['Toor Dal (तूर दाल)', 'Moong Dal (मूंग दाल)', 'Chana (चना)'] },
-  { category: '🌶️ Spices', items: ['Turmeric (हळद)', 'Red Chili (लाल मिर्च)', 'Cumin (जीरा)'] },
-  { category: '🧴 Oils', items: ['Cooking Oil (तेल)', 'Ghee (तूप)', 'Mustard Oil (सरसों तेल)'] },
+  { categoryKey: 'grains', items: ['Rice (चावल)', 'Wheat Flour (गेहूं आटा)', 'Rava (रवा)'] },
+  { categoryKey: 'pulses', items: ['Toor Dal (तूर दाल)', 'Moong Dal (मूंग दाल)', 'Chana (चना)'] },
+  { categoryKey: 'spices', items: ['Turmeric (हळद)', 'Red Chili (लाल मिर्च)', 'Cumin (जीरा)'] },
+  { categoryKey: 'oils', items: ['Cooking Oil (तेल)', 'Ghee (तूप)', 'Mustard Oil (सरसों तेल)'] },
 ];
 
 const TOUR_HIGHLIGHTS = [
   {
     icon: Package,
-    title: 'Inventory',
-    titleMr: 'साठा',
-    description: 'Track what\'s in your kitchen with smart stock levels',
+    titleKey: 'inventory',
+    descKey: 'inventoryDesc',
     color: 'bg-amber-500'
   },
   {
     icon: ShoppingBasket,
-    title: 'Shopping List',
-    titleMr: 'खरेदी यादी',
-    description: 'Auto-generated lists synced with family members',
+    titleKey: 'shoppingList',
+    descKey: 'shoppingListDesc',
     color: 'bg-green-500'
   },
   {
     icon: Calendar,
-    title: 'Meal Planner',
-    titleMr: 'जेवण नियोजन',
-    description: 'Plan weekly meals with YouTube recipe integration',
+    titleKey: 'mealPlanner',
+    descKey: 'mealPlannerDesc',
     color: 'bg-blue-500'
+  },
+  {
+    icon: Sparkles,
+    titleKey: 'digitalDadi',
+    descKey: 'digitalDadiDesc',
+    color: 'bg-purple-500'
+  },
+];
   },
   {
     icon: Sparkles,
