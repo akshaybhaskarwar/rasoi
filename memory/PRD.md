@@ -286,6 +286,9 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - `/api/translate/verify` - User verifies a translation (POST)
 - `/api/translate/edit` - User provides custom "Dadi Override" (POST)
 - `/api/translate/community-verified` - Get all Gold translations (GET)
+- `/api/households/create` - Create new household (POST)
+- `/api/households/join` - Join household with kitchen code (POST)
+- `/api/households/{id}/member/{member_id}` - Remove member from household (DELETE) - Added Feb 2, 2025
 
 ## Data Models
 
