@@ -94,12 +94,35 @@ const HouseholdSwitcher = () => {
     setLoading(false);
   };
 
-  const copyKitchenCode = () => {
-    if (activeHousehold?.kitchen_code) {
-      navigator.clipboard.writeText(activeHousehold.kitchen_code);
+  const copyKitchenCode = async () => {
+    if (!activeHousehold?.kitchen_code) return;
+    
+    const code = activeHousehold.kitchen_code;
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        // Fallback for non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      
       setCodeCopied(true);
       toast.success('Code copied!');
       setTimeout(() => setCodeCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast.error('Failed to copy. Please copy manually: ' + code);
     }
   };
 
