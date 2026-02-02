@@ -334,7 +334,7 @@ const HouseholdSwitcher = () => {
               <DialogHeader>
                 <DialogTitle>Invite Family Members</DialogTitle>
                 <DialogDescription>
-                  Share this code with family members to join "{activeHousehold.name}"
+                  Share this code with family members to join &ldquo;{activeHousehold.name}&rdquo;
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -406,8 +406,8 @@ const HouseholdSwitcher = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Family Member?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove <strong>{memberToRemove?.name}</strong> from "{activeHousehold?.name}"? 
-              They will lose access to this kitchen's inventory, shopping list, and meal plans.
+              Are you sure you want to remove <strong>{memberToRemove?.name}</strong> from &ldquo;{activeHousehold?.name}&rdquo;? 
+              They will lose access to this kitchen&apos;s inventory, shopping list, and meal plans.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
