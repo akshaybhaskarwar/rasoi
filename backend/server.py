@@ -314,7 +314,7 @@ class FestivalAlert(BaseModel):
 
 # ============ GOOGLE TRANSLATION API SERVICE ============
 
-async def google_translate_api(text: str, target_lang: str, source_lang: str = "en") -> Optional[str]:
+async def google_translate_api(text: str, target_lang: str, source_lang: str = "en", household_id: str = None, user_id: str = None) -> Optional[str]:
     """
     Call Google Cloud Translation API v3 (Basic/Advanced)
     Uses REST API with API key authentication
@@ -341,6 +341,10 @@ async def google_translate_api(text: str, target_lang: str, source_lang: str = "
             response = await client.post(url, params=params, timeout=10.0)
             response.raise_for_status()
             data = response.json()
+            
+            # Log API usage - count characters translated
+            char_count = len(text)
+            await log_api_usage(db, "translation", "translate", char_count, household_id, user_id)
             
             if data.get("data", {}).get("translations"):
                 return data["data"]["translations"][0]["translatedText"]
