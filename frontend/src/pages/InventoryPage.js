@@ -100,6 +100,8 @@ const InventoryPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPantryTemplateOpen, setIsPantryTemplateOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [editingExpiryItemId, setEditingExpiryItemId] = useState(null);
+  const [newExpiryDate, setNewExpiryDate] = useState('');
   
   const [newItem, setNewItem] = useState({
     name_en: '',
