@@ -65,21 +65,10 @@ const AdminPage = () => {
     }
   };
 
-  const fetchFestivals = async () => {
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get(`${API}/api/admin/festivals`, { headers });
-      setFestivals(res.data.festivals || []);
-    } catch (error) {
-      console.error('Error fetching festivals:', error);
-    }
-  };
-
   useEffect(() => {
     if (token && user?.is_admin) {
       fetchDashboardData();
       fetchTranslations();
-      fetchFestivals();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.is_admin]);
