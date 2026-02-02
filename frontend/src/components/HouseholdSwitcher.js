@@ -416,6 +416,36 @@ const HouseholdSwitcher = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Delete Kitchen Section - Only for owner */}
+                {activeHousehold.is_owner && (
+                  <div className="pt-4 mt-4 border-t border-red-100">
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-red-800 mb-1">Danger Zone</h4>
+                      {canDeleteKitchen ? (
+                        <>
+                          <p className="text-xs text-red-600 mb-3">
+                            Permanently delete this kitchen and all its data (inventory, shopping list, meal plans).
+                          </p>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setShowDeleteKitchenConfirm(true)}
+                            className="w-full"
+                            data-testid="delete-kitchen-btn"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Kitchen
+                          </Button>
+                        </>
+                      ) : (
+                        <p className="text-xs text-red-600">
+                          Remove all {activeHousehold.member_count - 1} other member(s) before you can delete this kitchen.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
