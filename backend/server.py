@@ -60,6 +60,7 @@ logger = logging.getLogger(__name__)
 class InventoryItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    household_id: Optional[str] = None  # Links to household for multi-user sync
     name_en: str
     name_hi: Optional[str] = None  # Hindi translation
     name_mr: Optional[str] = None  # Marathi translation
@@ -73,6 +74,7 @@ class InventoryItem(BaseModel):
     monthly_quantity: Optional[int] = None  # Monthly usage quantity (numeric)
     monthly_unit: Optional[str] = None  # Unit for monthly quantity (g, kg, ml, L, pcs)
     reserved_for: List[Dict[str, Any]] = []  # [{meal_plan_id, date, meal_type, qty, unit}]
+    last_updated_by: Optional[str] = None  # User ID who last updated
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class InventoryItemCreate(BaseModel):
