@@ -1143,13 +1143,14 @@ async def fetch_video_details(video_id: str, household_id: str = None, user_id: 
         logger.error(f"YouTube API error: {e}")
         return {}
 
-async def search_youtube_recipes(query: str, max_results: int = 10, favorite_channels: List[str] = []) -> List[Dict[str, Any]]:
+async def search_youtube_recipes(query: str, max_results: int = 10, favorite_channels: List[str] = [], household_id: str = None, user_id: str = None) -> List[Dict[str, Any]]:
     """Search YouTube for recipe videos - only from favorite channels if set"""
     try:
         youtube = get_youtube_service()
         
         all_results = []
         seen_video_ids = set()
+        search_count = 0  # Track number of API calls
         
         # If favorite channels exist, do a single search with all channel names
         if favorite_channels:
@@ -1166,6 +1167,7 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
                     regionCode="IN"
                 )
                 response = request.execute()
+                search_count += 1
                 
                 # Normalize favorite channel names for matching
                 favorite_names_lower = [ch.lower() for ch in favorite_channels]
@@ -1200,6 +1202,10 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
                     raise HTTPException(status_code=429, detail="YouTube API quota exceeded. Please try again later.")
                 raise
             
+            # Log API usage - search.list costs 100 units per call
+            if search_count > 0:
+                await log_api_usage(db, "youtube", "search.list", 100 * search_count, household_id, user_id)
+            
             return all_results[:max_results]
         
         # No favorite channels set - do general search
@@ -1212,6 +1218,7 @@ async def search_youtube_recipes(query: str, max_results: int = 10, favorite_cha
                 regionCode="IN"
             )
             response = request.execute()
+            search_count += 1
             
             for item in response.get('items', []):
                 video_id = item['id']['videoId']
