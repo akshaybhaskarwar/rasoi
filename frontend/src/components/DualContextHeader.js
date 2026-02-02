@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Globe } from 'lucide-react';
+import { MapPin, Globe, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import HouseholdSwitcher from '@/components/HouseholdSwitcher';
