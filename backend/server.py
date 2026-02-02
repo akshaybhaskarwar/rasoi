@@ -94,6 +94,8 @@ DEFAULT_MONTHLY_QUANTITIES = {
     'vegetables': {'quantity': 2, 'unit': 'kg', 'step': 500}, # 2 kg, step 500 g
     'fruits': {'quantity': 2, 'unit': 'kg', 'step': 500},   # 2 kg, step 500 g
     'fasting': {'quantity': 500, 'unit': 'g', 'step': 100}, # 500 g, step 100 g
+    'household': {'quantity': 1, 'unit': 'pcs', 'step': 1}, # 1 piece, step 1
+    'cleaning': {'quantity': 1, 'unit': 'pcs', 'step': 1},  # 1 piece, step 1
     'other': {'quantity': 1, 'unit': 'kg', 'step': 250}     # 1 kg, step 250 g
 }
 
