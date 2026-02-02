@@ -341,16 +341,23 @@ def create_household_routes(db, decode_token_func):
         if household["created_by"] != user["id"]:
             raise HTTPException(status_code=403, detail="Only the owner can delete this kitchen")
         
-        # Remove household from all members
-        member_ids = [m["user_id"] for m in household["members"]]
-        await db.users.update_many(
-            {"id": {"$in": member_ids}},
+        # Check if there are other members - must remove them first
+        other_members = [m for m in household["members"] if m["user_id"] != user["id"]]
+        if len(other_members) > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Please remove all {len(other_members)} member(s) before deleting the kitchen"
+            )
+        
+        # Remove household from owner
+        await db.users.update_one(
+            {"id": user["id"]},
             {"$pull": {"households": household_id}}
         )
         
-        # Reset active_household for members who had this as active
-        await db.users.update_many(
-            {"active_household": household_id},
+        # Reset active_household if this was active
+        await db.users.update_one(
+            {"id": user["id"], "active_household": household_id},
             {"$set": {"active_household": None}}
         )
         
