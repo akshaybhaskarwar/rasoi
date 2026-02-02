@@ -14,6 +14,7 @@ import ShoppingPage from "@/pages/ShoppingPage";
 import PlannerPage from "@/pages/PlannerPage";
 import CommunityPage from "@/pages/CommunityPage";
 import AuthPage from "@/pages/AuthPage";
+import AdminPage from "@/pages/AdminPage";
 
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
