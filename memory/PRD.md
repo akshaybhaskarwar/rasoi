@@ -284,6 +284,18 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - **Product Lookup**: Open Food Facts API
 - **Translation**: Google Cloud Translation API v3
 
+## Admin Features
+- **Admin Dashboard UI** - Added Feb 2, 2025
+  - Route: `/admin` (accessible via purple "Admin" button in header)
+  - Platform Statistics: Users, Households, Inventory Items, Translations
+  - API Quota Monitoring: YouTube & Translation API usage with progress bars
+  - Translation Moderation: Approve/reject pending community translations
+  - Festival Calendar management
+  - Admin Management section
+  - Collapsible sections for clean UI
+  - Refresh button to reload stats
+  - Redirects non-admin users to homepage
+
 ## Key API Endpoints
 - `/api/inventory` - Inventory CRUD (with expiry_date, barcode fields)
 - `/api/shopping` - Shopping list CRUD (now with stock_level field)
