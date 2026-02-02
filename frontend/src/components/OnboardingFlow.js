@@ -531,45 +531,45 @@ const OnboardingFlow = ({ onComplete }) => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4"
+                  className="space-y-3 sm:space-y-4"
                 >
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                      <Sparkles className="w-8 h-8 text-white" />
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
+                      <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
                       You're All Set! 🎉
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Here's what you can do with Rasoi-Sync
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {TOUR_HIGHLIGHTS.map((item, idx) => (
                       <motion.div
                         key={item.title}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        className="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow"
+                        className="p-2 sm:p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow"
                       >
-                        <div className={`w-10 h-10 ${item.color} rounded-lg flex items-center justify-center mb-2`}>
-                          <item.icon className="w-5 h-5 text-white" />
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 ${item.color} rounded-lg flex items-center justify-center mb-1.5 sm:mb-2`}>
+                          <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <h3 className="font-semibold text-sm text-gray-800">{item.title}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                        <h3 className="font-semibold text-xs sm:text-sm text-gray-800">{item.title}</h3>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 line-clamp-2">{item.description}</p>
                       </motion.div>
                     ))}
                   </div>
 
-                  <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
-                    <div className="flex items-start gap-3">
-                      <div className="text-3xl">👵</div>
-                      <div>
-                        <p className="font-medium text-gray-800 text-sm">Dadi's Tip</p>
-                        <p className="text-xs text-gray-600 mt-0.5">
-                          "Start by adding items you use daily. I'll help you track expiry dates and suggest recipes based on what's in your kitchen!"
+                  <div className="p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="text-2xl sm:text-3xl">👵</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-800 text-xs sm:text-sm">Dadi's Tip</p>
+                        <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
+                          "Start by adding items you use daily. I'll help track expiry dates and suggest recipes!"
                         </p>
                       </div>
                     </div>
