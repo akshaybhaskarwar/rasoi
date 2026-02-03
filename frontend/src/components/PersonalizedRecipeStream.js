@@ -259,7 +259,10 @@ const PersonalizedRecipeStream = () => {
         params.append('channel_filter', selectedChannel);
       }
       
-      const response = await axios.get(`${API}/stream/feed?${params}`);
+      const token = localStorage.getItem('auth_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API}/stream/feed?${params}`, { headers });
       setFeed(response.data.feed || []);
       setFeedStats({
         total: response.data.total_matches || 0,
