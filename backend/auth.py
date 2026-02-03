@@ -58,6 +58,7 @@ class User(BaseModel):
     households: List[str] = []  # List of household IDs user belongs to
     active_household: Optional[str] = None  # Currently selected household
     is_admin: bool = False
+    onboarding_complete: bool = False  # Whether user has completed onboarding
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserInDB(User):
