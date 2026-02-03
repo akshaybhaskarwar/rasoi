@@ -195,7 +195,7 @@ const ShoppingPage = () => {
   };
 
   const generateWhatsAppMessage = () => {
-    let message = `🛒 *Shopping List - ${activeTab === 'grocery' ? 'Grocery Store' : 'Local Mandi'}*\n\n`;
+    let message = `🛒 *Rasoi-Sync - ${activeTab === 'grocery' ? 'Grocery' : 'Local Mandi'} List*\n\n`;
     
     Object.entries(groupedByCategory).forEach(([category, items]) => {
       message += `*${category.toUpperCase()}*\n`;
