@@ -217,6 +217,22 @@ def create_auth_routes(db):
         
         return user
     
+    @auth_router.post("/complete-onboarding")
+    async def complete_onboarding(credentials: HTTPAuthorizationCredentials = Depends(security)):
+        """Mark user's onboarding as complete"""
+        if not credentials:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        payload = decode_token(credentials.credentials)
+        user_id = payload.get("sub")
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"onboarding_complete": True}}
+        )
+        
+        return {"message": "Onboarding marked as complete"}
+    
     @auth_router.post("/forgot-password")
     async def forgot_password(data: PasswordReset):
         user = await db.users.find_one({"email": data.email.lower()})
