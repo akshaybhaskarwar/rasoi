@@ -175,12 +175,22 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
         </div>
         
         <Button
-          onClick={() => navigate('/shopping')}
+          onClick={handleAddToShoppingList}
+          disabled={adding}
           className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white mt-4"
           data-testid="desktop-add-to-shopping-btn"
         >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          {getLabel('addToShoppingList')}
+          {adding ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Adding...
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {getLabel('addToShoppingList')}
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
