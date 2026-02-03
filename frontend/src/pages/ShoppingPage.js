@@ -51,7 +51,7 @@ const getDefaultQuantity = (category) => {
 };
 
 const ShoppingPage = () => {
-  const { shoppingList, addItem, deleteItem, updateItem, fetchShoppingList } = useShoppingList();
+  const { shoppingList, addItem, deleteItem, updateItem } = useShoppingList();
   const { inventory } = useInventory();
   const { language, getLabel } = useLanguage();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -59,7 +59,23 @@ const ShoppingPage = () => {
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [customQty, setCustomQty] = useState('');
   const [newItem, setNewItem] = useState({
+    name_en: '',
+    category: 'grains',
+    quantity: '-',
+    monthly_quantity: '1 kg',
+    store_type: 'grocery'
+  });
+
+  // Check if item already exists in shopping list (case-insensitive)
+  const isItemDuplicate = (itemName) => {
+    const nameLower = itemName.toLowerCase().trim();
+    return shoppingList.some(item => 
+      item.name_en?.toLowerCase().trim() === nameLower
+    );
+  };
     name_en: '',
     category: 'grains',
     quantity: '-',
