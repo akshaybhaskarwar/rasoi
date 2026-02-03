@@ -488,23 +488,76 @@ const ShoppingPage = () => {
                             )}
                           </div>
 
-                          {/* Quick Quantity Selector */}
-                          <Select
-                            value={item.monthly_quantity || ''}
-                            onValueChange={(val) => handleQuantityChange(item.id, val)}
-                          >
-                            <SelectTrigger 
-                              className="w-24 h-9 text-sm bg-orange-50 border-orange-200 text-orange-700 font-medium"
-                              data-testid={`qty-select-${item.id}`}
-                            >
-                              <SelectValue placeholder="Qty" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {QUICK_QTY_OPTIONS.map(qty => (
-                                <SelectItem key={qty} value={qty}>{qty}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {/* Quick Quantity Selector with Custom Input */}
+                          {editingItemId === item.id ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={customQty}
+                                onChange={(e) => setCustomQty(e.target.value)}
+                                placeholder="e.g., 3 kg"
+                                className="w-24 h-9 text-sm"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveCustomQty(item.id);
+                                  if (e.key === 'Escape') { setEditingItemId(null); setCustomQty(''); }
+                                }}
+                                data-testid={`custom-qty-input-${item.id}`}
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => saveCustomQty(item.id)}
+                                className="h-9 w-9 p-0 text-green-600"
+                              >
+                                ✓
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setEditingItemId(null); setCustomQty(''); }}
+                                className="h-9 w-9 p-0 text-gray-500"
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Select
+                                value={item.monthly_quantity || ''}
+                                onValueChange={(val) => {
+                                  if (val === 'custom') {
+                                    startCustomEdit(item.id, item.monthly_quantity);
+                                  } else {
+                                    handleQuantityChange(item.id, val);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger 
+                                  className="w-24 h-9 text-sm bg-orange-50 border-orange-200 text-orange-700 font-medium"
+                                  data-testid={`qty-select-${item.id}`}
+                                >
+                                  <SelectValue placeholder="Qty">{item.monthly_quantity || 'Set qty'}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {getQuantityOptions(item.category).map(qty => (
+                                    <SelectItem key={qty} value={qty}>{qty}</SelectItem>
+                                  ))}
+                                  <SelectItem value="custom" className="text-blue-600 font-medium">
+                                    ✏️ Custom...
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => startCustomEdit(item.id, item.monthly_quantity)}
+                                className="h-9 w-9 p-0 text-gray-400 hover:text-gray-600"
+                                title="Edit custom quantity"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
 
                           {/* Delete Button */}
                           <Button
