@@ -2321,7 +2321,14 @@ async def get_gap_analysis(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Analyze meal plan vs inventory to find missing ingredients (today onwards only)"""
-    user = await get_user_from_token(credentials)
+    # Get user from token
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id})
+    
+    if not user:
+        return {"missing_ingredients": []}
+    
     household_id = user.get("active_household")
     
     if not household_id:
