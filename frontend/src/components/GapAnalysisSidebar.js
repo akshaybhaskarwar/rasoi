@@ -1,14 +1,17 @@
-import { useGapAnalysis } from '@/hooks/useRasoiSync';
+import { useGapAnalysis, useShoppingList } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AlertTriangle, ChevronDown, ChevronUp, ShoppingCart } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, ShoppingCart, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const GapAnalysisSidebar = ({ isMobile = false }) => {
   const { analysis, loading } = useGapAnalysis();
+  const { shoppingList, addItem } = useShoppingList();
   const [isExpanded, setIsExpanded] = useState(!isMobile);
+  const [adding, setAdding] = useState(false);
   const navigate = useNavigate();
   const { getLabel } = useLanguage();
 
@@ -22,6 +25,47 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
     acc[item.date].push(item);
     return acc;
   }, {});
+
+  // Add all missing ingredients to shopping list
+  const handleAddToShoppingList = async () => {
+    setAdding(true);
+    let addedCount = 0;
+    
+    try {
+      for (const item of analysis.missing_ingredients) {
+        // Check if already in shopping list
+        const alreadyInList = shoppingList.some(
+          shopItem => shopItem.name_en?.toLowerCase() === item.ingredient?.toLowerCase()
+        );
+        
+        if (!alreadyInList) {
+          await addItem({
+            name_en: item.ingredient,
+            category: 'other',
+            quantity: '-',
+            monthly_quantity: '1 kg',
+            store_type: 'grocery',
+            source: 'gap-analysis'
+          });
+          addedCount++;
+        }
+      }
+      
+      if (addedCount > 0) {
+        toast.success(`Added ${addedCount} items to shopping list`);
+      } else {
+        toast.info('All items already in shopping list');
+      }
+      
+      // Navigate to shopping page
+      navigate('/shopping');
+    } catch (error) {
+      console.error('Error adding items:', error);
+      toast.error('Failed to add some items');
+    } finally {
+      setAdding(false);
+    }
+  };
 
   // Mobile collapsible card
   if (isMobile) {
