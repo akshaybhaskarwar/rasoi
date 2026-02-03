@@ -145,12 +145,13 @@ const ShoppingPage = () => {
       let addedCount = 0;
 
       for (const item of lowStockItems) {
+        // Case-insensitive duplicate check
         const alreadyInList = shoppingList.some(
-          shopItem => shopItem.name_en === item.name_en
+          shopItem => shopItem.name_en?.toLowerCase().trim() === item.name_en?.toLowerCase().trim()
         );
 
         if (!alreadyInList) {
-          const defaultQty = DEFAULT_MONTHLY_QTY[item.category] || '1 kg';
+          const defaultQty = getDefaultQuantity(item.category);
           await addItem({
             name_en: item.name_en,
             name_mr: item.name_mr,
