@@ -312,6 +312,9 @@ const ShoppingPage = () => {
                       placeholder="e.g., Basmati Rice"
                       data-testid="shopping-item-name"
                     />
+                    {newItem.name_en && isItemDuplicate(newItem.name_en) && (
+                      <p className="text-xs text-red-500 mt-1">⚠️ This item is already in your list</p>
+                    )}
                   </div>
                   <div>
                     <Label>Category</Label>
@@ -320,7 +323,7 @@ const ShoppingPage = () => {
                       onValueChange={(val) => setNewItem({ 
                         ...newItem, 
                         category: val,
-                        monthly_quantity: DEFAULT_MONTHLY_QTY[val] || '1 kg'
+                        monthly_quantity: getDefaultQuantity(val)
                       })}
                     >
                       <SelectTrigger>
@@ -336,7 +339,7 @@ const ShoppingPage = () => {
                   <div>
                     <Label>Quantity</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {QUICK_QTY_OPTIONS.slice(0, 6).map(qty => (
+                      {getQuantityOptions(newItem.category).map(qty => (
                         <Button
                           key={qty}
                           type="button"
