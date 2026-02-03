@@ -76,12 +76,6 @@ const ShoppingPage = () => {
       item.name_en?.toLowerCase().trim() === nameLower
     );
   };
-    name_en: '',
-    category: 'grains',
-    quantity: '-',
-    monthly_quantity: '5 kg',
-    store_type: 'grocery'
-  });
 
   // Filter items by store type and search query
   const filteredList = useMemo(() => {
