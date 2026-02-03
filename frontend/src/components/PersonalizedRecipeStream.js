@@ -242,7 +242,10 @@ const PersonalizedRecipeStream = () => {
   const fetchChannels = async () => {
     setIsLoadingChannels(true);
     try {
-      const response = await axios.get(`${API}/stream/channels`);
+      const token = localStorage.getItem('auth_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API}/stream/channels`, { headers });
       setChannels(response.data.channels || []);
     } catch (error) {
       console.error('Failed to fetch channels:', error);
