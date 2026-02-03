@@ -177,18 +177,42 @@ const ShoppingPage = () => {
     }
   };
 
-  // Handle quantity update
+  // Handle quantity update - supports both preset and custom values
   const handleQuantityChange = async (itemId, newQty) => {
     try {
       await updateItem(itemId, { monthly_quantity: newQty });
+      setEditingItemId(null);
+      setCustomQty('');
       toast.success('Quantity updated');
     } catch (error) {
       toast.error('Failed to update quantity');
     }
   };
 
-  // Handle add item
+  // Start editing custom quantity
+  const startCustomEdit = (itemId, currentQty) => {
+    setEditingItemId(itemId);
+    setCustomQty(currentQty || '');
+  };
+
+  // Save custom quantity
+  const saveCustomQty = (itemId) => {
+    if (customQty.trim()) {
+      handleQuantityChange(itemId, customQty.trim());
+    } else {
+      setEditingItemId(null);
+      setCustomQty('');
+    }
+  };
+
+  // Handle add item with duplicate check
   const handleAddItem = async () => {
+    // Check for duplicates
+    if (isItemDuplicate(newItem.name_en)) {
+      toast.error(`"${newItem.name_en}" is already in your shopping list`);
+      return;
+    }
+    
     try {
       await addItem({ 
         ...newItem, 
@@ -196,7 +220,7 @@ const ShoppingPage = () => {
         quantity: '-'
       });
       setIsAddDialogOpen(false);
-      setNewItem({ name_en: '', category: 'grains', quantity: '-', monthly_quantity: '5 kg', store_type: 'grocery' });
+      setNewItem({ name_en: '', category: 'grains', quantity: '-', monthly_quantity: '1 kg', store_type: 'grocery' });
       toast.success('Item added');
     } catch (error) {
       toast.error('Failed to add item');
