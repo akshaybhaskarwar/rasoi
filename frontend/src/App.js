@@ -19,29 +19,24 @@ import AdminPage from "@/pages/AdminPage";
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading, households, user } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(false);
   
-  useEffect(() => {
-    // Show onboarding only if:
-    // 1. User is authenticated and not loading
-    // 2. User has NOT completed onboarding (server-side flag)
-    // 3. User has no households yet
-    if (isAuthenticated && !loading && user) {
-      const serverOnboardingComplete = user.onboarding_complete === true;
-      const hasHouseholds = households && households.length > 0;
-      
-      // If user has completed onboarding on server OR has households, don't show
-      if (!serverOnboardingComplete && !hasHouseholds) {
-        setShowOnboarding(true);
-      } else {
-        setShowOnboarding(false);
-        // Sync localStorage with server state
-        if (serverOnboardingComplete || hasHouseholds) {
-          localStorage.setItem('onboarding_completed', 'true');
-        }
+  // Compute onboarding state directly instead of using useEffect + setState
+  const shouldShowOnboarding = (() => {
+    if (!isAuthenticated || loading || !user) return false;
+    
+    const serverOnboardingComplete = user.onboarding_complete === true;
+    const hasHouseholds = households && households.length > 0;
+    
+    // Sync localStorage with server state
+    if (serverOnboardingComplete || hasHouseholds) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboarding_completed', 'true');
       }
+      return false;
     }
-  }, [isAuthenticated, loading, households, user]);
+    
+    return true;
+  })();
   
   if (loading) {
     return (
