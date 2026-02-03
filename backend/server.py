@@ -2317,20 +2317,48 @@ async def get_festival_intelligence():
 # ============ GAP ANALYSIS ENDPOINT ============
 
 @api_router.get("/gap-analysis")
-async def get_gap_analysis():
-    """Analyze meal plan vs inventory to find missing ingredients"""
-    # Get all meal plans
-    meal_plans = await db.meal_plans.find({}, {"_id": 0}).to_list(1000)
+async def get_gap_analysis(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Analyze meal plan vs inventory to find missing ingredients (today onwards only)"""
+    user = await get_user_from_token(credentials)
+    household_id = user.get("active_household")
     
-    # Get all inventory
-    inventory = await db.inventory.find({}, {"_id": 0}).to_list(1000)
-    inventory_names = {item['name_en'].lower() for item in inventory if item.get('stock_level') in ['half', 'full']}
+    if not household_id:
+        return {"missing_ingredients": []}
     
-    # Find missing ingredients
+    # Get today's date as string (YYYY-MM-DD format)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Get meal plans from today onwards for this household
+    meal_plans = await db.meal_plans.find(
+        {
+            "household_id": household_id,
+            "date": {"$gte": today}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get all inventory for this household with stock
+    inventory = await db.inventory.find(
+        {"household_id": household_id},
+        {"_id": 0}
+    ).to_list(1000)
+    inventory_names = {
+        item['name_en'].lower() 
+        for item in inventory 
+        if item.get('stock_level') in ['half', 'full']
+    }
+    
+    # Find missing ingredients (deduplicate by ingredient name)
     missing = []
-    for plan in meal_plans:
+    seen_ingredients = set()
+    
+    for plan in sorted(meal_plans, key=lambda x: x.get('date', '')):
         for ingredient in plan.get('ingredients_needed', []):
-            if ingredient.lower() not in inventory_names:
+            ingredient_lower = ingredient.lower()
+            if ingredient_lower not in inventory_names and ingredient_lower not in seen_ingredients:
+                seen_ingredients.add(ingredient_lower)
                 missing.append({
                     "ingredient": ingredient,
                     "meal": plan['meal_name'],
