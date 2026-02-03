@@ -81,39 +81,6 @@ const HomePage = () => {
         })}
       </div>
 
-      {/* Missing Ingredients Section */}
-      {analysis?.missing_ingredients?.length > 0 && (
-        <Card className="shadow-sm border-red-200 bg-red-50/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-red-700">{getLabel('missingIngredients')}</h3>
-              <button 
-                onClick={() => navigate('/shopping')}
-                className="text-sm text-red-600 hover:underline"
-              >
-                {getLabel('viewAll')} →
-              </button>
-            </div>
-            <div className="space-y-3">
-              {analysis.missing_ingredients.slice(0, 3).map((item, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-red-100"
-                >
-                  <div>
-                    <p className="font-medium text-gray-800">{item.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {getLabel('forMeal')}: {item.needed_for} | {getLabel('onDate')}: {item.date}
-                    </p>
-                  </div>
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Recent Activity */}
       <Card className="shadow-sm">
         <CardContent className="p-6">
