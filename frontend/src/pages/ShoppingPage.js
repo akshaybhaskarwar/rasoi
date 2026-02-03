@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, Edit2, Check, X } from 'lucide-react';
+import { 
+  Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
+  Search, X, Minus, ChevronDown, ChevronUp, Package
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,9 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
+import { toast } from 'sonner';
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household'];
+const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household', 'other'];
 
 // Default monthly quantities by category
 const DEFAULT_MONTHLY_QTY = {
@@ -26,60 +31,60 @@ const DEFAULT_MONTHLY_QTY = {
   'beverages': '2 L',
   'vegetables': '2 kg',
   'fruits': '2 kg',
+  'household': '1 unit',
   'other': '1 kg'
 };
 
-// Map inventory categories to store types
-const CATEGORY_TO_STORE = {
-  'grains': 'grocery',
-  'pulses': 'grocery',
-  'spices': 'grocery',
-  'dairy': 'grocery',
-  'oils': 'grocery',
-  'bakery': 'grocery',
-  'fasting': 'grocery',
-  'snacks': 'grocery',
-  'beverages': 'grocery',
-  'vegetables': 'mandi',
-  'fruits': 'mandi',
-  'other': 'grocery'
-};
+// Quick quantity options
+const QUICK_QTY_OPTIONS = ['250 g', '500 g', '1 kg', '2 kg', '5 kg', '100 g', '1 L', '2 L', '1 pack', '2 packs'];
 
 const ShoppingPage = () => {
-  const { shoppingList, addItem, deleteItem, clearList, updateItem } = useShoppingList();
+  const { shoppingList, addItem, deleteItem, updateItem, fetchShoppingList } = useShoppingList();
   const { inventory } = useInventory();
   const { language, getLabel } = useLanguage();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('grocery');
   const [syncing, setSyncing] = useState(false);
-  const [editingItemId, setEditingItemId] = useState(null);
-  const [editingQty, setEditingQty] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState({});
   const [newItem, setNewItem] = useState({
     name_en: '',
     category: 'grains',
     quantity: '-',
-    monthly_quantity: '1 kg',
+    monthly_quantity: '5 kg',
     store_type: 'grocery'
   });
 
-  // Filter items by store type, but also check category for vegetables/fruits/mandi items
-  const filteredList = shoppingList.filter(item => {
-    const category = (item.category || '').toLowerCase();
-    // Items with mandi-related categories should go to mandi tab
-    if (category === 'vegetables' || category === 'fruits' || category === 'mandi') {
-      return activeTab === 'mandi';
-    }
-    // Other items go to grocery tab
-    return activeTab === 'grocery';
-  });
-  
-  const groupedByCategory = filteredList.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
-    return acc;
-  }, {});
+  // Filter items by store type and search query
+  const filteredList = useMemo(() => {
+    return shoppingList.filter(item => {
+      const category = (item.category || '').toLowerCase();
+      const isMandi = category === 'vegetables' || category === 'fruits' || category === 'mandi';
+      const matchesTab = isMandi ? activeTab === 'mandi' : activeTab === 'grocery';
+      
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = !searchQuery || 
+        item.name_en?.toLowerCase().includes(searchLower) ||
+        item.name_mr?.toLowerCase().includes(searchLower) ||
+        item.name_hi?.toLowerCase().includes(searchLower) ||
+        item.category?.toLowerCase().includes(searchLower);
+      
+      return matchesTab && matchesSearch;
+    });
+  }, [shoppingList, activeTab, searchQuery]);
 
-  // Get counts for each tab
+  // Group by category
+  const groupedByCategory = useMemo(() => {
+    return filteredList.reduce((acc, item) => {
+      const cat = item.category || 'other';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(item);
+      return acc;
+    }, {});
+  }, [filteredList]);
+
+  // Get counts
   const groceryCount = shoppingList.filter(item => {
     const category = (item.category || '').toLowerCase();
     return category !== 'vegetables' && category !== 'fruits' && category !== 'mandi';
@@ -90,14 +95,21 @@ const ShoppingPage = () => {
     return category === 'vegetables' || category === 'fruits' || category === 'mandi';
   }).length;
 
-  // Get low stock and empty items from inventory
+  // Get low stock items
   const getLowStockItems = () => {
     return inventory.filter(item => 
       item.stock_level === 'low' || item.stock_level === 'empty'
     );
   };
 
-  // Sync low stock items to shopping list
+  const getLowStockCount = () => {
+    const lowStockItems = getLowStockItems();
+    return lowStockItems.filter(item => 
+      !shoppingList.some(shopItem => shopItem.name_en === item.name_en)
+    ).length;
+  };
+
+  // Sync from inventory
   const syncFromInventory = async () => {
     setSyncing(true);
     try {
@@ -105,97 +117,84 @@ const ShoppingPage = () => {
       let addedCount = 0;
 
       for (const item of lowStockItems) {
-        // Check if item already in shopping list
         const alreadyInList = shoppingList.some(
           shopItem => shopItem.name_en === item.name_en
         );
 
         if (!alreadyInList) {
-          const storeType = CATEGORY_TO_STORE[item.category] || 'grocery';
           const defaultQty = DEFAULT_MONTHLY_QTY[item.category] || '1 kg';
-          
           await addItem({
             name_en: item.name_en,
             name_mr: item.name_mr,
             category: item.category,
-            quantity: '-',  // Placeholder since we use stock_level for display
-            store_type: storeType,
-            stock_level: item.stock_level,  // This is now saved by backend
-            monthly_quantity: defaultQty  // Default based on category
+            quantity: '-',
+            store_type: item.category === 'vegetables' || item.category === 'fruits' ? 'mandi' : 'grocery',
+            stock_level: item.stock_level,
+            monthly_quantity: defaultQty
           });
           addedCount++;
         }
       }
 
       if (addedCount > 0) {
-        alert(`Added ${addedCount} low/empty stock items to shopping list!`);
+        toast.success(`Added ${addedCount} low stock items`);
       } else {
-        alert('All low stock items are already in shopping list.');
+        toast.info('All low stock items already in list');
       }
     } catch (error) {
-      console.error('Error syncing from inventory:', error);
-      alert('Failed to sync items from inventory');
+      toast.error('Failed to sync items');
     } finally {
       setSyncing(false);
     }
   };
 
-  // Count low stock items not in shopping list
-  const getLowStockCount = () => {
-    const lowStockItems = getLowStockItems();
-    const notInList = lowStockItems.filter(item => 
-      !shoppingList.some(shopItem => shopItem.name_en === item.name_en)
-    );
-    return notInList.length;
+  // Handle quantity update
+  const handleQuantityChange = async (itemId, newQty) => {
+    try {
+      await updateItem(itemId, { monthly_quantity: newQty });
+      toast.success('Quantity updated');
+    } catch (error) {
+      toast.error('Failed to update quantity');
+    }
   };
 
-  // Auto-sync on mount if there are low stock items
-  useEffect(() => {
-    const lowStockCount = getLowStockCount();
-    if (lowStockCount > 0 && shoppingList.length === 0) {
-      // Auto-sync only if shopping list is empty
-      syncFromInventory();
-    }
-  }, []); // Only run on mount
-
+  // Handle add item
   const handleAddItem = async () => {
     try {
       await addItem({ 
         ...newItem, 
         store_type: activeTab,
-        quantity: '-'  // Use monthly_quantity for display
+        quantity: '-'
       });
       setIsAddDialogOpen(false);
-      setNewItem({ name_en: '', category: 'grains', quantity: '-', monthly_quantity: '1 kg', store_type: 'grocery' });
+      setNewItem({ name_en: '', category: 'grains', quantity: '-', monthly_quantity: '5 kg', store_type: 'grocery' });
+      toast.success('Item added');
     } catch (error) {
-      console.error('Error adding item:', error);
+      toast.error('Failed to add item');
     }
   };
 
-  // Handle inline editing of monthly quantity
-  const handleEditQuantity = (itemId, currentQty) => {
-    setEditingItemId(itemId);
-    setEditingQty(currentQty || '');
-  };
-
-  const handleSaveQuantity = async (itemId) => {
+  // Handle delete
+  const handleDeleteItem = async (itemId, itemName) => {
     try {
-      await updateItem(itemId, { monthly_quantity: editingQty });
-      setEditingItemId(null);
-      setEditingQty('');
+      await deleteItem(itemId);
+      toast.success(`Removed ${itemName}`);
     } catch (error) {
-      console.error('Error updating quantity:', error);
-      alert('Failed to update quantity');
+      toast.error('Failed to remove item');
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditingItemId(null);
-    setEditingQty('');
+  // Toggle category expansion
+  const toggleCategory = (category) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
   };
 
+  // Generate WhatsApp message
   const generateWhatsAppMessage = () => {
-    let message = `🛒 *Rasoi-Sync - ${activeTab === 'grocery' ? 'Grocery' : 'Local Mandi'} List*\n\n`;
+    let message = `🛒 *Rasoi-Sync - ${activeTab === 'grocery' ? 'Grocery' : 'Mandi'} List*\n\n`;
     
     Object.entries(groupedByCategory).forEach(([category, items]) => {
       message += `*${category.toUpperCase()}*\n`;
@@ -210,240 +209,212 @@ const ShoppingPage = () => {
     return encodeURIComponent(message);
   };
 
-  const handleWhatsAppExport = () => {
-    const message = generateWhatsAppMessage();
-    window.open(`https://wa.me/?text=${message}`, '_blank');
-  };
-
-  const handleCopyToClipboard = async () => {
-    const message = decodeURIComponent(generateWhatsAppMessage());
-    
-    try {
-      // Try modern clipboard API first
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(message);
-        alert('Copied to clipboard! You can now paste it in WhatsApp.');
-      } else {
-        // Fallback for older browsers or non-secure contexts
-        const textArea = document.createElement('textarea');
-        textArea.value = message;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (successful) {
-          alert('Copied to clipboard! You can now paste it in WhatsApp.');
-        } else {
-          alert('Failed to copy. Please try the "Send to WhatsApp" button instead.');
-        }
-      }
-    } catch (err) {
-      console.error('Copy failed:', err);
-      // Fallback method
-      const textArea = document.createElement('textarea');
-      textArea.value = message;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      try {
-        document.execCommand('copy');
-        alert('Copied to clipboard! You can now paste it in WhatsApp.');
-      } catch (e) {
-        alert('Failed to copy. Please try the "Send to WhatsApp" button instead.');
-      }
-      document.body.removeChild(textArea);
-    }
-  };
-
-  const handleDeleteItem = async (itemId, itemName) => {
-    try {
-      await deleteItem(itemId);
-      console.log(`Successfully deleted: ${itemName}`);
-    } catch (error) {
-      console.error('Error deleting shopping item:', error);
-      alert(`Failed to delete "${itemName}". Please try again.`);
-    }
-  };
-
   return (
-    <div className="container mx-auto px-4 py-4 md:py-6 pb-28 md:pb-6 space-y-4 md:space-y-6 relative" data-testid="shopping-page">
-      {/* Header - Responsive */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            {getLabel('shopping')}
-            {language !== 'en' && <span className="text-lg text-gray-500 font-normal ml-2">/ Shopping List</span>}
-          </h1>
-          <p className="text-gray-600 text-xs md:text-sm mt-1">
-            {language === 'hi' ? 'आपका स्मार्ट खरीदारी सहायक' : 
-             language === 'mr' ? 'तुमचा स्मार्ट खरेदी सहाय्यक' : 
-             'Your smart shopping assistant'}
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {getLowStockCount() > 0 && (
-            <Button
-              onClick={syncFromInventory}
-              disabled={syncing}
-              className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-md text-sm h-9 md:h-10"
-              data-testid="sync-inventory-btn"
-            >
-              {syncing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />
-                  <span className="hidden sm:inline">Syncing...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-1.5" />
-                  <span className="hidden sm:inline">Sync </span>{getLowStockCount()} Low
-                </>
-              )}
-            </Button>
-          )}
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full shadow-md text-sm h-9 md:h-10"
-                data-testid="add-shopping-item-btn"
+    <div className="container mx-auto px-4 py-4 pb-28 md:pb-6 space-y-4" data-testid="shopping-page">
+      {/* Header */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <ShoppingBag className="w-7 h-7 text-orange-500" />
+              {getLabel('shopping')}
+            </h1>
+            <p className="text-gray-500 text-sm">{shoppingList.length} items total</p>
+          </div>
+          <div className="flex gap-2">
+            {getLowStockCount() > 0 && (
+              <Button
+                onClick={syncFromInventory}
+                disabled={syncing}
+                variant="outline"
+                size="sm"
+                className="gap-1 border-green-300 text-green-700 hover:bg-green-50"
+                data-testid="sync-inventory-btn"
               >
-                <Plus className="w-4 h-4 mr-1.5" />
-                <span className="hidden sm:inline">Add Item</span>
-                <span className="sm:hidden">Add</span>
+                {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                <span className="hidden sm:inline">Sync</span> {getLowStockCount()}
               </Button>
-            </DialogTrigger>
-          <DialogContent data-testid="add-shopping-dialog">
-            <DialogHeader>
-              <DialogTitle>Add Shopping Item</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Item Name</Label>
-                <Input
-                  value={newItem.name_en}
-                  onChange={(e) => setNewItem({ ...newItem, name_en: e.target.value })}
-                  placeholder="e.g., Basmati Rice"
-                  data-testid="shopping-item-name"
-                />
-              </div>
-              <div>
-                <Label>Category</Label>
-                <Select 
-                  value={newItem.category} 
-                  onValueChange={(val) => setNewItem({ 
-                    ...newItem, 
-                    category: val,
-                    monthly_quantity: DEFAULT_MONTHLY_QTY[val] || '1 kg'
-                  })}
+            )}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-orange-500 hover:bg-orange-600 text-white gap-1"
+                  size="sm"
+                  data-testid="add-shopping-item-btn"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Monthly Quantity Required</Label>
-                <Input
-                  value={newItem.monthly_quantity}
-                  onChange={(e) => setNewItem({ ...newItem, monthly_quantity: e.target.value })}
-                  placeholder="e.g., 2 kg, 500 g, 1 L"
-                  data-testid="shopping-item-monthly-qty"
-                />
-                <p className="text-xs text-gray-500 mt-1">How much do you typically need per month?</p>
-              </div>
-              <Button 
-                onClick={handleAddItem}
-                className="w-full bg-[#FF9933] hover:bg-[#E68A2E] text-white rounded-full"
-                disabled={!newItem.name_en.trim()}
-              >
-                Add to Shopping List
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Shopping Item</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Item Name</Label>
+                    <Input
+                      value={newItem.name_en}
+                      onChange={(e) => setNewItem({ ...newItem, name_en: e.target.value })}
+                      placeholder="e.g., Basmati Rice"
+                      data-testid="shopping-item-name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Category</Label>
+                    <Select 
+                      value={newItem.category} 
+                      onValueChange={(val) => setNewItem({ 
+                        ...newItem, 
+                        category: val,
+                        monthly_quantity: DEFAULT_MONTHLY_QTY[val] || '1 kg'
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Quantity</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {QUICK_QTY_OPTIONS.slice(0, 6).map(qty => (
+                        <Button
+                          key={qty}
+                          type="button"
+                          variant={newItem.monthly_quantity === qty ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setNewItem({ ...newItem, monthly_quantity: qty })}
+                          className="text-xs"
+                        >
+                          {qty}
+                        </Button>
+                      ))}
+                    </div>
+                    <Input
+                      value={newItem.monthly_quantity}
+                      onChange={(e) => setNewItem({ ...newItem, monthly_quantity: e.target.value })}
+                      placeholder="Or type custom quantity"
+                      className="mt-2"
+                      data-testid="shopping-item-monthly-qty"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleAddItem}
+                    className="w-full bg-orange-500 hover:bg-orange-600"
+                    disabled={!newItem.name_en.trim()}
+                  >
+                    Add to List
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search items..."
+            className="pl-9 pr-9 bg-gray-50 border-gray-200"
+            data-testid="shopping-search"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 h-12">
           <TabsTrigger 
             value="grocery" 
             data-testid="tab-grocery"
-            className="flex flex-col py-3 data-[state=active]:bg-[#FF9933] data-[state=active]:text-white"
+            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white gap-2"
           >
-            <span className="text-lg">🏪</span>
-            <span className="font-bold">{getLabel('groceryStore')} {groceryCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{groceryCount}</span>}</span>
-            <span className="text-[10px] opacity-80">{getLabel('grains')}, {getLabel('spices')}</span>
+            🏪 Grocery
+            {groceryCount > 0 && <Badge variant="secondary" className="ml-1">{groceryCount}</Badge>}
           </TabsTrigger>
           <TabsTrigger 
             value="mandi" 
             data-testid="tab-mandi"
-            className="flex flex-col py-3 data-[state=active]:bg-[#138808] data-[state=active]:text-white"
+            className="data-[state=active]:bg-green-600 data-[state=active]:text-white gap-2"
           >
-            <span className="text-lg">🥬</span>
-            <span className="font-bold">{getLabel('localMandi')} {mandiCount > 0 && <span className="ml-1 text-xs bg-white/30 px-1.5 rounded-full">{mandiCount}</span>}</span>
-            <span className="text-[10px] opacity-80">{getLabel('vegetables')} & {getLabel('fruits')}</span>
+            🥬 Mandi
+            {mandiCount > 0 && <Badge variant="secondary" className="ml-1">{mandiCount}</Badge>}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="space-y-4 mt-4">
-          {/* WhatsApp Export Button for this tab */}
-          {Object.keys(groupedByCategory).length > 0 && (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => window.open(`https://wa.me/?text=${generateWhatsAppMessage()}`, '_blank')}
-                className={`flex-1 ${activeTab === 'grocery' ? 'bg-[#FF9933] hover:bg-[#E68A2E]' : 'bg-[#138808] hover:bg-[#0F6606]'} text-white`}
-                data-testid={`whatsapp-${activeTab}`}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                {getLabel('sendToWhatsApp')}
-              </Button>
-              <Button
-                onClick={handleCopyToClipboard}
-                variant="outline"
-                data-testid={`copy-whatsapp-${activeTab}`}
-              >
-                📋
-              </Button>
-            </div>
+        <TabsContent value={activeTab} className="mt-4 space-y-3">
+          {/* WhatsApp Export */}
+          {filteredList.length > 0 && (
+            <Button
+              onClick={() => window.open(`https://wa.me/?text=${generateWhatsAppMessage()}`, '_blank')}
+              className={`w-full ${activeTab === 'grocery' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'}`}
+              data-testid={`whatsapp-${activeTab}`}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Share on WhatsApp
+            </Button>
           )}
-          {Object.keys(groupedByCategory).length === 0 ? (
+
+          {/* Empty State */}
+          {filteredList.length === 0 ? (
             <Card className="p-12 text-center">
-              <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">{getLabel('emptyShoppingList')}</p>
-              <p className="text-sm text-gray-500">{getLabel('addItemsToStart')}</p>
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600 mb-2">
+                {searchQuery ? 'No items match your search' : 'Your list is empty'}
+              </p>
+              <p className="text-sm text-gray-500">
+                {searchQuery ? 'Try a different search term' : 'Add items or sync from inventory'}
+              </p>
             </Card>
           ) : (
-            <>
-              {Object.entries(groupedByCategory).map(([category, items]) => (
-                <Card key={category} className="shadow-sm">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 capitalize">
-                      {category} <span className="text-sm text-gray-500">({items.length})</span>
-                    </h3>
-                    <div className="space-y-2">
+            /* Items grouped by category */
+            Object.entries(groupedByCategory).map(([category, items]) => (
+              <Card key={category} className="overflow-hidden">
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  data-testid={`category-${category}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-gray-800 capitalize">{category}</span>
+                    <Badge variant="outline">{items.length}</Badge>
+                  </div>
+                  {expandedCategories[category] === false ? (
+                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                  )}
+                </button>
+                
+                {expandedCategories[category] !== false && (
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-gray-100">
                       {items.map((item) => (
                         <div 
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center gap-3 p-3 hover:bg-gray-50"
                           data-testid={`shopping-item-${item.id}`}
                         >
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-800 bilingual-text">
+                          {/* Item Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-800 truncate">
                               <TranslatedLabel 
                                 textEn={item.name_en}
                                 textRegional={language === 'hi' ? item.name_hi : item.name_mr}
@@ -452,71 +423,39 @@ const ShoppingPage = () => {
                                 size="sm"
                               />
                             </p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              {/* Stock level badge */}
-                              {item.stock_level && (
-                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                  item.stock_level === 'empty'
-                                    ? 'bg-gray-200 text-gray-700'
-                                    : item.stock_level === 'low'
-                                      ? 'bg-[#FF9933]/20 text-[#FF9933]'
-                                      : 'bg-gray-100 text-gray-600'
-                                }`}>
-                                  {item.stock_level === 'empty' ? '○ Empty' : '◔ Low'}
-                                </span>
-                              )}
-                              
-                              {/* Monthly quantity - editable */}
-                              {editingItemId === item.id ? (
-                                <div className="flex items-center gap-1">
-                                  <Input
-                                    value={editingQty}
-                                    onChange={(e) => setEditingQty(e.target.value)}
-                                    className="h-7 w-20 text-xs"
-                                    placeholder="e.g., 2 kg"
-                                    autoFocus
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleSaveQuantity(item.id);
-                                      if (e.key === 'Escape') handleCancelEdit();
-                                    }}
-                                    data-testid={`edit-qty-input-${item.id}`}
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleSaveQuantity(item.id)}
-                                    className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                                    data-testid={`save-qty-${item.id}`}
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleCancelEdit}
-                                    className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
-                                    data-testid={`cancel-qty-${item.id}`}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => handleEditQuantity(item.id, item.monthly_quantity)}
-                                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-[#138808]/10 text-[#138808] font-medium hover:bg-[#138808]/20 transition-colors"
-                                  data-testid={`monthly-qty-${item.id}`}
-                                >
-                                  <span>📦 {item.monthly_quantity || 'Set qty'}</span>
-                                  <Edit2 className="w-3 h-3 opacity-60" />
-                                </button>
-                              )}
-                            </div>
+                            {item.stock_level && (
+                              <span className={`text-xs ${
+                                item.stock_level === 'empty' ? 'text-gray-500' : 'text-orange-600'
+                              }`}>
+                                {item.stock_level === 'empty' ? '○ Empty' : '◔ Low stock'}
+                              </span>
+                            )}
                           </div>
+
+                          {/* Quick Quantity Selector */}
+                          <Select
+                            value={item.monthly_quantity || ''}
+                            onValueChange={(val) => handleQuantityChange(item.id, val)}
+                          >
+                            <SelectTrigger 
+                              className="w-24 h-9 text-sm bg-orange-50 border-orange-200 text-orange-700 font-medium"
+                              data-testid={`qty-select-${item.id}`}
+                            >
+                              <SelectValue placeholder="Qty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {QUICK_QTY_OPTIONS.map(qty => (
+                                <SelectItem key={qty} value={qty}>{qty}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          {/* Delete Button */}
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteItem(item.id, item.name_en)}
-                            className="text-red-600 hover:text-red-700 min-h-[44px] min-w-[44px]"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
                             data-testid={`delete-shopping-${item.id}`}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -525,20 +464,19 @@ const ShoppingPage = () => {
                       ))}
                     </div>
                   </CardContent>
-                </Card>
-              ))}
-            </>
+                )}
+              </Card>
+            ))
           )}
         </TabsContent>
       </Tabs>
 
-      {/* WhatsApp FAB - Mobile Only */}
+      {/* WhatsApp FAB - Mobile */}
       {shoppingList.length > 0 && (
         <button
           onClick={() => window.open(`https://wa.me/?text=${generateWhatsAppMessage()}`, '_blank')}
-          className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-[#25D366] hover:bg-[#20BD5A] active:bg-[#1DAA50] rounded-full shadow-lg flex items-center justify-center z-[90] transition-transform active:scale-95"
+          className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full shadow-lg flex items-center justify-center z-[90]"
           data-testid="whatsapp-fab"
-          aria-label="Send to WhatsApp"
         >
           <Send className="w-6 h-6 text-white" />
         </button>
