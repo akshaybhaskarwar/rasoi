@@ -3053,13 +3053,27 @@ def match_ingredients_in_text(text: str, inventory_items: List[str], min_matches
     }
 
 @api_router.get("/stream/channels")
-async def get_favorite_channels_with_info():
+async def get_favorite_channels_with_info(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """
     Get favorite channels with their YouTube info (avatars, etc.)
     Caches channel info to avoid repeated API calls
     """
-    # Get user's favorite channels
-    prefs = await db.preferences.find_one({}, {"_id": 0})
+    # Get user and household
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id})
+    household_id = user.get("active_household") if user else None
+    
+    # Get user's favorite channels (scoped to household)
+    prefs_query = {"household_id": household_id} if household_id else {}
+    prefs = await db.preferences.find_one(prefs_query, {"_id": 0})
+    
+    # Fallback to global preferences
+    if not prefs:
+        prefs = await db.preferences.find_one({}, {"_id": 0})
+    
     favorite_channels = prefs.get('favorite_channels', []) if prefs else []
     
     if not favorite_channels:
