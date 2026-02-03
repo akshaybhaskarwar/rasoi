@@ -298,13 +298,37 @@ const OnboardingFlow = ({ onComplete }) => {
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    // Mark onboarding complete on server
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/complete-onboarding`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error('Error marking onboarding complete:', error);
+    }
     localStorage.setItem('onboarding_completed', 'true');
     setIsVisible(false);
     onComplete?.();
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Mark onboarding complete on server
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/complete-onboarding`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error('Error marking onboarding complete:', error);
+    }
     localStorage.setItem('onboarding_completed', 'true');
     setIsVisible(false);
     const successMsg = selectedLanguage === 'hi' 
