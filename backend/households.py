@@ -113,12 +113,15 @@ def create_household_routes(db, decode_token_func):
         
         await db.households.insert_one(household)
         
-        # Add household to user's list and set as active
+        # Add household to user's list, set as active, and mark onboarding complete
         await db.users.update_one(
             {"id": user["id"]},
             {
                 "$addToSet": {"households": household["id"]},
-                "$set": {"active_household": household["id"]}
+                "$set": {
+                    "active_household": household["id"],
+                    "onboarding_complete": True
+                }
             }
         )
         
