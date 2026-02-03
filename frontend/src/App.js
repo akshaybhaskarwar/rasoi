@@ -19,10 +19,11 @@ import AdminPage from "@/pages/AdminPage";
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading, households, user } = useAuth();
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   
   // Compute onboarding state directly instead of using useEffect + setState
   const shouldShowOnboarding = (() => {
-    if (!isAuthenticated || loading || !user) return false;
+    if (!isAuthenticated || loading || !user || onboardingDismissed) return false;
     
     const serverOnboardingComplete = user.onboarding_complete === true;
     const hasHouseholds = households && households.length > 0;
@@ -55,8 +56,8 @@ function ProtectedRoute({ children }) {
   
   return (
     <>
-      {showOnboarding && (
-        <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
+      {shouldShowOnboarding && (
+        <OnboardingFlow onComplete={() => setOnboardingDismissed(true)} />
       )}
       {children}
     </>
