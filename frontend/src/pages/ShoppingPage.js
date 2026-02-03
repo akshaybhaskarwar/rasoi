@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
-  Search, X, Minus, ChevronDown, ChevronUp, Package
+  Search, X, ChevronDown, ChevronUp, Package, Edit2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,25 +18,37 @@ import { toast } from 'sonner';
 
 const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household', 'other'];
 
-// Default monthly quantities by category
-const DEFAULT_MONTHLY_QTY = {
-  'grains': '5 kg',
-  'pulses': '2 kg',
-  'spices': '100 g',
-  'dairy': '5 L',
-  'oils': '2 L',
-  'bakery': '1 pack',
-  'fasting': '500 g',
-  'snacks': '500 g',
-  'beverages': '2 L',
-  'vegetables': '2 kg',
-  'fruits': '2 kg',
-  'household': '1 unit',
-  'other': '1 kg'
+// Category to unit type mapping
+const CATEGORY_UNITS = {
+  // Solid items - weight based
+  'grains': { type: 'weight', options: ['100 g', '250 g', '500 g', '1 kg', '2 kg', '5 kg', '10 kg'], default: '1 kg' },
+  'pulses': { type: 'weight', options: ['250 g', '500 g', '1 kg', '2 kg', '5 kg'], default: '1 kg' },
+  'spices': { type: 'weight', options: ['25 g', '50 g', '100 g', '200 g', '250 g', '500 g'], default: '100 g' },
+  'vegetables': { type: 'weight', options: ['250 g', '500 g', '1 kg', '2 kg'], default: '500 g' },
+  'fruits': { type: 'weight', options: ['250 g', '500 g', '1 kg', '2 kg'], default: '1 kg' },
+  'snacks': { type: 'weight', options: ['100 g', '200 g', '250 g', '500 g', '1 kg'], default: '250 g' },
+  'fasting': { type: 'weight', options: ['100 g', '250 g', '500 g', '1 kg'], default: '250 g' },
+  // Liquid items - volume based  
+  'dairy': { type: 'volume', options: ['250 ml', '500 ml', '1 L', '2 L', '5 L'], default: '1 L' },
+  'oils': { type: 'volume', options: ['200 ml', '500 ml', '1 L', '2 L', '5 L'], default: '1 L' },
+  'beverages': { type: 'volume', options: ['250 ml', '500 ml', '1 L', '2 L'], default: '1 L' },
+  // Count-based items
+  'bakery': { type: 'count', options: ['1 pack', '2 packs', '3 packs', '6 packs', '1 dozen'], default: '1 pack' },
+  'household': { type: 'count', options: ['1 unit', '2 units', '1 pack', '2 packs', '1 box'], default: '1 unit' },
+  'other': { type: 'weight', options: ['100 g', '250 g', '500 g', '1 kg', '2 kg'], default: '500 g' }
 };
 
-// Quick quantity options
-const QUICK_QTY_OPTIONS = ['250 g', '500 g', '1 kg', '2 kg', '5 kg', '100 g', '1 L', '2 L', '1 pack', '2 packs'];
+// Get quantity options based on category
+const getQuantityOptions = (category) => {
+  const config = CATEGORY_UNITS[category] || CATEGORY_UNITS['other'];
+  return config.options;
+};
+
+// Get default quantity based on category
+const getDefaultQuantity = (category) => {
+  const config = CATEGORY_UNITS[category] || CATEGORY_UNITS['other'];
+  return config.default;
+};
 
 const ShoppingPage = () => {
   const { shoppingList, addItem, deleteItem, updateItem, fetchShoppingList } = useShoppingList();
