@@ -3125,6 +3125,7 @@ async def get_favorite_channels_with_info():
 
 @api_router.get("/stream/feed")
 async def get_personalized_recipe_stream(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     channel_filter: Optional[str] = None,
     min_matches: int = 2,
     max_videos_per_channel: int = 15
@@ -3135,12 +3136,26 @@ async def get_personalized_recipe_stream(
     - Matches video title/description against user inventory
     - Only returns videos with min_matches ingredients
     """
-    # Get user inventory
+    # Get user and household
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id})
+    
+    if not user:
+        return {"feed": [], "message": "User not found", "quota_cost": 0}
+    
+    household_id = user.get("active_household")
+    
+    # Get user inventory for their household
+    query = {"stock_level": {"$ne": "empty"}}
+    if household_id:
+        query["household_id"] = household_id
+    
     inventory_items = await db.inventory.find(
-        {"stock_level": {"$ne": "empty"}},
+        query,
         {"name_en": 1, "_id": 0}
     ).to_list(100)
-    user_inventory = [item["name_en"] for item in inventory_items]
+    user_inventory = [item["name_en"] for item in inventory_items if item.get("name_en")]
     
     if not user_inventory:
         return {
@@ -3149,8 +3164,14 @@ async def get_personalized_recipe_stream(
             "quota_cost": 0
         }
     
-    # Get favorite channels
-    prefs = await db.preferences.find_one({}, {"_id": 0})
+    # Get favorite channels (scoped to household if available)
+    prefs_query = {"household_id": household_id} if household_id else {}
+    prefs = await db.preferences.find_one(prefs_query, {"_id": 0})
+    
+    # Fallback to global preferences if no household-specific ones
+    if not prefs:
+        prefs = await db.preferences.find_one({}, {"_id": 0})
+    
     favorite_channels = prefs.get('favorite_channels', []) if prefs else []
     
     if not favorite_channels:
