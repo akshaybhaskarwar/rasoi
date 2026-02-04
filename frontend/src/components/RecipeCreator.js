@@ -46,7 +46,7 @@ const StockStatusBadge = ({ status }) => {
 };
 
 // Recipe Card Component
-export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, compact = false }) => {
+export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPlanner, compact = false }) => {
   const { language } = useLanguage();
   
   const getIngredientDisplay = (ing) => {
@@ -55,23 +55,39 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, compact = 
     return ing.name_en || ing.ingredient_name;
   };
   
+  const isYouTubeRecipe = recipe.recipe_type === 'youtube' || recipe.youtube_video_id;
+  
   return (
     <Card 
       className={`overflow-hidden hover:shadow-lg transition-shadow cursor-pointer ${compact ? '' : 'h-full'}`}
       onClick={() => onView?.(recipe)}
       data-testid={`recipe-card-${recipe.id}`}
     >
-      {/* Photo */}
-      {recipe.photo_url && !compact && (
-        <div className="h-40 bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center">
+      {/* Photo/Thumbnail */}
+      {(recipe.photo_url || recipe.youtube_thumbnail) && !compact && (
+        <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center">
           {recipe.photo_base64 ? (
             <img 
               src={`data:image/jpeg;base64,${recipe.photo_base64}`} 
               alt={recipe.title}
               className="w-full h-full object-cover"
             />
+          ) : recipe.youtube_thumbnail || recipe.photo_url ? (
+            <img 
+              src={recipe.youtube_thumbnail || recipe.photo_url} 
+              alt={recipe.title}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <ChefHat className="w-16 h-16 text-orange-300" />
+          )}
+          {/* YouTube Badge */}
+          {isYouTubeRecipe && (
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-red-600 text-white text-[10px]">
+                <Camera className="w-3 h-3 mr-1" /> YouTube
+              </Badge>
+            </div>
           )}
         </div>
       )}
@@ -84,10 +100,17 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, compact = 
           </h3>
           {recipe.chef_name && (
             <p className="text-xs text-gray-500 mt-0.5">
-              by {recipe.chef_name}
+              {isYouTubeRecipe ? '' : 'by '}{recipe.chef_name}
             </p>
           )}
         </div>
+        
+        {/* Personal Note for YouTube recipes */}
+        {isYouTubeRecipe && recipe.personal_note && !compact && (
+          <p className="text-xs text-gray-600 italic line-clamp-2 bg-amber-50 p-2 rounded mb-2">
+            "{recipe.personal_note}"
+          </p>
+        )}
         
         {/* Stock Status */}
         {recipe.stock_status && (
@@ -140,17 +163,29 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, compact = 
         )}
         
         {/* Actions */}
-        {recipe.stock_status?.missing?.length > 0 && !compact && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full mt-3 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
-            onClick={(e) => { e.stopPropagation(); onAddToShopping?.(recipe); }}
-          >
-            <ShoppingCart className="w-3 h-3 mr-1" />
-            Add {recipe.stock_status.missing.length} Missing Items
-          </Button>
-        )}
+        <div className="flex gap-2 mt-3">
+          {isYouTubeRecipe && onAddToPlanner && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 text-xs"
+              onClick={(e) => { e.stopPropagation(); onAddToPlanner?.(recipe); }}
+            >
+              <Sparkles className="w-3 h-3 mr-1" /> Plan
+            </Button>
+          )}
+          {recipe.stock_status?.missing?.length > 0 && !compact && (
+            <Button
+              size="sm"
+              variant="outline"
+              className={`${isYouTubeRecipe ? '' : 'w-full'} text-xs border-amber-300 text-amber-700 hover:bg-amber-50`}
+              onClick={(e) => { e.stopPropagation(); onAddToShopping?.(recipe); }}
+            >
+              <ShoppingCart className="w-3 h-3 mr-1" />
+              {isYouTubeRecipe ? '' : `Add ${recipe.stock_status.missing.length} Missing`}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
