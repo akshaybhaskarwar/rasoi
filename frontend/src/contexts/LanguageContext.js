@@ -175,6 +175,7 @@ export const UI_LABELS = {
     inventory: 'सामान',
     shopping: 'खरीदारी सूची',
     planner: 'भोजन योजना',
+    recipes: 'रेसिपी',
     community: 'समुदाय',
     
     // Common actions
