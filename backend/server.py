@@ -22,6 +22,7 @@ from auth import auth_router, create_auth_routes, decode_token, security
 from households import household_router, create_household_routes
 from realtime import sse_router, create_sse_routes, notify_inventory_change, notify_shopping_change
 from admin import admin_router, create_admin_routes, log_api_usage
+from recipes import create_recipe_routes
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
