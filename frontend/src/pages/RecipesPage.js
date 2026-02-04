@@ -497,7 +497,7 @@ const RecipesPage = () => {
               <ChefHat className="w-16 h-16 text-gray-200 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700 mb-2">No recipes yet</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Start building your family's recipe collection!
+                Start building your family&apos;s recipe collection!
               </p>
               <Button onClick={() => setShowCreator(true)} className="bg-orange-500 hover:bg-orange-600">
                 <Plus className="w-4 h-4 mr-2" />
