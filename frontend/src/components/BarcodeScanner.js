@@ -524,8 +524,8 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : scanning ? (
                 <div className="relative">
-                  {/* Camera View - Full height for mobile */}
-                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '50vh', minHeight: '300px' }}>
+                  {/* Camera View - Adjusted height for mobile to ensure buttons visible */}
+                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '40vh', minHeight: '250px', maxHeight: '350px' }}>
                     <video
                       ref={videoRef}
                       autoPlay
@@ -547,7 +547,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     </div>
                   </div>
                   
-                  {/* Bottom Controls - Fixed at bottom of camera */}
+                  {/* Bottom Controls - Always visible */}
                   <div className="flex gap-3 mt-4">
                     <Button
                       onClick={() => {
@@ -555,16 +555,16 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                         setScanMode('choose');
                       }}
                       variant="outline"
-                      className="flex-1 h-14 text-base"
+                      className="flex-1 h-12 text-base"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={capturePhoto}
-                      className="flex-[2] h-14 text-base bg-[#FF9933] hover:bg-[#E68A2E] text-white font-bold"
+                      className="flex-[2] h-12 text-base bg-[#FF9933] hover:bg-[#E68A2E] text-white font-bold"
                       data-testid="capture-name-photo"
                     >
-                      <Camera className="w-6 h-6 mr-2" />
+                      <Camera className="w-5 h-5 mr-2" />
                       Capture
                     </Button>
                   </div>
