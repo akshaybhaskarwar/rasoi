@@ -519,7 +519,7 @@ export const YouTubeRecipeCard = ({ recipe, onView, onAddToPlanner, onAddToShopp
         {/* Personal Note */}
         {recipe.personal_note && (
           <p className="text-xs text-gray-600 italic line-clamp-2 bg-amber-50 p-2 rounded mb-3">
-            "{recipe.personal_note}"
+            &ldquo;{recipe.personal_note}&rdquo;
           </p>
         )}
         
