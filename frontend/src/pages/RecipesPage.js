@@ -424,15 +424,15 @@ const RecipesPage = () => {
             <span className="hidden sm:inline">YouTube</span>
           </Button>
           <Button
-          onClick={() => setShowCreator(true)}
-          className="bg-orange-500 hover:bg-orange-600 gap-2"
-          data-testid="create-recipe-btn"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Recipe</span>
-        </Button>
+            onClick={() => setShowCreator(true)}
+            className="bg-orange-500 hover:bg-orange-600 gap-2"
+            data-testid="create-recipe-btn"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Recipe</span>
+          </Button>
+        </div>
       </div>
-      
       {/* Search & Filter */}
       <div className="space-y-3 mb-6">
         <div className="relative">
