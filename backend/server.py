@@ -2004,9 +2004,9 @@ async def refresh_meal_plan_videos():
 
 # ============ RECIPE COMMUNITY ENDPOINTS ============
 
-@api_router.post("/recipes", response_model=Recipe)
-async def create_recipe(recipe: RecipeCreate):
-    """Post a recipe to community"""
+@api_router.post("/youtube-recipes", response_model=Recipe)
+async def create_youtube_recipe(recipe: RecipeCreate):
+    """Post a YouTube recipe to community (legacy endpoint)"""
     # Extract video ID from URL
     video_id = recipe.youtube_url.split('v=')[-1].split('&')[0]
     
@@ -2023,9 +2023,9 @@ async def create_recipe(recipe: RecipeCreate):
     await db.recipes.insert_one(doc)
     return recipe_obj
 
-@api_router.get("/recipes", response_model=List[Recipe])
-async def get_recipes():
-    """Get community recipes"""
+@api_router.get("/youtube-recipes", response_model=List[Recipe])
+async def get_youtube_recipes():
+    """Get YouTube community recipes (legacy endpoint)"""
     recipes = await db.recipes.find({}, {"_id": 0}).to_list(1000)
     
     for recipe in recipes:
@@ -2045,7 +2045,7 @@ async def search_recipes(query: str, max_results: int = 10, favorite_channels: s
 
 # ============ LOCAL RECIPE SEARCH ENDPOINT ============
 
-@api_router.get("/recipes/search")
+@api_router.get("/youtube-recipes/search")
 async def search_local_recipes_endpoint(ingredients: str = "", videos_only: bool = False, favorite_channels: str = "", max_results: int = 20, query: str = ""):
     """Search local recipe database by ingredients or text query with favorite channel priority"""
     # Parse ingredients from comma-separated string
