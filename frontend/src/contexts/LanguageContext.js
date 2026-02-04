@@ -452,6 +452,7 @@ export const UI_LABELS = {
     cookWithYourStock: 'तुमच्या साठ्यातून शिजवा',
     recipesFromFavoriteChannels: 'तुमच्या आवडीच्या चॅनेलवरील पाककृती तुमच्या साठ्याशी जुळणाऱ्या',
     recipesFromChannelsAppearFirst: 'या चॅनेलवरील पाककृती प्रथम दिसतात',
+    minIngredientsMatch: 'किमान साहित्य जुळणी:',
     
     // Days
     monday: 'सोमवार',
