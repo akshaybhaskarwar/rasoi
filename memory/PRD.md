@@ -339,7 +339,7 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - `/api/inventory` - Inventory CRUD (with expiry_date, barcode fields)
 - `/api/shopping` - Shopping list CRUD (now with stock_level field)
 - `/api/barcode/{barcode}` - Product lookup from Open Food Facts
-- `/api/recipes/search` - Local recipe search by ingredients
+- `/api/youtube-recipes/search` - Local recipe search by ingredients (renamed from /api/recipes)
 - `/api/gap-analysis` - Compare meal plan vs inventory
 - `/api/preferences/favorite-channels` - GET/POST/DELETE favorites
 - `/api/translate` - Translate text to multiple languages (POST)
@@ -350,6 +350,16 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - `/api/households/create` - Create new household (POST)
 - `/api/households/join` - Join household with kitchen code (POST)
 - `/api/households/{id}/member/{member_id}` - Remove member from household (DELETE) - Added Feb 2, 2025
+- **User-Generated Recipes (UGR)** - Added Feb 4, 2025:
+  - `/api/recipes` - GET (list household recipes), POST (create recipe)
+  - `/api/recipes/tags` - GET (list available recipe tags)
+  - `/api/recipes/units` - GET (list available unit options)
+  - `/api/recipes/suggest-ingredients` - GET (auto-suggest from inventory)
+  - `/api/recipes/community` - GET (list published community recipes)
+  - `/api/recipes/{id}` - GET (recipe details), PUT (update), DELETE (delete)
+  - `/api/recipes/{id}/photo` - GET (recipe photo base64)
+  - `/api/recipes/{id}/like` - POST (like a published recipe)
+  - `/api/recipes/{id}/add-missing-to-shopping` - POST (add missing ingredients to shopping)
 
 ## Data Models
 
