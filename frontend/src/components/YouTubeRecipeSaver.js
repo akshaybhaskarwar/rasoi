@@ -395,11 +395,8 @@ const YouTubeRecipeSaver = ({ onSave, onCancel }) => {
         </div>
       )}
       
-      {/* Spacer for fixed buttons */}
-      <div className="h-4" />
-      
-      {/* Fixed Action Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 z-[110] shadow-lg">
+      {/* Sticky Action Buttons */}
+      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 mt-6 -mx-1 shadow-lg">
         <Button
           variant="outline"
           onClick={onCancel}
