@@ -409,14 +409,14 @@ def auth_token(api_client):
     signup_response = api_client.post(f"{BASE_URL}/api/auth/signup", json=signup_data)
     
     if signup_response.status_code == 200:
-        token = signup_response.json().get("token")
+        token = signup_response.json().get("access_token")
         if token:
             print(f"✓ Created test user: {TEST_EMAIL}")
             
             # Create a household for the user
             household_data = {"name": "Test Recipe Household"}
             api_client.post(
-                f"{BASE_URL}/api/households",
+                f"{BASE_URL}/api/households/create",
                 json=household_data,
                 headers={"Authorization": f"Bearer {token}"}
             )
@@ -432,7 +432,7 @@ def auth_token(api_client):
     login_response = api_client.post(f"{BASE_URL}/api/auth/login", json=login_data)
     
     if login_response.status_code == 200:
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
         if token:
             print(f"✓ Logged in as: {TEST_EMAIL}")
             return token
@@ -445,7 +445,7 @@ def auth_token(api_client):
     
     fallback_response = api_client.post(f"{BASE_URL}/api/auth/login", json=fallback_login)
     if fallback_response.status_code == 200:
-        token = fallback_response.json().get("token")
+        token = fallback_response.json().get("access_token")
         if token:
             print("✓ Logged in with fallback test user")
             return token
