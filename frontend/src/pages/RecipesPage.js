@@ -613,6 +613,10 @@ const RecipesPage = () => {
             onAddToShopping={handleAddToShopping}
             onLike={handleLikeRecipe}
             onEdit={handleEditRecipe}
+            onAddToPlanner={(recipe) => {
+              setSelectedRecipe(null); // Close detail view
+              handleAddToPlanner(recipe);
+            }}
             isOwnRecipe={selectedRecipe ? isOwnRecipe(selectedRecipe) : false}
           />
         </DialogContent>
@@ -621,7 +625,9 @@ const RecipesPage = () => {
       {/* Add to Planner Modal */}
       {plannerRecipe && (
         <AddToPlannerModal
+          isOpen={!!plannerRecipe}
           video={plannerRecipe}
+          matchedIngredients={plannerRecipe.ingredients?.map(i => i.name_en || i.ingredient_name) || []}
           onClose={() => setPlannerRecipe(null)}
           onSuccess={() => {
             setPlannerRecipe(null);
