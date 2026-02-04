@@ -44,21 +44,32 @@ export const useInventory = () => {
   const addItem = async (itemData) => {
     try {
       // Use household-scoped endpoint with auth
+      console.log('Adding item to household inventory:', itemData);
+      const headers = getAuthHeaders();
+      console.log('Auth headers:', headers);
       const response = await axios.post(`${API}/inventory/household`, itemData, {
-        headers: getAuthHeaders()
+        headers: headers
       });
+      console.log('Item added successfully:', response.data);
       setInventory(prev => [...prev, response.data]);
       return response.data;
     } catch (err) {
-      // Fallback to public endpoint
-      try {
-        const response = await axios.post(`${API}/inventory`, itemData);
-        setInventory(prev => [...prev, response.data]);
-        return response.data;
-      } catch (fallbackErr) {
-        setError(fallbackErr.message);
-        throw fallbackErr;
+      console.error('Household add failed:', err.response?.data || err.message);
+      // Fallback to public endpoint if household fails (no auth)
+      if (err.response?.status === 401 || err.response?.status === 400) {
+        console.log('Falling back to public endpoint');
+        try {
+          const response = await axios.post(`${API}/inventory`, itemData);
+          setInventory(prev => [...prev, response.data]);
+          return response.data;
+        } catch (fallbackErr) {
+          console.error('Fallback also failed:', fallbackErr.response?.data || fallbackErr.message);
+          setError(fallbackErr.message);
+          throw fallbackErr;
+        }
       }
+      setError(err.message);
+      throw err;
     }
   };
 
