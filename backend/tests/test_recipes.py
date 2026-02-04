@@ -10,8 +10,8 @@ from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test user credentials - will be created during test
-TEST_EMAIL = f"recipe_test_{uuid.uuid4().hex[:8]}@test.com"
+# Test user credentials - use existing test user
+TEST_EMAIL = "recipe_tester@test.com"
 TEST_PASSWORD = "TestPass123!"
 TEST_NAME = "Recipe Tester"
 
