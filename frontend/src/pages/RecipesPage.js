@@ -97,17 +97,35 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, is
             <ChefHat className="w-20 h-20 text-orange-200" />
           </div>
         )}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          {isOwnRecipe && (
+            <button
+              onClick={() => onEdit?.(recipe)}
+              className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-50 transition-colors"
+              data-testid="edit-recipe-btn"
+            >
+              <Edit className="w-4 h-4 text-orange-600" />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       
       {/* Title & Meta */}
       <div className="space-y-3">
-        <h2 className="text-2xl font-bold text-gray-800">{recipe.title}</h2>
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-2xl font-bold text-gray-800">{recipe.title}</h2>
+          {recipe.youtube_video_id && (
+            <Badge variant="outline" className="shrink-0 bg-red-50 text-red-600 border-red-200">
+              <Youtube className="w-3 h-3 mr-1" /> YouTube
+            </Badge>
+          )}
+        </div>
         
         {recipe.chef_name && (
           <p className="text-sm text-gray-600">
@@ -126,7 +144,7 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, is
           <div className="py-2">
             <StockStatusBadge status={recipe.stock_status} />
           </div>
-        )}
+        )}}
         
         {/* Meta Info */}
         <div className="flex flex-wrap gap-4 text-sm text-gray-500">
