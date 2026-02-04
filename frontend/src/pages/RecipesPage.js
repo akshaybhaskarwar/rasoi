@@ -281,8 +281,10 @@ const RecipesPage = () => {
   const [selectedTag, setSelectedTag] = useState(null);
   const [tags, setTags] = useState([]);
   const [showCreator, setShowCreator] = useState(false);
+  const [showYouTubeSaver, setShowYouTubeSaver] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [plannerRecipe, setPlannerRecipe] = useState(null);
   
   // Fetch tags
   useEffect(() => {
