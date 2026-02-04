@@ -668,7 +668,7 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
       <div className="h-24" />
       
       {/* Fixed Submit Buttons - Always visible on mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 z-50 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 z-[110] shadow-lg">
         <Button
           variant="outline"
           onClick={onCancel}
