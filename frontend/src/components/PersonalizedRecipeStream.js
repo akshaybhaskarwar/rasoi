@@ -446,7 +446,7 @@ const PersonalizedRecipeStream = () => {
 
       {/* Match threshold filter */}
       <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-600">Minimum ingredients match:</span>
+        <span className="text-sm text-gray-600">{getLabel('minIngredientsMatch')}</span>
         <div className="flex gap-2">
           {[1, 2, 3].map((num) => (
             <button
