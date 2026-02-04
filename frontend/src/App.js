@@ -13,6 +13,7 @@ import InventoryPage from "@/pages/InventoryPage";
 import ShoppingPage from "@/pages/ShoppingPage";
 import PlannerPage from "@/pages/PlannerPage";
 import CommunityPage from "@/pages/CommunityPage";
+import RecipesPage from "@/pages/RecipesPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
 
