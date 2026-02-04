@@ -566,6 +566,22 @@ const RecipesPage = () => {
         </SheetContent>
       </Sheet>
       
+      {/* YouTube Recipe Saver Sheet */}
+      <Sheet open={showYouTubeSaver} onOpenChange={setShowYouTubeSaver}>
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="flex items-center gap-2">
+              <Youtube className="w-6 h-6 text-red-500" />
+              Save YouTube Recipe
+            </SheetTitle>
+          </SheetHeader>
+          <YouTubeRecipeSaver
+            onSave={handleYouTubeSaved}
+            onCancel={() => setShowYouTubeSaver(false)}
+          />
+        </SheetContent>
+      </Sheet>
+      
       {/* Recipe Detail Dialog */}
       <Dialog open={!!selectedRecipe} onOpenChange={() => setSelectedRecipe(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden p-6">
@@ -579,6 +595,18 @@ const RecipesPage = () => {
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Add to Planner Modal */}
+      {plannerRecipe && (
+        <AddToPlannerModal
+          video={plannerRecipe}
+          onClose={() => setPlannerRecipe(null)}
+          onSuccess={() => {
+            setPlannerRecipe(null);
+            toast.success('Added to meal plan!');
+          }}
+        />
+      )}
     </div>
   );
 };
