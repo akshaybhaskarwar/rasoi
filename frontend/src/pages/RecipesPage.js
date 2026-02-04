@@ -379,6 +379,22 @@ const RecipesPage = () => {
     setShowCreator(true);
   };
   
+  // Handle YouTube recipe saved
+  const handleYouTubeSaved = (savedRecipe) => {
+    setShowYouTubeSaver(false);
+    fetchRecipes();
+  };
+  
+  // Handle add to planner for YouTube recipes
+  const handleAddToPlanner = (recipe) => {
+    setPlannerRecipe({
+      video_id: recipe.youtube_video_id,
+      title: recipe.title,
+      thumbnail: recipe.youtube_thumbnail || recipe.photo_url,
+      channel: recipe.youtube_channel || recipe.chef_name
+    });
+  };
+  
   // Check if recipe belongs to current household
   const isOwnRecipe = (recipe) => {
     return recipe.household_id === activeHousehold?.id;
@@ -397,7 +413,17 @@ const RecipesPage = () => {
             {activeHousehold?.name || 'Your household'}'s recipe collection
           </p>
         </div>
-        <Button
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowYouTubeSaver(true)}
+            variant="outline"
+            className="gap-2 border-red-200 text-red-600 hover:bg-red-50"
+            data-testid="save-youtube-btn"
+          >
+            <Youtube className="w-4 h-4" />
+            <span className="hidden sm:inline">YouTube</span>
+          </Button>
+          <Button
           onClick={() => setShowCreator(true)}
           className="bg-orange-500 hover:bg-orange-600 gap-2"
           data-testid="create-recipe-btn"
