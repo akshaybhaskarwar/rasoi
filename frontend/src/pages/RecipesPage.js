@@ -50,7 +50,7 @@ const StockStatusBadge = ({ status }) => {
 };
 
 // Recipe Detail View
-const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike }) => {
+const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, isOwnRecipe = false }) => {
   const { language } = useLanguage();
   const [photoData, setPhotoData] = useState(null);
   const [loadingPhoto, setLoadingPhoto] = useState(false);
