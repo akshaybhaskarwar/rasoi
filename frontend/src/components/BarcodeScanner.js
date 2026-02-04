@@ -635,8 +635,8 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : scanning ? (
                 <div className="relative">
-                  {/* Camera View - Full height for mobile */}
-                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '50vh', minHeight: '300px' }}>
+                  {/* Camera View - Adjusted height for mobile to ensure buttons visible */}
+                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '40vh', minHeight: '250px', maxHeight: '350px' }}>
                     <video
                       ref={videoRef}
                       autoPlay
@@ -658,21 +658,21 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     </div>
                   </div>
                   
-                  {/* Bottom Controls */}
+                  {/* Bottom Controls - Always visible */}
                   <div className="flex gap-3 mt-4">
                     <Button
                       onClick={skipToConfirm}
                       variant="outline"
-                      className="flex-1 h-14 text-base"
+                      className="flex-1 h-12 text-base"
                     >
                       Skip
                     </Button>
                     <Button
                       onClick={capturePhoto}
-                      className="flex-[2] h-14 text-base bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 font-bold"
+                      className="flex-[2] h-12 text-base bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 font-bold"
                       data-testid="capture-expiry-photo"
                     >
-                      <Camera className="w-6 h-6 mr-2" />
+                      <Camera className="w-5 h-5 mr-2" />
                       Capture
                     </Button>
                   </div>
