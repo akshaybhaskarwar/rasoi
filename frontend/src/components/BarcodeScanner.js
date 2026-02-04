@@ -436,8 +436,8 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : scanning ? (
                 <div className="relative">
-                  {/* Camera View - Full height for mobile */}
-                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '50vh', minHeight: '300px' }}>
+                  {/* Camera View - Adjusted height for mobile */}
+                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '40vh', minHeight: '250px', maxHeight: '350px' }}>
                     <video
                       ref={videoRef}
                       autoPlay
@@ -463,14 +463,14 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     </div>
                   </div>
                   
-                  {/* Bottom Controls */}
+                  {/* Bottom Controls - Always visible */}
                   <Button
                     onClick={() => {
                       stopCamera();
                       setScanMode('choose');
                     }}
                     variant="outline"
-                    className="w-full h-14 text-base mt-4"
+                    className="w-full h-12 text-base mt-4"
                   >
                     Cancel
                   </Button>
