@@ -93,6 +93,7 @@ function AppContent() {
                       <Route path="/inventory" element={<InventoryPage />} />
                       <Route path="/shopping" element={<ShoppingPage />} />
                       <Route path="/planner" element={<PlannerPage />} />
+                      <Route path="/recipes" element={<RecipesPage />} />
                       <Route path="/community" element={<CommunityPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                     </Routes>
