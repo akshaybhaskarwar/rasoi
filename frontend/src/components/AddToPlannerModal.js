@@ -90,17 +90,30 @@ const AddToPlannerModal = ({
         }
       });
       
-      await axios.post(`${API}/meal-plans`, {
+      // Build the meal plan data
+      const mealPlanData = {
         date: selectedDate,
         meal_type: selectedMealSlot,
         meal_name: video.title,
-        youtube_video_id: video.video_id,
-        youtube_thumbnail: video.thumbnail,
-        youtube_channel: video.channel || video.channel_name,
         ingredients_needed: matchedIngredients,
         reserved_ingredients: reservedIngredients,
         serving_size: selectedServingSize
-      });
+      };
+      
+      // Add YouTube or user recipe specific fields
+      if (video.is_user_recipe) {
+        mealPlanData.user_recipe_id = video.video_id;
+        mealPlanData.recipe_source = 'user_recipe';
+        mealPlanData.recipe_thumbnail = video.thumbnail;
+        mealPlanData.recipe_chef = video.channel;
+      } else {
+        mealPlanData.youtube_video_id = video.video_id;
+        mealPlanData.youtube_thumbnail = video.thumbnail;
+        mealPlanData.youtube_channel = video.channel || video.channel_name;
+        mealPlanData.recipe_source = 'youtube';
+      }
+      
+      await axios.post(`${API}/meal-plans`, mealPlanData);
       
       // Find day name for success message
       const dayInfo = prepData?.week_dates?.find(d => d.date === selectedDate);
