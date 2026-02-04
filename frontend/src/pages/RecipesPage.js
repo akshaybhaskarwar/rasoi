@@ -385,13 +385,18 @@ const RecipesPage = () => {
     fetchRecipes();
   };
   
-  // Handle add to planner for YouTube recipes
+  // Handle add to planner for any recipe (YouTube or user-created)
   const handleAddToPlanner = (recipe) => {
+    // For YouTube recipes, use youtube_video_id
+    // For user-created recipes, use the recipe id
     setPlannerRecipe({
-      video_id: recipe.youtube_video_id,
+      video_id: recipe.youtube_video_id || recipe.id,
       title: recipe.title,
-      thumbnail: recipe.youtube_thumbnail || recipe.photo_url,
-      channel: recipe.youtube_channel || recipe.chef_name
+      thumbnail: recipe.youtube_thumbnail || recipe.photo_url || null,
+      channel: recipe.youtube_channel || recipe.chef_name || 'Family Recipe',
+      // Pass additional data for user-created recipes
+      is_user_recipe: !recipe.youtube_video_id,
+      ingredients: recipe.ingredients || []
     });
   };
   
