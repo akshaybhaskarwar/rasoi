@@ -71,6 +71,22 @@ class StockStatus(BaseModel):
     missing: List[Dict[str, Any]]
     low_stock: List[Dict[str, Any]]
 
+class YouTubeRecipeCreate(BaseModel):
+    """Model for creating a YouTube-linked recipe"""
+    youtube_video_id: str
+    youtube_url: str
+    title: str
+    thumbnail: Optional[str] = None
+    channel_name: Optional[str] = None
+    channel_id: Optional[str] = None
+    duration: Optional[str] = None
+    description: Optional[str] = None
+    detected_ingredients: List[str] = []
+    matched_inventory_items: List[str] = []
+    personal_note: Optional[str] = None
+    categories: List[str] = []
+    tags: List[str] = []
+
 # ============ RECIPE TAGS ============
 
 RECIPE_TAGS = [
