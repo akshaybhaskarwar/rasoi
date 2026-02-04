@@ -1,4 +1,4 @@
-import { Home, Package, ShoppingCart, Calendar } from 'lucide-react';
+import { Home, Package, ShoppingCart, Calendar, BookOpen } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -11,6 +11,7 @@ export const BottomNavigation = () => {
     { path: '/', icon: Home, labelKey: 'home', testId: 'nav-home' },
     { path: '/inventory', icon: Package, labelKey: 'inventory', testId: 'nav-inventory' },
     { path: '/planner', icon: Calendar, labelKey: 'planner', testId: 'nav-planner' },
+    { path: '/recipes', icon: BookOpen, labelKey: 'recipes', testId: 'nav-recipes' },
     { path: '/shopping', icon: ShoppingCart, labelKey: 'shopping', testId: 'nav-shopping' },
   ];
 
