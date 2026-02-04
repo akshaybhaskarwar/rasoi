@@ -9,16 +9,33 @@ export const useInventory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Get auth headers for API calls
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchInventory = async (category = null) => {
     setLoading(true);
     setError(null);
     try {
-      const url = category ? `${API}/inventory?category=${category}` : `${API}/inventory`;
-      const response = await axios.get(url);
+      // Use household-scoped endpoint
+      const url = category 
+        ? `${API}/inventory/household?category=${category}` 
+        : `${API}/inventory/household`;
+      const response = await axios.get(url, { headers: getAuthHeaders() });
       setInventory(response.data);
       return response.data;
     } catch (err) {
-      setError(err.message);
+      // Fallback to public endpoint if household endpoint fails
+      try {
+        const url = category ? `${API}/inventory?category=${category}` : `${API}/inventory`;
+        const response = await axios.get(url);
+        setInventory(response.data);
+        return response.data;
+      } catch (fallbackErr) {
+        setError(fallbackErr.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -26,18 +43,30 @@ export const useInventory = () => {
 
   const addItem = async (itemData) => {
     try {
-      const response = await axios.post(`${API}/inventory`, itemData);
+      // Use household-scoped endpoint with auth
+      const response = await axios.post(`${API}/inventory/household`, itemData, {
+        headers: getAuthHeaders()
+      });
       setInventory(prev => [...prev, response.data]);
       return response.data;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      // Fallback to public endpoint
+      try {
+        const response = await axios.post(`${API}/inventory`, itemData);
+        setInventory(prev => [...prev, response.data]);
+        return response.data;
+      } catch (fallbackErr) {
+        setError(fallbackErr.message);
+        throw fallbackErr;
+      }
     }
   };
 
   const updateItem = async (itemId, updates) => {
     try {
-      await axios.put(`${API}/inventory/${itemId}`, updates);
+      await axios.put(`${API}/inventory/${itemId}`, updates, {
+        headers: getAuthHeaders()
+      });
       setInventory(prev => prev.map(item => 
         item.id === itemId ? { ...item, ...updates } : item
       ));
@@ -49,7 +78,9 @@ export const useInventory = () => {
 
   const deleteItem = async (itemId) => {
     try {
-      const response = await axios.delete(`${API}/inventory/${itemId}`);
+      const response = await axios.delete(`${API}/inventory/${itemId}`, {
+        headers: getAuthHeaders()
+      });
       console.log('Delete API response:', response.data);
       
       // Immediately update local state
