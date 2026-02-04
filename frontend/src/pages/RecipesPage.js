@@ -137,7 +137,7 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, is
         
         {recipe.story && (
           <p className="text-sm text-gray-600 italic bg-amber-50 p-3 rounded-lg border-l-4 border-amber-400">
-            "{recipe.story}"
+            &ldquo;{recipe.story}&rdquo;
           </p>
         )}
         
