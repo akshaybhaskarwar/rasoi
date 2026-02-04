@@ -296,6 +296,7 @@ export const UI_LABELS = {
     cookWithYourStock: 'अपने सामान से पकाएं',
     recipesFromFavoriteChannels: 'आपके पसंदीदा चैनलों की रेसिपी जो आपके रसोई से मेल खाती हैं',
     recipesFromChannelsAppearFirst: 'इन चैनलों की रेसिपी पहले दिखाई देती हैं',
+    minIngredientsMatch: 'न्यूनतम सामग्री मिलान:',
     
     // Days
     monday: 'सोमवार',
