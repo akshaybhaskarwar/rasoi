@@ -146,7 +146,7 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, is
           <div className="py-2">
             <StockStatusBadge status={recipe.stock_status} />
           </div>
-        )}}
+        )}
         
         {/* Meta Info */}
         <div className="flex flex-wrap gap-4 text-sm text-gray-500">
