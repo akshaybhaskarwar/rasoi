@@ -395,6 +395,9 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - `/api/recipes/{id}/photo` - GET (recipe photo base64)
   - `/api/recipes/{id}/like` - POST (like a published recipe)
   - `/api/recipes/{id}/add-missing-to-shopping` - POST (add missing ingredients to shopping)
+  - `/api/recipes/youtube` - POST (create YouTube-linked recipe) - Added Feb 4, 2025
+- **YouTube Video Details** - Added Feb 4, 2025:
+  - `/api/youtube/video-details/{video_id}` - GET (fetch video metadata using 1 quota unit)
 
 ## Data Models
 
@@ -416,6 +419,14 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 ### Meal Plan
 ```
 {id, date, meal_type, meal_name, youtube_video_id?, youtube_thumbnail?, ingredients_needed[], created_at}
+```
+
+### YouTube Recipe (New - Feb 4, 2025)
+```
+{id, household_id, created_by, title, chef_name, story, ingredients[], instructions[], tags[], categories[], 
+ recipe_type: 'youtube', youtube_video_id, youtube_url, youtube_thumbnail, youtube_channel, youtube_channel_id,
+ youtube_duration, youtube_description, detected_ingredients[], matched_inventory_items[], personal_note,
+ is_published, likes, created_at, updated_at}
 ```
 
 ---
