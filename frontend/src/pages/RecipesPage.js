@@ -232,6 +232,17 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
             Add {recipe.stock_status.missing.length} Missing Items to Shopping List
           </Button>
         )}
+        
+        {/* Add to Meal Planner */}
+        <Button
+          onClick={() => onAddToPlanner?.(recipe)}
+          variant="outline"
+          className="w-full mt-3 border-orange-300 text-orange-700 hover:bg-orange-50"
+          data-testid="add-recipe-to-planner-btn"
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          Add to Meal Planner
+        </Button>
       </div>
       
       {/* Instructions */}
