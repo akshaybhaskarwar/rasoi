@@ -140,6 +140,7 @@ export const UI_LABELS = {
     cookWithYourStock: 'Cook with Your Stock',
     recipesFromFavoriteChannels: 'Recipes from your favorite channels matching your pantry',
     recipesFromChannelsAppearFirst: 'Recipes from these channels appear first',
+    minIngredientsMatch: 'Minimum ingredients match:',
     
     // Days
     monday: 'Monday',
