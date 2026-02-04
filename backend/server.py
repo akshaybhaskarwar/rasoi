@@ -20,7 +20,7 @@ import re
 # Import authentication and household modules
 from auth import auth_router, create_auth_routes, decode_token, security
 from households import household_router, create_household_routes
-from realtime import sse_router, create_sse_routes, notify_inventory_change, notify_shopping_change
+from realtime import sse_router, create_sse_routes, notify_inventory_change, notify_shopping_change, notify_household
 from admin import admin_router, create_admin_routes, log_api_usage
 from recipes import create_recipe_routes
 

@@ -221,3 +221,7 @@ async def notify_meal_plan_change(household_id: str, action: str, meal: dict, us
         "meal": meal,
         "by": user_name
     })
+
+async def notify_household(household_id: str, event_type: str, data: dict):
+    """Generic notification for household members - used for recipes and other events"""
+    await broadcast_to_household(household_id, event_type, data)
