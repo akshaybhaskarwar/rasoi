@@ -330,6 +330,7 @@ export const UI_LABELS = {
     inventory: 'साठा',
     shopping: 'खरेदी यादी',
     planner: 'जेवण नियोजक',
+    recipes: 'रेसिपी',
     community: 'समुदाय',
     
     // Common actions
