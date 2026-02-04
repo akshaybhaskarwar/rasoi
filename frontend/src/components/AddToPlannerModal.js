@@ -279,7 +279,7 @@ const AddToPlannerModal = ({
                     <Package className="w-4 h-4 text-[#FF9933]" />
                     Reserve Ingredients
                     <span className="text-xs font-normal text-gray-400 ml-1">
-                      (uncheck what you won't use)
+                      (uncheck what you won&apos;t use)
                     </span>
                   </label>
                   <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-gray-50 rounded-xl">
