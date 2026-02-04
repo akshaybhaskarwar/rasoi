@@ -321,7 +321,7 @@ const AddToPlannerModal = ({
                   </div>
                   <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    Selected items will be marked as "Reserved" in your inventory
+                    Selected items will be marked as &ldquo;Reserved&rdquo; in your inventory
                   </p>
                 </div>
               )}
