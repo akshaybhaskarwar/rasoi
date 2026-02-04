@@ -544,6 +544,8 @@ const RecipesPage = () => {
             onClose={() => setSelectedRecipe(null)}
             onAddToShopping={handleAddToShopping}
             onLike={handleLikeRecipe}
+            onEdit={handleEditRecipe}
+            isOwnRecipe={selectedRecipe ? isOwnRecipe(selectedRecipe) : false}
           />
         </DialogContent>
       </Dialog>
