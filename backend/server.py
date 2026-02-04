@@ -2836,6 +2836,55 @@ def extract_ingredients_from_description(description: str) -> List[str]:
     
     return ingredients[:10]  # Limit to 10 ingredients
 
+@api_router.get("/youtube/video-details/{video_id}")
+async def get_youtube_video_details(
+    video_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get YouTube video details by video ID
+    Uses videos.list API (only 1 quota unit)
+    """
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id})
+    household_id = user.get("active_household") if user else None
+    
+    try:
+        youtube = get_youtube_service()
+        
+        # Fetch video details (costs only 1 quota unit!)
+        request = youtube.videos().list(
+            part="snippet,contentDetails",
+            id=video_id
+        )
+        response = request.execute()
+        
+        # Log API usage
+        await log_api_usage(db, "youtube", "videos.list", 1, household_id, user_id)
+        
+        if not response.get('items'):
+            raise HTTPException(status_code=404, detail="Video not found")
+        
+        item = response['items'][0]
+        snippet = item['snippet']
+        
+        return {
+            "video_id": video_id,
+            "title": snippet.get('title', ''),
+            "channel": snippet.get('channelTitle', ''),
+            "channel_id": snippet.get('channelId', ''),
+            "thumbnail": snippet.get('thumbnails', {}).get('high', {}).get('url', snippet.get('thumbnails', {}).get('medium', {}).get('url', '')),
+            "description": snippet.get('description', ''),
+            "duration": item.get('contentDetails', {}).get('duration', ''),
+            "published_at": snippet.get('publishedAt', '')
+        }
+        
+    except HttpError as e:
+        if 'quotaExceeded' in str(e):
+            raise HTTPException(status_code=429, detail="YouTube API quota exceeded")
+        raise HTTPException(status_code=500, detail=f"YouTube API error: {str(e)}")
+
 @api_router.post("/youtube/add-video")
 async def add_user_video(submission: YouTubeVideoSubmission):
     """
