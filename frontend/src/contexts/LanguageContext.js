@@ -20,6 +20,7 @@ export const UI_LABELS = {
     inventory: 'Inventory',
     shopping: 'Shopping List',
     planner: 'Meal Planner',
+    recipes: 'Recipes',
     community: 'Community',
     
     // Common actions
