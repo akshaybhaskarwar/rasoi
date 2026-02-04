@@ -182,8 +182,17 @@ const AddToPlannerModal = ({
                     {video.title}
                   </h3>
                   <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                    <Youtube className="w-3 h-3 text-red-500" />
-                    {video.channel || video.channel_name || 'YouTube'}
+                    {video.is_user_recipe ? (
+                      <>
+                        <ChefHat className="w-3 h-3 text-orange-500" />
+                        {video.channel || 'Family Recipe'}
+                      </>
+                    ) : (
+                      <>
+                        <Youtube className="w-3 h-3 text-red-500" />
+                        {video.channel || video.channel_name || 'YouTube'}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
