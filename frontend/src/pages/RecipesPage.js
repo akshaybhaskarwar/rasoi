@@ -364,7 +364,20 @@ const RecipesPage = () => {
   const handleRecipeSaved = (savedRecipe) => {
     setShowCreator(false);
     setEditingRecipe(null);
+    setSelectedRecipe(null);
     fetchRecipes();
+  };
+  
+  // Handle edit recipe
+  const handleEditRecipe = (recipe) => {
+    setSelectedRecipe(null);
+    setEditingRecipe(recipe);
+    setShowCreator(true);
+  };
+  
+  // Check if recipe belongs to current household
+  const isOwnRecipe = (recipe) => {
+    return recipe.household_id === activeHousehold?.id;
   };
   
   return (
