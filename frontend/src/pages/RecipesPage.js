@@ -512,6 +512,7 @@ const RecipesPage = () => {
                   recipe={recipe}
                   onView={setSelectedRecipe}
                   onAddToShopping={handleAddToShopping}
+                  onAddToPlanner={handleAddToPlanner}
                 />
               ))}
             </div>
