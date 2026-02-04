@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   ChefHat, Plus, Search, Filter, Heart, ShoppingCart, 
-  Clock, Users, BookOpen, Globe, Home, X, ArrowLeft
+  Clock, Users, BookOpen, Globe, Home, X, ArrowLeft, Edit, Youtube, Link2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
