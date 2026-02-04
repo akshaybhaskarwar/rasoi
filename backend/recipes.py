@@ -380,6 +380,122 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
             "stock_status": stock_status.dict()
         }
     
+    @recipe_router.post("/youtube")
+    async def create_youtube_recipe(
+        recipe: YouTubeRecipeCreate,
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+        """Create a recipe from a YouTube video link"""
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        
+        if not household_id:
+            raise HTTPException(status_code=400, detail="No active household")
+        
+        # Check if this video is already saved for this household
+        existing = await db.user_recipes.find_one({
+            "household_id": household_id,
+            "youtube_video_id": recipe.youtube_video_id
+        })
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="This video is already in your cookbook")
+        
+        recipe_id = str(uuid.uuid4())
+        
+        # Convert detected ingredients to recipe ingredient format
+        processed_ingredients = []
+        for ing_name in recipe.detected_ingredients:
+            ing_dict = {
+                "ingredient_name": ing_name,
+                "quantity": 0,  # Unknown from video
+                "unit": "as needed",
+                "name_en": ing_name
+            }
+            
+            # Try to translate
+            try:
+                translations = await translate_ingredient(ing_name)
+                ing_dict["name_mr"] = translations.get("mr")
+                ing_dict["name_hi"] = translations.get("hi")
+            except:
+                pass
+            
+            # Check if in inventory
+            inv_item = await db.inventory.find_one({
+                "household_id": household_id,
+                "name_en": {"$regex": f"^{ing_name}$", "$options": "i"}
+            })
+            if inv_item:
+                ing_dict["inventory_item_id"] = inv_item.get("id")
+            
+            processed_ingredients.append(ing_dict)
+        
+        # Create recipe document
+        recipe_doc = {
+            "id": recipe_id,
+            "household_id": household_id,
+            "created_by": user.get("id"),
+            "created_by_name": user.get("name"),
+            "created_by_email": user.get("email"),
+            "title": recipe.title,
+            "chef_name": recipe.channel_name or "YouTube",
+            "story": recipe.personal_note,
+            "ingredients": processed_ingredients,
+            "instructions": [],  # No instructions from video
+            "tags": recipe.tags or recipe.categories,
+            "categories": recipe.categories,
+            "servings": 4,  # Default
+            "prep_time_minutes": None,
+            "cook_time_minutes": None,
+            "photo_url": recipe.thumbnail,
+            "is_published": False,
+            "likes": 0,
+            # YouTube-specific fields
+            "youtube_video_id": recipe.youtube_video_id,
+            "youtube_url": recipe.youtube_url,
+            "youtube_thumbnail": recipe.thumbnail,
+            "youtube_channel": recipe.channel_name,
+            "youtube_channel_id": recipe.channel_id,
+            "youtube_duration": recipe.duration,
+            "youtube_description": recipe.description,
+            "detected_ingredients": recipe.detected_ingredients,
+            "matched_inventory_items": recipe.matched_inventory_items,
+            "personal_note": recipe.personal_note,
+            "recipe_type": "youtube",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.user_recipes.insert_one(recipe_doc)
+        
+        # Calculate initial stock status
+        stock_status = await calculate_stock_status(recipe_id, household_id)
+        
+        # Notify household members via SSE
+        try:
+            await notify_household(
+                household_id,
+                "new_recipe",
+                {
+                    "recipe_id": recipe_id,
+                    "title": recipe.title,
+                    "chef_name": recipe.channel_name,
+                    "youtube": True,
+                    "message": f"{user.get('name')} saved a YouTube recipe: {recipe.title}!"
+                }
+            )
+        except Exception as e:
+            print(f"SSE notification error: {e}")
+        
+        # Remove internal fields
+        recipe_doc.pop("_id", None)
+        
+        return {
+            **recipe_doc,
+            "stock_status": stock_status.dict()
+        }
+    
     @recipe_router.get("")
     async def get_household_recipes(
         credentials: HTTPAuthorizationCredentials = Depends(security),
