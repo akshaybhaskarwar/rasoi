@@ -164,11 +164,11 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPla
         
         {/* Actions */}
         <div className="flex gap-2 mt-3">
-          {isYouTubeRecipe && onAddToPlanner && (
+          {onAddToPlanner && (
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 text-xs"
+              className="flex-1 text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
               onClick={(e) => { e.stopPropagation(); onAddToPlanner?.(recipe); }}
             >
               <Sparkles className="w-3 h-3 mr-1" /> Plan
@@ -178,11 +178,10 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPla
             <Button
               size="sm"
               variant="outline"
-              className={`${isYouTubeRecipe ? '' : 'w-full'} text-xs border-amber-300 text-amber-700 hover:bg-amber-50`}
+              className="text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
               onClick={(e) => { e.stopPropagation(); onAddToShopping?.(recipe); }}
             >
               <ShoppingCart className="w-3 h-3 mr-1" />
-              {isYouTubeRecipe ? '' : `Add ${recipe.stock_status.missing.length} Missing`}
             </Button>
           )}
         </div>
