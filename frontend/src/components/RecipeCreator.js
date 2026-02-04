@@ -629,12 +629,15 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
         <Share2 className="w-5 h-5 text-blue-400" />
       </div>
       
-      {/* Submit Buttons */}
-      <div className="flex gap-3 pt-4">
+      {/* Spacer for fixed bottom buttons */}
+      <div className="h-24" />
+      
+      {/* Fixed Submit Buttons - Always visible on mobile */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 z-50 shadow-lg">
         <Button
           variant="outline"
           onClick={onCancel}
-          className="flex-1"
+          className="flex-1 h-12"
           disabled={loading}
         >
           Cancel
@@ -642,7 +645,7 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="flex-1 bg-orange-500 hover:bg-orange-600"
+          className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-base font-semibold"
           data-testid="save-recipe-btn"
         >
           {loading ? (
