@@ -300,6 +300,41 @@ A mobile-first web application for intelligent Indian kitchen management with bi
   - Notify household members when new recipe is created
   - Instant updates across devices
 
+#### 📺 Save YouTube Recipe Feature - Added Feb 4, 2025
+- **Quick-Paste Input UI**:
+  - Simple input field for YouTube URLs
+  - Validates youtube.com, youtu.be, and Shorts links
+  - Auto-fetches video metadata (thumbnail, title, channel, duration) using videos.list API (1 quota unit)
+  
+- **Ingredient Extractor (Local Logic)**:
+  - Scans video title and description for Indian ingredient keywords
+  - Cross-references with household inventory
+  - Shows "Matches Your Pantry" preview before saving
+  - Displays matched and missing ingredients
+  
+- **Household Sharing & Organization**:
+  - Personal notes field (e.g., "Aai, this is exactly like the Dal you make!")
+  - Auto-category detection from title (Breakfast, Maharashtrian, Quick Recipe, etc.)
+  - Manual category/tag selection
+  - Real-time sync via SSE to all household members
+  
+- **Add to Planner Bridge**:
+  - Every YouTube recipe card has "Plan" button
+  - Triggers standard add-to-planner flow with date picker
+  - Marks detected ingredients as reserved
+
+#### 🔧 Recipe Edit Functionality - Added Feb 4, 2025
+- Edit button (pencil icon) appears on user's own recipes in detail view
+- Opens RecipeCreator form with all fields pre-filled
+- PUT /api/recipes/{id} updates recipe in database
+- Stock status recalculated after update
+
+#### 📱 Mobile UX Improvements - Added Feb 4, 2025
+- Recipe form submit buttons fixed at bottom with z-index: 110
+- Always visible and clickable on mobile devices
+- Proper spacing to avoid overlap with content
+- Spacer div added to prevent content hiding behind fixed buttons
+
 ### 🟠 Known Issues
 - **YouTube API Quota**: Daily quota limits apply. Mitigated via cache-first architecture.
 
