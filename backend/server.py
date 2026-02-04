@@ -1339,6 +1339,82 @@ async def create_inventory_item(item: InventoryItemCreate, background_tasks: Bac
     await db.inventory.insert_one(doc)
     return inventory_item
 
+@api_router.get("/inventory/household")
+async def get_household_inventory(
+    category: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get inventory items for the user's active household"""
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    household_id = user.get("active_household")
+    if not household_id:
+        raise HTTPException(status_code=400, detail="No active household")
+    
+    query = {"household_id": household_id}
+    if category:
+        query["category"] = category
+    
+    items = await db.inventory.find(query, {"_id": 0}).to_list(1000)
+    
+    for item in items:
+        if isinstance(item.get('created_at'), str):
+            item['created_at'] = datetime.fromisoformat(item['created_at'])
+    
+    return items
+
+@api_router.post("/inventory/household")
+async def create_household_inventory_item(
+    item: InventoryItemCreate,
+    background_tasks: BackgroundTasks,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create inventory item for the user's active household"""
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    household_id = user.get("active_household")
+    if not household_id:
+        raise HTTPException(status_code=400, detail="No active household")
+    
+    item_dict = item.model_dump()
+    inventory_item = InventoryItem(**item_dict)
+    inventory_item.household_id = household_id  # Associate with household
+    
+    # If Marathi name provided, use it; otherwise translate
+    if item.name_mr:
+        inventory_item.name_mr = item.name_mr
+    else:
+        name_mr = await translate_text_simple(item.name_en, "mr")
+        inventory_item.name_mr = name_mr
+    
+    # Translate to Hindi as well
+    name_hi = await translate_text_simple(item.name_en, "hi")
+    inventory_item.name_hi = name_hi
+    
+    doc = inventory_item.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['household_id'] = household_id
+    
+    await db.inventory.insert_one(doc)
+    
+    # Notify household members
+    try:
+        await notify_inventory_change(household_id, "add", doc, user.get("name", "Someone"))
+    except Exception as e:
+        print(f"SSE notification error: {e}")
+    
+    return inventory_item
+
 @api_router.get("/inventory", response_model=List[InventoryItem])
 async def get_inventory(category: Optional[str] = None):
     """Get all inventory items"""
