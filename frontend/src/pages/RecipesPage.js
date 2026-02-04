@@ -410,7 +410,7 @@ const RecipesPage = () => {
             Family Recipes
           </h1>
           <p className="text-sm text-gray-500">
-            {activeHousehold?.name || 'Your household'}'s recipe collection
+            {activeHousehold?.name || 'Your household'}&apos;s recipe collection
           </p>
         </div>
         <div className="flex gap-2">
