@@ -246,7 +246,7 @@ const YouTubeRecipeSaver = ({ onSave, onCancel }) => {
   };
   
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6">
       {/* URL Input */}
       <div>
         <Label className="text-sm font-medium flex items-center gap-2 mb-2">
