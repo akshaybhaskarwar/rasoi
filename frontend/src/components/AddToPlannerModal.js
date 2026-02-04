@@ -40,7 +40,8 @@ const AddToPlannerModal = ({
         video_title: video.title,
         video_thumbnail: video.thumbnail,
         channel_name: video.channel || video.channel_name || '',
-        matched_ingredients: matchedIngredients
+        matched_ingredients: matchedIngredients,
+        is_user_recipe: video.is_user_recipe || false
       });
       
       setPrepData(response.data);
