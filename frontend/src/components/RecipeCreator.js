@@ -664,11 +664,8 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
         <Share2 className="w-5 h-5 text-blue-400" />
       </div>
       
-      {/* Spacer for fixed bottom buttons */}
-      <div className="h-24" />
-      
-      {/* Fixed Submit Buttons - Always visible on mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 z-[110] shadow-lg">
+      {/* Submit Buttons - Sticky at bottom */}
+      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex gap-3 mt-6 -mx-1 shadow-lg">
         <Button
           variant="outline"
           onClick={onCancel}
