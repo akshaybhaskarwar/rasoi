@@ -551,35 +551,40 @@ const RecipesPage = () => {
       </Tabs>
       
       {/* Recipe Creator Sheet */}
-      <Sheet open={showCreator} onOpenChange={setShowCreator}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
-          <SheetHeader className="mb-4">
+      <Sheet open={showCreator} onOpenChange={(open) => { setShowCreator(open); if (!open) setEditingRecipe(null); }}>
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+          <SheetHeader className="p-6 pb-2 shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <ChefHat className="w-6 h-6 text-orange-500" />
               {editingRecipe ? 'Edit Recipe' : 'Create New Recipe'}
             </SheetTitle>
           </SheetHeader>
-          <RecipeCreator
-            onSuccess={handleRecipeSaved}
-            onCancel={() => { setShowCreator(false); setEditingRecipe(null); }}
-            editRecipe={editingRecipe}
-          />
+          <div className="flex-1 overflow-y-auto px-6">
+            <RecipeCreator
+              onSuccess={handleRecipeSaved}
+              onCancel={() => { setShowCreator(false); setEditingRecipe(null); }}
+              editRecipe={editingRecipe}
+            />
+          </div>
         </SheetContent>
       </Sheet>
       
       {/* YouTube Recipe Saver Sheet */}
       <Sheet open={showYouTubeSaver} onOpenChange={setShowYouTubeSaver}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
-          <SheetHeader className="mb-4">
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+          <SheetHeader className="p-6 pb-2 shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <Youtube className="w-6 h-6 text-red-500" />
-              Save YouTube Recipe
+              Save Your YouTube Recipe
             </SheetTitle>
+            <p className="text-sm text-gray-500">Save a recipe video to your family cookbook</p>
           </SheetHeader>
-          <YouTubeRecipeSaver
-            onSave={handleYouTubeSaved}
-            onCancel={() => setShowYouTubeSaver(false)}
-          />
+          <div className="flex-1 overflow-y-auto px-6">
+            <YouTubeRecipeSaver
+              onSave={handleYouTubeSaved}
+              onCancel={() => setShowYouTubeSaver(false)}
+            />
+          </div>
         </SheetContent>
       </Sheet>
       
