@@ -3327,12 +3327,6 @@ create_household_routes(db, decode_token)
 create_sse_routes(db, decode_token)
 create_admin_routes(db, decode_token)
 
-# Create a notify function for household SSE
-async def notify_household(household_id: str, event_type: str, data: dict):
-    """Notify household members via SSE"""
-    # This will be handled by the SSE module
-    pass
-
 # Initialize recipe routes
 recipe_router = create_recipe_routes(db, decode_token, google_translate_api, notify_household)
 
