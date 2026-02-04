@@ -264,13 +264,52 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 ### 🟠 Known Issues
 - **YouTube API Quota**: Daily quota limits apply. Mitigated via cache-first architecture.
 
+#### 👩‍🍳 User-Generated Recipe (UGR) Module - Added Feb 4, 2025
+- **Smart Recipe Creator Form**:
+  - Mobile-first recipe creation with title, chef name, story fields
+  - Intelligent ingredient input with auto-suggestions from household inventory
+  - Quantity and unit selection (g, kg, ml, L, cup, tbsp, tsp, piece, bunch, pinch)
+  - Step-by-step instruction editor with numbered steps
+  - Photo upload with preview
+  - Tags selection (Quick Breakfast, Festival Special, Fasting, Grandma's Recipe, etc.)
+  - "Publish to Community" option for sharing with all users
+  
+- **Inventory & Translation Bridge**:
+  - Auto-translate recipe ingredients to Hindi and Marathi
+  - Stock status badge shows "All ingredients in stock" / "Missing X items" / "X items running low"
+  - Ingredient auto-complete from household inventory items
+  - Links ingredients to inventory for real-time stock checking
+  
+- **Recipe-to-Stock Linking**:
+  - Calculates ingredient availability from household inventory
+  - Color-coded status: Green (all in stock), Yellow (low/missing few), Red (many missing)
+  - "Add Missing to Shopping List" button adds unavailable ingredients
+  
+- **Household Recipe Feed**:
+  - `/recipes` route shows household-specific recipe collection
+  - Search and filter by tags
+  - Recipe cards with stock status, metadata, ingredient preview
+  - Tabs: "My Kitchen" (household recipes) and "Community" (published recipes)
+  
+- **Community Kitchen**:
+  - Published recipes visible to all users
+  - Like/favorite functionality
+  - Recipe discovery across households
+  
+- **Real-Time Sharing (SSE)**:
+  - Notify household members when new recipe is created
+  - Instant updates across devices
+
+### 🟠 Known Issues
+- **YouTube API Quota**: Daily quota limits apply. Mitigated via cache-first architecture.
+
 ### 🟡 Pending Tasks (P1)
-- Translate "Minimum ingredients match:" text in PersonalizedRecipeStream.js
+- ~~Translate "Minimum ingredients match:" text in PersonalizedRecipeStream.js~~ ✓ Fixed Feb 4, 2025
 - Translate meal type labels (Breakfast, Lunch, Dinner, Snacks) in planner cards
 - Voice input for adding inventory items
 
 ### 🔵 Backlog (P2)
-- Community Kitchen (user-submitted recipes)
+- ~~Community Kitchen (user-submitted recipes)~~ ✓ Implemented Feb 4, 2025
 - "Digital Dadi" enhanced with more dynamic suggestions
 - Freshness indicators & "Mummy's Secret Stash" icons
 - Expand local recipe database
