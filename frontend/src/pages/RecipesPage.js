@@ -552,7 +552,7 @@ const RecipesPage = () => {
       
       {/* Recipe Creator Sheet */}
       <Sheet open={showCreator} onOpenChange={(open) => { setShowCreator(open); if (!open) setEditingRecipe(null); }}>
-        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0 pb-20">
           <SheetHeader className="p-6 pb-2 shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <ChefHat className="w-6 h-6 text-orange-500" />
@@ -571,7 +571,7 @@ const RecipesPage = () => {
       
       {/* YouTube Recipe Saver Sheet */}
       <Sheet open={showYouTubeSaver} onOpenChange={setShowYouTubeSaver}>
-        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0 pb-20">
           <SheetHeader className="p-6 pb-2 shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <Youtube className="w-6 h-6 text-red-500" />
