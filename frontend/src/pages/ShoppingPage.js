@@ -676,9 +676,7 @@ const ShoppingPage = () => {
                           
                           {/* Bottom Row - Expiry Date & Mark as Purchased */}
                           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                            {/* Expiry Date Input */}
-                            <div className="flex items-center gap-2 flex-1">
-                              {/* Expiry Date Button - Same design as inventory */}
+                            {/* Expiry Date Button - Same design as inventory */}
                             <button
                               onClick={() => setEditingExpiryId(editingExpiryId === item.id ? null : item.id)}
                               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 border-dashed transition-colors ${
