@@ -53,7 +53,7 @@ class TestInventoryStockTracking:
                         requests.delete(f"{BASE_URL}/api/inventory/{item['id']}", headers=self.headers)
             
             # Get all shopping items
-            response = requests.get(f"{BASE_URL}/api/shopping/household", headers=self.headers)
+            response = requests.get(f"{BASE_URL}/api/shopping", headers=self.headers)
             if response.status_code == 200:
                 items = response.json()
                 for item in items:
@@ -296,7 +296,7 @@ class TestShoppingListPurchaseIntegration:
                         requests.delete(f"{BASE_URL}/api/inventory/{item['id']}", headers=self.headers)
             
             # Clean shopping list
-            response = requests.get(f"{BASE_URL}/api/shopping/household", headers=self.headers)
+            response = requests.get(f"{BASE_URL}/api/shopping", headers=self.headers)
             if response.status_code == 200:
                 for item in response.json():
                     if item.get("name_en", "").startswith("TEST_"):
@@ -309,7 +309,7 @@ class TestShoppingListPurchaseIntegration:
         unique_name = f"TEST_Tomato_{uuid.uuid4().hex[:6]}"
         
         create_response = requests.post(
-            f"{BASE_URL}/api/shopping/household",
+            f"{BASE_URL}/api/shopping",
             headers=self.headers,
             json={
                 "name_en": unique_name,
@@ -333,7 +333,7 @@ class TestShoppingListPurchaseIntegration:
         unique_name = f"TEST_Onion_{uuid.uuid4().hex[:6]}"
         
         create_response = requests.post(
-            f"{BASE_URL}/api/shopping/household",
+            f"{BASE_URL}/api/shopping",
             headers=self.headers,
             json={
                 "name_en": unique_name,
@@ -363,7 +363,7 @@ class TestShoppingListPurchaseIntegration:
         
         # Create shopping item
         shop_response = requests.post(
-            f"{BASE_URL}/api/shopping/household",
+            f"{BASE_URL}/api/shopping",
             headers=self.headers,
             json={
                 "name_en": unique_name,
@@ -496,7 +496,7 @@ class TestShoppingListPurchaseIntegration:
         
         # Create shopping item
         shop_response = requests.post(
-            f"{BASE_URL}/api/shopping/household",
+            f"{BASE_URL}/api/shopping",
             headers=self.headers,
             json={
                 "name_en": unique_name,
@@ -513,7 +513,7 @@ class TestShoppingListPurchaseIntegration:
         assert delete_response.status_code == 200
         
         # Verify item is gone
-        list_response = requests.get(f"{BASE_URL}/api/shopping/household", headers=self.headers)
+        list_response = requests.get(f"{BASE_URL}/api/shopping", headers=self.headers)
         items = list_response.json()
         found = any(i["id"] == shop_item["id"] for i in items)
         
@@ -539,16 +539,29 @@ class TestInventoryAPIEndpoints:
         yield
     
     def test_inventory_model_has_current_stock(self):
-        """Verify inventory items have current_stock field in response"""
-        response = requests.get(f"{BASE_URL}/api/inventory/household", headers=self.headers)
-        assert response.status_code == 200
+        """Verify newly created inventory items have current_stock field in response"""
+        unique_name = f"TEST_CheckField_{uuid.uuid4().hex[:6]}"
         
-        items = response.json()
-        if items:
-            # Check first item has current_stock field
-            first_item = items[0]
-            assert "current_stock" in first_item or first_item.get("current_stock") is not None or "current_stock" in str(first_item), \
-                f"current_stock field should exist in inventory items. Got: {first_item.keys()}"
+        # Create a new item to verify current_stock field exists
+        create_response = requests.post(
+            f"{BASE_URL}/api/inventory/household",
+            headers=self.headers,
+            json={
+                "name_en": unique_name,
+                "category": "other",
+                "current_stock": 100,
+                "stock_level": "low"
+            }
+        )
+        assert create_response.status_code == 200
+        item = create_response.json()
+        
+        # Check the created item has current_stock field
+        assert "current_stock" in item, f"current_stock field should exist. Got: {item.keys()}"
+        assert item["current_stock"] == 100
+        
+        # Cleanup
+        requests.delete(f"{BASE_URL}/api/inventory/{item['id']}", headers=self.headers)
     
     def test_update_inventory_current_stock_and_stock_level(self):
         """Test updating both current_stock and stock_level together"""
