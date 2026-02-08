@@ -236,6 +236,107 @@ const ShoppingPage = () => {
     }
   };
 
+  // Handle Mark as Purchased - connects shopping list to inventory
+  const handleMarkAsPurchased = async (item) => {
+    setProcessingPurchase(item.id);
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const expiryDate = purchaseExpiryDates[item.id] || null;
+      
+      // Parse quantity from string (e.g., "1 kg" -> { value: 1000, unit: 'g' })
+      const parseQuantity = (qtyString) => {
+        if (!qtyString || qtyString === '-') return { value: 0, unit: 'g' };
+        
+        const match = qtyString.match(/^([\d.]+)\s*(.+)$/);
+        if (!match) return { value: 0, unit: 'g' };
+        
+        let value = parseFloat(match[1]);
+        let unit = match[2].toLowerCase().trim();
+        
+        // Convert to base units (grams or ml)
+        if (unit === 'kg') { value *= 1000; unit = 'g'; }
+        else if (unit === 'l' || unit === 'liter' || unit === 'litre') { value *= 1000; unit = 'ml'; }
+        else if (unit.includes('pack') || unit.includes('unit') || unit.includes('dozen')) {
+          // For count-based items, just use the number
+          unit = 'units';
+        }
+        
+        return { value, unit };
+      };
+      
+      const parsedQty = parseQuantity(item.monthly_quantity);
+      
+      // Find matching inventory item by name (case-insensitive)
+      const existingItem = inventory.find(inv => 
+        inv.name_en?.toLowerCase() === item.name_en?.toLowerCase()
+      );
+      
+      if (existingItem) {
+        // Update existing inventory item - add to current stock
+        const newCurrentStock = (existingItem.current_stock || 0) + parsedQty.value;
+        
+        const updateData = {
+          current_stock: newCurrentStock
+        };
+        
+        // Calculate new stock level
+        const monthlyNeed = existingItem.monthly_quantity || 500;
+        const percentage = (newCurrentStock / monthlyNeed) * 100;
+        if (percentage === 0) updateData.stock_level = 'empty';
+        else if (percentage <= 25) updateData.stock_level = 'low';
+        else if (percentage <= 75) updateData.stock_level = 'half';
+        else updateData.stock_level = 'full';
+        
+        // Update expiry if provided
+        if (expiryDate) {
+          updateData.expiry_date = expiryDate;
+        }
+        
+        await axios.put(`${API}/api/inventory/${existingItem.id}`, updateData, { headers });
+        
+        toast.success(`Added ${item.monthly_quantity || 'items'} to ${item.name_en} stock`);
+      } else {
+        // Create new inventory item
+        const newInventoryItem = {
+          name_en: item.name_en,
+          name_mr: item.name_mr || '',
+          name_hi: item.name_hi || '',
+          category: item.category || 'other',
+          current_stock: parsedQty.value,
+          stock_level: parsedQty.value > 0 ? 'full' : 'empty',
+          monthly_quantity: parsedQty.value || 500,
+          monthly_unit: parsedQty.unit,
+          expiry_date: expiryDate || null
+        };
+        
+        await axios.post(`${API}/api/inventory/household`, newInventoryItem, { headers });
+        
+        toast.success(`Added ${item.name_en} to inventory`);
+      }
+      
+      // Remove from shopping list
+      await deleteItem(item.id);
+      
+      // Clear the expiry date state for this item
+      setPurchaseExpiryDates(prev => {
+        const newState = { ...prev };
+        delete newState[item.id];
+        return newState;
+      });
+      
+      // Refresh inventory
+      await fetchInventory();
+      
+    } catch (error) {
+      console.error('Error marking as purchased:', error);
+      toast.error('Failed to update inventory');
+    } finally {
+      setProcessingPurchase(null);
+    }
+  };
+
   // Toggle category expansion
   const toggleCategory = (category) => {
     setExpandedCategories(prev => ({
