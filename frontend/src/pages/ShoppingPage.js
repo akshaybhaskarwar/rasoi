@@ -671,6 +671,43 @@ const ShoppingPage = () => {
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
+                          </div>
+                          
+                          {/* Bottom Row - Expiry Date & Mark as Purchased */}
+                          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                            {/* Expiry Date Input */}
+                            <div className="flex items-center gap-2 flex-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              <input
+                                type="date"
+                                value={purchaseExpiryDates[item.id] || ''}
+                                onChange={(e) => setPurchaseExpiryDates(prev => ({
+                                  ...prev,
+                                  [item.id]: e.target.value
+                                }))}
+                                className="flex-1 h-9 px-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                placeholder="Add expiry date"
+                                data-testid={`expiry-date-${item.id}`}
+                              />
+                            </div>
+                            
+                            {/* Mark as Purchased Button */}
+                            <Button
+                              onClick={() => handleMarkAsPurchased(item)}
+                              disabled={processingPurchase === item.id}
+                              className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white font-medium"
+                              data-testid={`mark-purchased-${item.id}`}
+                            >
+                              {processingPurchase === item.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4 mr-1" />
+                                  Purchased
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
