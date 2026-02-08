@@ -91,6 +91,26 @@ const STOCK_LEVELS = [
   { value: 'full', label: 'Full', color: 'bg-[#77DD77] text-white', icon: '●' }
 ];
 
+// Calculate stock status based on current stock vs monthly need
+const calculateStockStatus = (currentStock, monthlyNeed) => {
+  if (!monthlyNeed || monthlyNeed === 0) {
+    return currentStock > 0 ? { value: 'full', label: 'Full', color: 'bg-[#77DD77] text-white', icon: '●' } 
+                           : { value: 'empty', label: 'Empty', color: 'bg-gray-200 text-gray-700', icon: '○' };
+  }
+  
+  const percentage = (currentStock / monthlyNeed) * 100;
+  
+  if (percentage === 0) {
+    return { value: 'empty', label: 'Empty', color: 'bg-gray-200 text-gray-700', icon: '○' };
+  } else if (percentage <= 25) {
+    return { value: 'low', label: 'Low', color: 'bg-[#FF9933] text-white', icon: '◔' };
+  } else if (percentage <= 75) {
+    return { value: 'half', label: 'Half', color: 'bg-[#FFCC00] text-gray-800', icon: '◑' };
+  } else {
+    return { value: 'full', label: 'Full', color: 'bg-[#77DD77] text-white', icon: '●' };
+  }
+};
+
 const InventoryPage = () => {
   const { inventory, loading, addItem, updateItem, deleteItem } = useInventory();
   const { language, getLabel, isEnglish } = useLanguage();
