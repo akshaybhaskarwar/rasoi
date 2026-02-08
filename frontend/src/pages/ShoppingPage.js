@@ -54,8 +54,8 @@ const getDefaultQuantity = (category) => {
 };
 
 const ShoppingPage = () => {
-  const { shoppingList, addItem, deleteItem, updateItem } = useShoppingList();
-  const { inventory } = useInventory();
+  const { shoppingList, addItem, deleteItem, updateItem, fetchShoppingList } = useShoppingList();
+  const { inventory, addItem: addInventoryItem, updateItem: updateInventoryItem, fetchInventory } = useInventory();
   const { language, getLabel } = useLanguage();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('grocery');
@@ -64,6 +64,8 @@ const ShoppingPage = () => {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [editingItemId, setEditingItemId] = useState(null);
   const [customQty, setCustomQty] = useState('');
+  const [purchaseExpiryDates, setPurchaseExpiryDates] = useState({}); // Track expiry dates for each item
+  const [processingPurchase, setProcessingPurchase] = useState(null); // Track which item is being processed
   const [newItem, setNewItem] = useState({
     name_en: '',
     category: 'grains',
