@@ -220,6 +220,33 @@ const InventoryPage = () => {
     }
   };
 
+  // Handle current stock changes (for consumption tracking)
+  const handleCurrentStockChange = async (item, direction) => {
+    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
+    const currentStock = item.current_stock || 0;
+    const step = defaults.step;
+    
+    let newStock;
+    if (direction === 'increase') {
+      newStock = currentStock + step;
+    } else {
+      newStock = Math.max(0, currentStock - step); // Don't go below 0
+    }
+    
+    try {
+      // Calculate the new stock level based on current stock vs monthly need
+      const monthlyNeed = item.monthly_quantity || defaults.quantity;
+      const newStatus = calculateStockStatus(newStock, monthlyNeed);
+      
+      await updateItem(item.id, { 
+        current_stock: newStock,
+        stock_level: newStatus.value // Also update stock_level for backward compatibility
+      });
+    } catch (error) {
+      console.error('Error updating current stock:', error);
+    }
+  };
+
   const handleDelete = async (itemId, itemName) => {
     if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
       try {
