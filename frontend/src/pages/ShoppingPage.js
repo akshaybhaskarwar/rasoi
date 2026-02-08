@@ -940,6 +940,13 @@ const ShoppingPage = () => {
           <Send className="w-6 h-6 text-white" />
         </button>
       )}
+
+      {/* AI Scanner Dialog - Reuses BarcodeScanner logic for shopping */}
+      <ShoppingBarcodeScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onItemScanned={handleScannedItem}
+      />
     </div>
   );
 };
