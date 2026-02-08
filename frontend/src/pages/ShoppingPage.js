@@ -66,6 +66,7 @@ const ShoppingPage = () => {
   const [customQty, setCustomQty] = useState('');
   const [purchaseExpiryDates, setPurchaseExpiryDates] = useState({}); // Track expiry dates for each item
   const [processingPurchase, setProcessingPurchase] = useState(null); // Track which item is being processed
+  const [editingExpiryId, setEditingExpiryId] = useState(null); // Track which item's expiry is being edited
   const [newItem, setNewItem] = useState({
     name_en: '',
     category: 'grains',
