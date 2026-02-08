@@ -565,28 +565,30 @@ const ShoppingPage = () => {
                       {items.map((item) => (
                         <div 
                           key={item.id}
-                          className="flex items-center gap-3 p-3 hover:bg-gray-50"
+                          className="p-3 hover:bg-gray-50"
                           data-testid={`shopping-item-${item.id}`}
                         >
-                          {/* Item Info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-800 truncate">
-                              <TranslatedLabel 
-                                textEn={item.name_en}
-                                textRegional={language === 'hi' ? item.name_hi : item.name_mr}
-                                targetLanguage={language}
-                                showVerification={false}
-                                size="sm"
-                              />
-                            </p>
-                            {item.stock_level && (
-                              <span className={`text-xs ${
-                                item.stock_level === 'empty' ? 'text-gray-500' : 'text-orange-600'
-                              }`}>
-                                {item.stock_level === 'empty' ? '○ Empty' : '◔ Low stock'}
-                              </span>
-                            )}
-                          </div>
+                          {/* Top Row - Item info, quantity, delete */}
+                          <div className="flex items-center gap-3">
+                            {/* Item Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-800 truncate">
+                                <TranslatedLabel 
+                                  textEn={item.name_en}
+                                  textRegional={language === 'hi' ? item.name_hi : item.name_mr}
+                                  targetLanguage={language}
+                                  showVerification={false}
+                                  size="sm"
+                                />
+                              </p>
+                              {item.stock_level && (
+                                <span className={`text-xs ${
+                                  item.stock_level === 'empty' ? 'text-gray-500' : 'text-orange-600'
+                                }`}>
+                                  {item.stock_level === 'empty' ? '○ Empty' : '◔ Low stock'}
+                                </span>
+                              )}
+                            </div>
 
                           {/* Quick Quantity Selector with Custom Input */}
                           {editingItemId === item.id ? (
