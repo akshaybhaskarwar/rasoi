@@ -133,6 +133,16 @@ A mobile-first web application for intelligent Indian kitchen management with bi
 - Category grouping by store type (Grocery/Mandi)
 - CRUD operations
 - WhatsApp export feature
+- ✅ **Enhanced Add Shopping Item Dialog** - Added Feb 8, 2025
+  - Two entry methods:
+    1. **AI Scanning** (AI Powered) - Opens ShoppingBarcodeScanner with:
+       - 📸 Take Photos: AI-powered product name & expiry date OCR (2-step flow)
+       - Scan Barcode: Product lookup via Open Food Facts
+       - Enter Manually: Direct data entry within scanner
+    2. **Enter Manually** - Traditional form with item name, category, quantity
+  - Back to options navigation within manual entry
+  - Duplicate item detection with warning message
+  - Category-based default quantities
 
 #### Gap Analysis Sidebar
 - ✅ **Desktop: Right sidebar shows missing ingredients** - Verified Jan 27, 2025
