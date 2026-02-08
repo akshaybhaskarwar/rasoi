@@ -3,7 +3,7 @@ import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
-  Search, X, ChevronDown, ChevronUp, Package, Edit2
+  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household', 'other'];
 
