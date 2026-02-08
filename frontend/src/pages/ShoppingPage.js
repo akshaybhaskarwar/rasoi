@@ -353,12 +353,10 @@ const ShoppingPage = () => {
       // Remove from shopping list
       await deleteItem(item.id);
       
-      // Clear the expiry date state for this item
-      setPurchaseExpiryDates(prev => {
-        const newState = { ...prev };
-        delete newState[item.id];
-        return newState;
-      });
+      // Clear the expiry date editing state
+      if (editingExpiryItemId === item.id) {
+        cancelEditingExpiry();
+      }
       
       // Refresh inventory
       await fetchInventory();
