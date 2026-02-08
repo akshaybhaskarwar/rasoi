@@ -744,32 +744,51 @@ const InventoryPage = () => {
                             </div>
                           )}
 
-                          {/* Stock Level Display */}
+                          {/* Stock Level Display - Now Dynamic */}
                           <div className="mb-3">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium text-gray-700">Stock Level</span>
-                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${stockInfo.color}`}>
-                                {stockInfo.icon} {stockInfo.label}
-                              </span>
+                              {(() => {
+                                const currentStock = item.current_stock || 0;
+                                const monthlyNeed = item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500;
+                                const calculatedStatus = calculateStockStatus(currentStock, monthlyNeed);
+                                return (
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${calculatedStatus.color}`}>
+                                    {calculatedStatus.icon} {calculatedStatus.label}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           </div>
 
-                          {/* Stock Level Toggles - Touch-friendly 44x44px minimum */}
-                          <div className="grid grid-cols-4 gap-1.5 md:gap-2 mb-3">
-                            {STOCK_LEVELS.map((level) => (
-                              <button
-                                key={level.value}
-                                onClick={() => handleUpdateStock(item.id, level.value)}
-                                className={`min-h-[44px] py-2.5 md:py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-                                  item.stock_level === level.value
-                                    ? level.color + ' shadow-md'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100 active:bg-gray-200 border border-gray-300'
-                                }`}
-                                data-testid={`stock-${level.value}-${item.id}`}
-                              >
-                                {level.icon}
-                              </button>
-                            ))}
+                          {/* Current Stock Controls - Replaces dot toggles */}
+                          <div className="mb-3 p-2.5 md:p-3 bg-white/70 rounded-xl border border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-gray-600">Current Stock</span>
+                              <div className="flex items-center gap-1.5 md:gap-2">
+                                <button
+                                  onClick={() => handleCurrentStockChange(item, 'decrease')}
+                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition-colors"
+                                  data-testid={`stock-minus-${item.id}`}
+                                  disabled={(item.current_stock || 0) <= 0}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="min-w-[60px] md:min-w-[70px] text-center text-sm font-bold text-gray-800 bg-[#E8F5E9] px-2 md:px-3 py-1.5 rounded-lg border border-[#77DD77]/30">
+                                  {formatQuantity(
+                                    item.current_stock || 0,
+                                    item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'
+                                  )}
+                                </span>
+                                <button
+                                  onClick={() => handleCurrentStockChange(item, 'increase')}
+                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-[#77DD77] hover:bg-[#66CC66] active:bg-[#55BB55] text-white transition-colors"
+                                  data-testid={`stock-plus-${item.id}`}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
                           </div>
 
                           {/* Monthly Quantity Controls - Touch-friendly */}
