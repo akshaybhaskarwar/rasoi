@@ -66,7 +66,8 @@ class InventoryItem(BaseModel):
     name_hi: Optional[str] = None  # Hindi translation
     name_mr: Optional[str] = None  # Marathi translation
     category: str
-    stock_level: str = "empty"  # empty, low, half, full
+    stock_level: str = "empty"  # empty, low, half, full (now auto-calculated)
+    current_stock: int = 0  # Actual current stock quantity (in base units: g or ml)
     freshness: Optional[int] = None  # 0-100 for perishables
     is_secret_stash: bool = False
     unit: str = "kg"
@@ -81,8 +82,10 @@ class InventoryItem(BaseModel):
 class InventoryItemCreate(BaseModel):
     name_en: str
     name_mr: Optional[str] = None  # Accept Marathi name directly
+    name_hi: Optional[str] = None  # Accept Hindi name directly
     category: str
     stock_level: str = "empty"
+    current_stock: int = 0  # Actual current stock quantity
     freshness: Optional[int] = None
     is_secret_stash: bool = False
     unit: str = "kg"
