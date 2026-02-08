@@ -3,7 +3,7 @@ import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
-  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar
+  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar, Edit, AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,27 @@ import { toast } from 'sonner';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// Helper function to check expiry status (same as inventory)
+const getExpiryStatus = (expiryDate) => {
+  if (!expiryDate) return null;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiry = new Date(expiryDate);
+  expiry.setHours(0, 0, 0, 0);
+  
+  const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+  
+  if (daysUntilExpiry < 0) {
+    return { status: 'expired', days: Math.abs(daysUntilExpiry), message: `Expired ${Math.abs(daysUntilExpiry)} days ago` };
+  } else if (daysUntilExpiry === 0) {
+    return { status: 'today', days: 0, message: 'Expires today!' };
+  } else if (daysUntilExpiry <= 30) {
+    return { status: 'soon', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
+  }
+  return { status: 'ok', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
+};
 
 const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household', 'other'];
 
