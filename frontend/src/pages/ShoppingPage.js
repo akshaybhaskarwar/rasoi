@@ -705,79 +705,128 @@ const ShoppingPage = () => {
                           </Button>
                           </div>
                           
-                          {/* Bottom Row - Expiry Date & Mark as Purchased */}
-                          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                            {/* Expiry Date Button - Same design as inventory */}
-                            <button
-                              onClick={() => setEditingExpiryId(editingExpiryId === item.id ? null : item.id)}
-                              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 border-dashed transition-colors ${
-                                purchaseExpiryDates[item.id] 
-                                  ? 'bg-green-50 border-green-300 text-green-700'
-                                  : 'bg-amber-50 border-amber-300 text-gray-600 hover:bg-amber-100'
-                              }`}
-                              data-testid={`expiry-btn-${item.id}`}
-                            >
-                              <Calendar className="w-4 h-4" />
-                              <span className="text-sm font-medium">
-                                {purchaseExpiryDates[item.id] 
-                                  ? new Date(purchaseExpiryDates[item.id]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                  : 'Add expiry date'
-                                }
-                              </span>
-                            </button>
-                            
-                            {/* Mark as Purchased Button */}
+                          {/* Expiry Date Display & Editor - Exact replica from Inventory */}
+                          {editingExpiryItemId === item.id ? (
+                            <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                              <div className="flex flex-col gap-2">
+                                <Label className="text-xs font-medium text-blue-800">Update Expiry Date</Label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="date"
+                                    value={newExpiryDate}
+                                    onChange={(e) => setNewExpiryDate(e.target.value)}
+                                    className="flex-1 h-9 text-sm"
+                                    data-testid={`edit-expiry-input-${item.id}`}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={cancelEditingExpiry}
+                                    className="h-9 px-3 bg-green-600 hover:bg-green-700"
+                                    data-testid={`save-expiry-${item.id}`}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={cancelEditingExpiry}
+                                    className="h-9 px-3"
+                                    data-testid={`cancel-expiry-${item.id}`}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                                {newExpiryDate && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setNewExpiryDate('')}
+                                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
+                                  >
+                                    Clear expiry date
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ) : item.expiry_date ? (
+                            (() => {
+                              const expStatus = getExpiryStatus(item.expiry_date);
+                              return (
+                                <div className={`mt-3 p-2 rounded-lg ${
+                                  expStatus.status === 'expired' ? 'bg-red-100 border border-red-300' :
+                                  expStatus.status === 'today' ? 'bg-red-50 border border-red-200' :
+                                  expStatus.status === 'soon' ? 'bg-amber-50 border border-amber-200' :
+                                  'bg-gray-50 border border-gray-200'
+                                }`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      {(expStatus.status === 'expired' || expStatus.status === 'today' || expStatus.status === 'soon') && (
+                                        <AlertTriangle className={`w-4 h-4 ${
+                                          expStatus.status === 'expired' ? 'text-red-500' :
+                                          expStatus.status === 'today' ? 'text-red-400' :
+                                          'text-amber-500'
+                                        }`} />
+                                      )}
+                                      <span className={`text-xs font-medium ${
+                                        expStatus.status === 'expired' ? 'text-red-700' :
+                                        expStatus.status === 'today' ? 'text-red-600' :
+                                        expStatus.status === 'soon' ? 'text-amber-700' :
+                                        'text-gray-600'
+                                      }`}>
+                                        {expStatus.message}
+                                      </span>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => startEditingExpiry(item)}
+                                      className={`h-7 px-2 text-xs ${
+                                        expStatus.status === 'expired' ? 'text-red-600 hover:bg-red-200' :
+                                        expStatus.status === 'today' ? 'text-red-500 hover:bg-red-100' :
+                                        expStatus.status === 'soon' ? 'text-amber-600 hover:bg-amber-100' :
+                                        'text-gray-500 hover:bg-gray-100'
+                                      }`}
+                                      title="Update expiry date"
+                                      data-testid={`edit-expiry-btn-${item.id}`}
+                                    >
+                                      <Edit className="w-3 h-3 mr-1" />
+                                      Update
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <div className="mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditingExpiry(item)}
+                                className="w-full h-8 text-xs text-gray-500 border-dashed"
+                                data-testid={`add-expiry-btn-${item.id}`}
+                              >
+                                <Calendar className="w-3 h-3 mr-1" />
+                                Add expiry date
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {/* Mark as Purchased Button */}
+                          <div className="mt-3 pt-3 border-t border-gray-100">
                             <Button
                               onClick={() => handleMarkAsPurchased(item)}
                               disabled={processingPurchase === item.id}
-                              className="h-10 px-4 bg-green-600 hover:bg-green-700 text-white font-medium"
+                              className="w-full h-10 bg-green-600 hover:bg-green-700 text-white font-medium"
                               data-testid={`mark-purchased-${item.id}`}
                             >
                               {processingPurchase === item.id ? (
-                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
                               ) : (
-                                <>
-                                  <Check className="w-4 h-4 mr-1" />
-                                  Purchased
-                                </>
+                                <Check className="w-4 h-4 mr-2" />
                               )}
+                              {processingPurchase === item.id ? 'Processing...' : 'Mark as Purchased'}
                             </Button>
                           </div>
-                          
-                          {/* Expiry Date Modal - Inline expansion */}
-                          {editingExpiryId === item.id && (
-                            <div className="mt-3 p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="text-sm font-semibold text-blue-600">Update Expiry Date</span>
-                                <button 
-                                  onClick={() => setEditingExpiryId(null)}
-                                  className="text-gray-400 hover:text-gray-600"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <div className="flex gap-2">
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="date"
-                                    value={purchaseExpiryDates[item.id] || ''}
-                                    onChange={(e) => setPurchaseExpiryDates(prev => ({
-                                      ...prev,
-                                      [item.id]: e.target.value
-                                    }))}
-                                    className="w-full h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    data-testid={`expiry-date-${item.id}`}
-                                  />
-                                </div>
-                                <Button
-                                  onClick={() => setEditingExpiryId(null)}
-                                  className="h-10 px-4 bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                  Save
-                                </Button>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
