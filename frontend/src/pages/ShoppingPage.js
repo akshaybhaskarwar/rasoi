@@ -89,6 +89,8 @@ const ShoppingPage = () => {
   const [editingExpiryItemId, setEditingExpiryItemId] = useState(null); // Same as inventory
   const [newExpiryDate, setNewExpiryDate] = useState(''); // Same as inventory
   const [processingPurchase, setProcessingPurchase] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [addMethod, setAddMethod] = useState(null); // 'scan' | 'manual' | null
   const [newItem, setNewItem] = useState({
     name_en: '',
     category: 'grains',
