@@ -258,6 +258,17 @@ const ShoppingPage = () => {
     }
   };
 
+  // Expiry date editing functions (same as inventory)
+  const startEditingExpiry = (item) => {
+    setEditingExpiryItemId(item.id);
+    setNewExpiryDate(item.expiry_date || '');
+  };
+
+  const cancelEditingExpiry = () => {
+    setEditingExpiryItemId(null);
+    setNewExpiryDate('');
+  };
+
   // Handle Mark as Purchased - connects shopping list to inventory
   const handleMarkAsPurchased = async (item) => {
     setProcessingPurchase(item.id);
@@ -265,7 +276,8 @@ const ShoppingPage = () => {
     try {
       const token = localStorage.getItem('auth_token');
       const headers = { Authorization: `Bearer ${token}` };
-      const expiryDate = purchaseExpiryDates[item.id] || null;
+      // Use the expiry date from the editing state if this item is being edited
+      const expiryDate = editingExpiryItemId === item.id ? newExpiryDate : (item.expiry_date || null);
       
       // Parse quantity from string (e.g., "1 kg" -> { value: 1000, unit: 'g' })
       const parseQuantity = (qtyString) => {
