@@ -112,26 +112,15 @@ const calculateStockStatus = (currentStock, monthlyNeed) => {
 };
 
 const InventoryPage = () => {
-  const { inventory, loading, addItem, updateItem, deleteItem, fetchInventory } = useInventory();
+  const { inventory, loading, updateItem, deleteItem, fetchInventory } = useInventory();
   const { language, getLabel, isEnglish } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStockLevel, setSelectedStockLevel] = useState('all'); // New state for stock filtering
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPantryTemplateOpen, setIsPantryTemplateOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [editingExpiryItemId, setEditingExpiryItemId] = useState(null);
   const [newExpiryDate, setNewExpiryDate] = useState('');
-  
-  const [newItem, setNewItem] = useState({
-    name_en: '',
-    category: 'grains',
-    stock_level: 'empty',
-    freshness: null,
-    is_secret_stash: false,
-    unit: 'kg',
-    expiry_date: ''
-  });
 
   // Get items expiring soon (within 30 days)
   const expiringItems = inventory.filter(item => {
