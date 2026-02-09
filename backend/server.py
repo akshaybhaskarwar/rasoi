@@ -1522,9 +1522,30 @@ async def update_shopping_item(item_id: str, updates: Dict[str, Any]):
     return {"message": "Updated successfully"}
 
 @api_router.get("/shopping", response_model=List[ShoppingItem])
-async def get_shopping_list(store_type: Optional[str] = None):
-    """Get shopping list"""
-    query = {"store_type": store_type} if store_type else {}
+async def get_shopping_list(
+    store_type: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get shopping list for user's active household"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    household_id = user.get("active_household")
+    if not household_id:
+        # Return empty list for users without household
+        return []
+    
+    query = {"household_id": household_id}
+    if store_type:
+        query["store_type"] = store_type
+    
     items = await db.shopping_list.find(query, {"_id": 0}).to_list(1000)
     
     for item in items:
