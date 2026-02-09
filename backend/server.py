@@ -1597,12 +1597,34 @@ async def get_shopping_list(
     return items
 
 @api_router.delete("/shopping/{item_id}")
-async def delete_shopping_item(item_id: str):
+async def delete_shopping_item(
+    item_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """Delete shopping item"""
+    # Get item info before deletion for notification
+    item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+    
+    # Get user info for notification
+    user = None
+    if credentials:
+        payload = decode_token(credentials.credentials)
+        user_id = payload.get("sub")
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    
     result = await db.shopping_list.delete_one({"id": item_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Notify household members about deletion
+    if item and item.get("household_id"):
+        await notify_shopping_change(
+            item["household_id"], 
+            "delete", 
+            {"id": item_id, "name_en": item.get("name_en")},
+            user.get("name") if user else None
+        )
     
     return {"message": "Deleted successfully"}
 
