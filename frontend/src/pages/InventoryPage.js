@@ -149,6 +149,15 @@ const InventoryPage = () => {
     return acc;
   }, {});
 
+  // Handle item scanned from BarcodeScanner
+  const handleScannedItem = async (scannedItem) => {
+    try {
+      await addItem(scannedItem);
+    } catch (error) {
+      console.error('Error adding scanned item:', error);
+    }
+  };
+
   const handleUpdateStock = async (itemId, stockLevel) => {
     try {
       await updateItem(itemId, { stock_level: stockLevel });
