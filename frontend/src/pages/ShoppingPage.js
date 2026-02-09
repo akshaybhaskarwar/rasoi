@@ -78,7 +78,6 @@ const ShoppingPage = () => {
   const { shoppingList, addItem, deleteItem, updateItem, fetchShoppingList } = useShoppingList();
   const { inventory, addItem: addInventoryItem, updateItem: updateInventoryItem, fetchInventory } = useInventory();
   const { language, getLabel } = useLanguage();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('grocery');
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,14 +88,6 @@ const ShoppingPage = () => {
   const [newExpiryDate, setNewExpiryDate] = useState(''); // Same as inventory
   const [processingPurchase, setProcessingPurchase] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [addMethod, setAddMethod] = useState(null); // 'scan' | 'manual' | null
-  const [newItem, setNewItem] = useState({
-    name_en: '',
-    category: 'grains',
-    quantity: '-',
-    monthly_quantity: '1 kg',
-    store_type: 'grocery'
-  });
 
   // Check if item already exists in shopping list (case-insensitive)
   const isItemDuplicate = (itemName) => {
