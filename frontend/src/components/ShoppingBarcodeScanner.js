@@ -726,7 +726,11 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   <Label>Category</Label>
                   <Select 
                     value={productData.category} 
-                    onValueChange={(val) => setProductData({ ...productData, category: val })}
+                    onValueChange={(val) => setProductData({ 
+                      ...productData, 
+                      category: val,
+                      monthly_quantity: getDefaultQuantity(val)
+                    })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -737,6 +741,32 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                
+                {/* Quantity Options - Category-wise */}
+                <div>
+                  <Label>Quantity</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {getQuantityOptions(productData.category).map(qty => (
+                      <Button
+                        key={qty}
+                        type="button"
+                        variant={productData.monthly_quantity === qty ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setProductData({ ...productData, monthly_quantity: qty })}
+                        className="text-xs"
+                      >
+                        {qty}
+                      </Button>
+                    ))}
+                  </div>
+                  <Input
+                    value={productData.monthly_quantity}
+                    onChange={(e) => setProductData({ ...productData, monthly_quantity: e.target.value })}
+                    placeholder="Or type custom quantity"
+                    className="mt-2"
+                    data-testid="quantity-input"
+                  />
                 </div>
                 
                 <div>
