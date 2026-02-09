@@ -173,10 +173,12 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       setOcrProgress(100);
       
       if (data.success && data.result) {
+        const suggestedCat = data.suggested_category || productData.category;
         setProductData(prev => ({ 
           ...prev, 
           name_en: data.result,
-          category: data.suggested_category || prev.category
+          category: suggestedCat,
+          monthly_quantity: getDefaultQuantity(suggestedCat)
         }));
         setCapturedImage(null);
         setScanMode('photo_expiry');
