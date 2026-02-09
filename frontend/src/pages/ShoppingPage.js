@@ -3,12 +3,11 @@ import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
-  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar, Edit, AlertTriangle, Camera, PenLine
+  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar, Edit, AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
