@@ -19,7 +19,7 @@ export const useInventory = () => {
     setLoading(true);
     setError(null);
     try {
-      // Use household-scoped endpoint
+      // Use household-scoped endpoint only - no fallback to public
       const url = category 
         ? `${API}/inventory/household?category=${category}` 
         : `${API}/inventory/household`;
@@ -27,15 +27,10 @@ export const useInventory = () => {
       setInventory(response.data);
       return response.data;
     } catch (err) {
-      // Fallback to public endpoint if household endpoint fails
-      try {
-        const url = category ? `${API}/inventory?category=${category}` : `${API}/inventory`;
-        const response = await axios.get(url);
-        setInventory(response.data);
-        return response.data;
-      } catch (fallbackErr) {
-        setError(fallbackErr.message);
-      }
+      console.error('Failed to fetch inventory:', err.response?.data || err.message);
+      // Return empty array for new users without household
+      setInventory([]);
+      setError(err.response?.data?.detail || err.message);
     } finally {
       setLoading(false);
     }
