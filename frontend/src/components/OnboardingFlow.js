@@ -789,8 +789,8 @@ const OnboardingFlow = ({ onComplete }) => {
                         <div className={`w-8 h-8 sm:w-10 sm:h-10 ${item.color} rounded-lg flex items-center justify-center mb-1.5 sm:mb-2`}>
                           <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <h3 className="font-semibold text-xs sm:text-sm text-gray-800">{item.title}</h3>
-                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 line-clamp-2">{item.description}</p>
+                        <h3 className="font-semibold text-xs sm:text-sm text-gray-800">{t[item.titleKey]}</h3>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 line-clamp-2">{t[item.descKey]}</p>
                       </motion.div>
                     ))}
                   </div>
