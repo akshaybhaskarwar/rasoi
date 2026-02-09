@@ -346,7 +346,8 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       name_en: productData.name_en,
       category: productData.category,
       barcode: productData.barcode || null,
-      expiry_date: expiryDate || null
+      expiry_date: expiryDate || null,
+      monthly_quantity: productData.monthly_quantity || getDefaultQuantity(productData.category)
     });
     
     onClose();
