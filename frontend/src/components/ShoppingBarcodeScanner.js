@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
-import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Scan, Sparkles, ShoppingBag, PenLine } from 'lucide-react';
+import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Scan, Sparkles, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
