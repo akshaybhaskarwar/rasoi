@@ -655,7 +655,7 @@ const ShoppingPage = () => {
                                   />
                                   <Button
                                     size="sm"
-                                    onClick={cancelEditingExpiry}
+                                    onClick={() => saveExpiry(item.id)}
                                     className="h-9 px-3 bg-green-600 hover:bg-green-700"
                                     data-testid={`save-expiry-${item.id}`}
                                   >
