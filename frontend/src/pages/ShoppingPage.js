@@ -219,29 +219,6 @@ const ShoppingPage = () => {
     }
   };
 
-  // Handle add item with duplicate check
-  const handleAddItem = async () => {
-    // Check for duplicates
-    if (isItemDuplicate(newItem.name_en)) {
-      toast.error(`"${newItem.name_en}" is already in your shopping list`);
-      return;
-    }
-    
-    try {
-      await addItem({ 
-        ...newItem, 
-        store_type: activeTab,
-        quantity: '-'
-      });
-      setIsAddDialogOpen(false);
-      setAddMethod(null);
-      setNewItem({ name_en: '', category: 'grains', quantity: '-', monthly_quantity: '1 kg', store_type: 'grocery' });
-      toast.success('Item added');
-    } catch (error) {
-      toast.error('Failed to add item');
-    }
-  };
-
   // Handle scanned item from AI scanner
   const handleScannedItem = async (scannedItem) => {
     // Check for duplicates
@@ -257,7 +234,7 @@ const ShoppingPage = () => {
         category: scannedItem.category,
         quantity: '-',
         store_type: scannedItem.category === 'vegetables' || scannedItem.category === 'fruits' ? 'mandi' : 'grocery',
-        monthly_quantity: defaultQty,
+        monthly_quantity: scannedItem.monthly_quantity || defaultQty,
         expiry_date: scannedItem.expiry_date || null
       });
       toast.success(`Added ${scannedItem.name_en} to shopping list`);
