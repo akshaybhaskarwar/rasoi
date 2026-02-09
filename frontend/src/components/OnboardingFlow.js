@@ -262,14 +262,27 @@ const TOUR_HIGHLIGHTS = [
 ];
 
 const OnboardingFlow = ({ onComplete }) => {
-  const { user, updateProfile, createHousehold, joinHousehold } = useAuth();
+  const { user, updateProfile, createHousehold, joinHousehold, households } = useAuth();
   
-  const [currentStep, setCurrentStep] = useState(0);
+  // Determine start step based on user state
+  // - If user has language from signup, skip welcome step (start at household)
+  // - If user has household, skip to pantry step
+  const getInitialStep = () => {
+    if (households && households.length > 0) {
+      return 2; // Start at pantry step
+    }
+    if (user?.home_language) {
+      return 1; // Start at household step (skip welcome/language)
+    }
+    return 0; // Start at welcome step
+  };
+  
+  const [currentStep, setCurrentStep] = useState(getInitialStep);
   const [isVisible, setIsVisible] = useState(true);
   
-  // Form state
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const [selectedCity, setSelectedCity] = useState('Pune');
+  // Form state - use user's existing preferences if available
+  const [selectedLanguage, setSelectedLanguage] = useState(user?.home_language || 'en');
+  const [selectedCity, setSelectedCity] = useState(user?.city || 'Pune');
   const [householdMode, setHouseholdMode] = useState('create');
   const [householdName, setHouseholdName] = useState('');
   const [kitchenCode, setKitchenCode] = useState('');
