@@ -414,23 +414,50 @@ const OnboardingFlow = ({ onComplete }) => {
     setLoading(true);
     try {
       const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+      const token = localStorage.getItem('auth_token');
+      
+      // Group items by category for proper categorization
+      const categoryMap = {
+        'grains': ['Rice', 'Wheat Flour', 'Rava', 'चावल', 'गेहूं आटा', 'रवा'],
+        'pulses': ['Toor Dal', 'Moong Dal', 'Chana', 'तूर दाल', 'मूंग दाल', 'चना'],
+        'spices': ['Turmeric', 'Red Chili', 'Cumin', 'हळद', 'लाल मिर्च', 'जीरा'],
+        'oils': ['Cooking Oil', 'Ghee', 'Mustard Oil', 'तेल', 'तूप', 'सरसों तेल']
+      };
+      
+      const getCategory = (itemName) => {
+        for (const [category, items] of Object.entries(categoryMap)) {
+          if (items.some(i => itemName.includes(i))) {
+            return category;
+          }
+        }
+        return 'other';
+      };
       
       for (const item of selectedPantryItems) {
         // Extract English name (before parentheses)
         const nameEn = item.split(' (')[0].trim();
-        await fetch(`${API}/inventory`, {
+        const category = getCategory(item);
+        
+        // Use household-scoped endpoint
+        const response = await fetch(`${API}/inventory/household`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             name_en: nameEn,
-            category: 'grains',
+            category: category,
             stock_level: 'full',
-            unit: 'kg'
+            unit: category === 'oils' ? 'L' : 'kg',
+            current_stock: 1,
+            monthly_quantity: 1
           })
         });
+        
+        if (!response.ok) {
+          console.error('Failed to add item:', nameEn, await response.text());
+        }
       }
       
       toast.success(`Added ${selectedPantryItems.length} items to your pantry! 🎉`);
