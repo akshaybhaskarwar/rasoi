@@ -1912,10 +1912,28 @@ async def prepare_meal_plan(request: PrepareMealPlanRequest):
     }
 
 @api_router.post("/meal-plans", response_model=MealPlan)
-async def create_meal_plan(plan: MealPlanCreate):
-    """Create meal plan with ingredient reservations"""
+async def create_meal_plan(
+    plan: MealPlanCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create meal plan with ingredient reservations for user's active household"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    household_id = user.get("active_household")
+    if not household_id:
+        raise HTTPException(status_code=400, detail="No active household. Please create or join a kitchen first.")
+    
     plan_dict = plan.model_dump()
     meal_plan = MealPlan(**plan_dict)
+    meal_plan.household_id = household_id  # Set household
     
     # Set channel info
     if plan.youtube_channel:
@@ -1929,6 +1947,7 @@ async def create_meal_plan(plan: MealPlanCreate):
     
     doc = meal_plan.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['household_id'] = household_id
     
     await db.meal_plans.insert_one(doc)
     
