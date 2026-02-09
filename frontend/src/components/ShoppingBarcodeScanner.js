@@ -246,7 +246,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     }
   };
 
-  // Barcode scanning mode
+  // Barcode scanning mode - lazy load @zxing/browser
   const startBarcodeScanner = async () => {
     setScanning(true);
     setError(null);
@@ -254,6 +254,8 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     processedRef.current = false;
     
     try {
+      // Dynamic import - only loads when user clicks "Scan Barcode"
+      const { BrowserMultiFormatReader } = await import('@zxing/browser');
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
       
