@@ -112,7 +112,7 @@ const calculateStockStatus = (currentStock, monthlyNeed) => {
 };
 
 const InventoryPage = () => {
-  const { inventory, loading, updateItem, deleteItem, fetchInventory } = useInventory();
+  const { inventory, loading, addItem, updateItem, deleteItem, fetchInventory } = useInventory();
   const { language, getLabel, isEnglish } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
