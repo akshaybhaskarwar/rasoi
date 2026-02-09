@@ -343,7 +343,7 @@ const PANTRY_TEMPLATE = {
   }
 };
 
-export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [] }) => {
+export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [], onItemsAdded }) => {
   const [selectedItems, setSelectedItems] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
