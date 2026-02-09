@@ -268,15 +268,10 @@ const OnboardingFlow = ({ onComplete }) => {
   // - If user has language from signup, skip welcome step (start at household)
   // - If user has household, skip to pantry step
   const getInitialStep = () => {
-    const hasHouseholds = households && households.length > 0;
-    const hasLanguage = user?.home_language;
-    
-    console.log('[OnboardingFlow] getInitialStep:', { hasHouseholds, hasLanguage, households: households?.length });
-    
-    if (hasHouseholds) {
+    if (households && households.length > 0) {
       return 2; // Start at pantry step
     }
-    if (hasLanguage) {
+    if (user?.home_language) {
       return 1; // Start at household step (skip welcome/language)
     }
     return 0; // Start at welcome step
@@ -284,9 +279,6 @@ const OnboardingFlow = ({ onComplete }) => {
   
   const [currentStep, setCurrentStep] = useState(getInitialStep);
   const [isVisible, setIsVisible] = useState(true);
-  
-  // Debug logging for step changes
-  console.log('[OnboardingFlow] Render - currentStep:', currentStep, 'isVisible:', isVisible);
   
   // Form state - use user's existing preferences if available
   const [selectedLanguage, setSelectedLanguage] = useState(user?.home_language || 'en');
