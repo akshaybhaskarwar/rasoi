@@ -76,7 +76,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
 
   const resetState = useCallback(() => {
     setScanMode('choose');
-    setProductData({ name_en: '', category: 'other', barcode: '' });
+    setProductData({ name_en: '', category: 'other', barcode: '', monthly_quantity: '500 g' });
     setExpiryDate('');
     setError(null);
     setOcrProgress(0);
