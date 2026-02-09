@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
