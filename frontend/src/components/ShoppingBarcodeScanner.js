@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
-import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Scan, Sparkles, ShoppingBag } from 'lucide-react';
+import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Scan, Sparkles, ShoppingBag, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -407,12 +407,12 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   className="h-auto py-4 bg-orange-500 hover:bg-orange-600 text-white"
                   data-testid="choose-photo-method"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full">
                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                       <Camera className="w-6 h-6" />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold flex items-center gap-2">
+                      <p className="font-bold flex items-center gap-2 w-full">
                         Take Photos
                         <span className="text-xs bg-white/30 px-2 py-0.5 rounded-full">AI Powered</span>
                       </p>
@@ -431,7 +431,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   className="h-auto py-4"
                   data-testid="choose-barcode-method"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full">
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                       <Scan className="w-6 h-6 text-gray-600" />
                     </div>
@@ -445,11 +445,19 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 {/* Manual Entry */}
                 <Button
                   onClick={() => setScanMode('confirm')}
-                  variant="ghost"
-                  className="text-gray-600"
+                  variant="outline"
+                  className="h-auto py-4"
                   data-testid="choose-manual-method"
                 >
-                  Enter Manually
+                  <div className="flex items-center gap-3 w-full">
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <PenLine className="w-6 h-6 text-gray-600" />
+                          </div>
+                          <div className="text-left flex-1">
+                            <p className="font-bold text-gray-800">Enter Manually</p>
+                            <p className="text-xs text-gray-500">Type item name and select category</p>
+                          </div>
+                    </div>
                 </Button>
               </div>
             </div>
