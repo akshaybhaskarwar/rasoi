@@ -297,17 +297,20 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       const data = await response.json();
       
       if (data.found) {
+        const cat = mapCategory(data.category);
         setProductData({
           barcode: barcode,
           name_en: data.name || `Product ${barcode}`,
-          category: mapCategory(data.category)
+          category: cat,
+          monthly_quantity: getDefaultQuantity(cat)
         });
         setScanMode('photo_expiry');
       } else {
         setProductData({
           barcode: barcode,
           name_en: '',
-          category: 'other'
+          category: 'other',
+          monthly_quantity: getDefaultQuantity('other')
         });
         setScanMode('photo_expiry');
         setError('Product not found in database. Please enter name manually.');
@@ -317,7 +320,8 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
       setProductData({
         barcode: barcode,
         name_en: '',
-        category: 'other'
+        category: 'other',
+        monthly_quantity: getDefaultQuantity('other')
       });
       setScanMode('photo_expiry');
       setError('Could not lookup product. Please enter details manually.');
