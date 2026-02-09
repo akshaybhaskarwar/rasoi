@@ -211,14 +211,22 @@ export const useMealPlanner = () => {
   const [error, setError] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
 
+  // Get auth headers for API calls
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchMealPlans = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API}/meal-plans`);
+      const response = await axios.get(`${API}/meal-plans`, { headers: getAuthHeaders() });
       setMealPlans(response.data);
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to fetch meal plans:', err.response?.data || err.message);
+      setMealPlans([]);
+      setError(err.response?.data?.detail || err.message);
     } finally {
       setLoading(false);
     }
@@ -226,7 +234,7 @@ export const useMealPlanner = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const response = await axios.get(`${API}/meal-plans/suggestions`);
+      const response = await axios.get(`${API}/meal-plans/suggestions`, { headers: getAuthHeaders() });
       setSuggestions(response.data.suggestions || []);
       return response.data.suggestions || [];
     } catch (err) {
@@ -237,18 +245,19 @@ export const useMealPlanner = () => {
 
   const addMealPlan = async (planData) => {
     try {
-      const response = await axios.post(`${API}/meal-plans`, planData);
+      const response = await axios.post(`${API}/meal-plans`, planData, { headers: getAuthHeaders() });
       setMealPlans(prev => [...prev, response.data]);
       return response.data;
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to add meal plan:', err.response?.data || err.message);
+      setError(err.response?.data?.detail || err.message);
       throw err;
     }
   };
 
   const deleteMealPlan = async (planId) => {
     try {
-      const response = await axios.delete(`${API}/meal-plans/${planId}`);
+      const response = await axios.delete(`${API}/meal-plans/${planId}`, { headers: getAuthHeaders() });
       setMealPlans(prev => prev.filter(plan => plan.id !== planId));
       return response.data; // Returns { message, released_ingredients, plan_name }
     } catch (err) {
