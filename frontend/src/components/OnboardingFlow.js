@@ -308,8 +308,15 @@ const OnboardingFlow = ({ onComplete }) => {
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   const handleNext = () => {
+    console.log('[OnboardingFlow] handleNext called, currentStep:', currentStep, 'STEPS.length:', STEPS.length);
     if (currentStep < STEPS.length - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep(prev => {
+        const newStep = prev + 1;
+        console.log('[OnboardingFlow] Incrementing step from', prev, 'to', newStep);
+        return newStep;
+      });
+    } else {
+      console.log('[OnboardingFlow] handleNext - already at last step, not incrementing');
     }
   };
 
