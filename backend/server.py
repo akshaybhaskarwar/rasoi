@@ -1934,9 +1934,26 @@ async def create_meal_plan(plan: MealPlanCreate):
     return meal_plan
 
 @api_router.get("/meal-plans", response_model=List[MealPlan])
-async def get_meal_plans():
-    """Get all meal plans"""
-    plans = await db.meal_plans.find({}, {"_id": 0}).to_list(1000)
+async def get_meal_plans(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get meal plans for user's active household"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    household_id = user.get("active_household")
+    if not household_id:
+        # Return empty list for users without household
+        return []
+    
+    plans = await db.meal_plans.find({"household_id": household_id}, {"_id": 0}).to_list(1000)
     
     for plan in plans:
         if isinstance(plan.get('created_at'), str):
