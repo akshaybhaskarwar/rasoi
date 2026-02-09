@@ -50,7 +50,8 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const [productData, setProductData] = useState({
     name_en: '',
     category: 'other',
-    barcode: ''
+    barcode: '',
+    monthly_quantity: '500 g'
   });
   const [expiryDate, setExpiryDate] = useState('');
   const [error, setError] = useState(null);
