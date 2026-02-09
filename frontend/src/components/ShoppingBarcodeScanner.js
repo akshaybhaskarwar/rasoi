@@ -484,7 +484,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
               
               {isProcessing ? (
                 <div className="text-center py-8">
-                  <Loader2 className="w-16 h-16 text-orange-500 mx-auto mb-4 animate-spin" />
+                  <Loader2 className="w-16 h-6 text-orange-500 mx-auto mb-4 animate-spin" />
                   <p className="text-gray-600">Reading text... {ocrProgress}%</p>
                   <div className="w-48 h-2 bg-gray-200 rounded-full mx-auto mt-2">
                     <div 
@@ -495,7 +495,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : capturedImage ? (
                 <div className="space-y-3">
-                  <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+                  <img src={capturedImage} alt="Captured" className="w-full max-h-[40vh] object-cover rounded-lg" />
                   <div className="flex gap-2">
                     <Button onClick={() => { setCapturedImage(null); startCamera(); }} variant="outline" className="flex-1">
                       <RotateCcw className="w-4 h-4 mr-2" />
@@ -556,7 +556,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     <Camera className="w-10 h-10 text-orange-500" />
                   </div>
                   <p className="text-gray-600 text-sm mb-4">Take a photo of the product name on the package</p>
-                  <Button onClick={startCamera} className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white text-base font-bold">
+                  <Button onClick={startCamera} className="w-full h-8 bg-orange-500 hover:bg-orange-600 text-white text-base font-bold">
                     <Camera className="w-6 h-6 mr-2" />
                     Open Camera
                   </Button>
@@ -602,7 +602,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : capturedImage ? (
                 <div className="space-y-3">
-                  <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+                  <img src={capturedImage} alt="Captured" className="w-full max-h-[40vh] object-cover rounded-lg" />
                   <div className="flex gap-2">
                     <Button onClick={() => { setCapturedImage(null); startCamera(); }} variant="outline" className="flex-1">
                       <RotateCcw className="w-4 h-4 mr-2" />
