@@ -22,21 +22,21 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated, loading, households, user } = useAuth();
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   
-  // Compute onboarding state directly instead of using useEffect + setState
+  // Compute onboarding state
   const shouldShowOnboarding = (() => {
     if (!isAuthenticated || loading || !user || onboardingDismissed) return false;
     
+    // Only skip onboarding if server explicitly marked it complete
     const serverOnboardingComplete = user.onboarding_complete === true;
-    const hasHouseholds = households && households.length > 0;
     
-    // Sync localStorage with server state
-    if (serverOnboardingComplete || hasHouseholds) {
+    if (serverOnboardingComplete) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('onboarding_completed', 'true');
       }
       return false;
     }
     
+    // Show onboarding if not complete - it will skip to the right step based on user state
     return true;
   })();
   
