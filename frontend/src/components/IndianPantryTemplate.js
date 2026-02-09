@@ -508,6 +508,12 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [], 
 
       alert(`Successfully added ${allSelectedItems.length} items to your inventory with Marathi translations!`);
       setSelectedItems({});
+      
+      // Notify parent to refresh inventory
+      if (onItemsAdded) {
+        onItemsAdded();
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error adding items:', error);
