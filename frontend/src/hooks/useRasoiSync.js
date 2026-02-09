@@ -112,15 +112,23 @@ export const useShoppingList = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Get auth headers for API calls
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchShoppingList = async (storeType = null) => {
     setLoading(true);
     setError(null);
     try {
       const url = storeType ? `${API}/shopping?store_type=${storeType}` : `${API}/shopping`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: getAuthHeaders() });
       setShoppingList(response.data);
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to fetch shopping list:', err.response?.data || err.message);
+      setShoppingList([]);
+      setError(err.response?.data?.detail || err.message);
     } finally {
       setLoading(false);
     }
@@ -128,18 +136,19 @@ export const useShoppingList = () => {
 
   const addItem = async (itemData) => {
     try {
-      const response = await axios.post(`${API}/shopping`, itemData);
+      const response = await axios.post(`${API}/shopping`, itemData, { headers: getAuthHeaders() });
       setShoppingList(prev => [...prev, response.data]);
       return response.data;
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to add shopping item:', err.response?.data || err.message);
+      setError(err.response?.data?.detail || err.message);
       throw err;
     }
   };
 
   const updateItem = async (itemId, updates) => {
     try {
-      await axios.put(`${API}/shopping/${itemId}`, updates);
+      await axios.put(`${API}/shopping/${itemId}`, updates, { headers: getAuthHeaders() });
       setShoppingList(prev => prev.map(item => 
         item.id === itemId ? { ...item, ...updates } : item
       ));
@@ -151,7 +160,7 @@ export const useShoppingList = () => {
 
   const deleteItem = async (itemId) => {
     try {
-      const response = await axios.delete(`${API}/shopping/${itemId}`);
+      const response = await axios.delete(`${API}/shopping/${itemId}`, { headers: getAuthHeaders() });
       console.log('Delete shopping item API response:', response.data);
       
       // Immediately update local state
