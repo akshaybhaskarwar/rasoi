@@ -406,9 +406,7 @@ const OnboardingFlow = ({ onComplete }) => {
   };
 
   const addPantryItems = async () => {
-    console.log('[OnboardingFlow] addPantryItems called, selectedPantryItems:', selectedPantryItems.length);
     if (selectedPantryItems.length === 0) {
-      console.log('[OnboardingFlow] No items selected, calling handleNext');
       handleNext();
       return;
     }
