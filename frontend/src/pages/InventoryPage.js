@@ -874,6 +874,7 @@ const InventoryPage = () => {
         isOpen={isPantryTemplateOpen}
         onClose={() => setIsPantryTemplateOpen(false)}
         existingInventory={inventory}
+        onItemsAdded={fetchInventory}
       />
 
       {/* Barcode Scanner Dialog */}
