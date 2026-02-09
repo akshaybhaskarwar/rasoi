@@ -265,6 +265,18 @@ const ShoppingPage = () => {
     setNewExpiryDate('');
   };
 
+  const saveExpiry = async (itemId) => {
+    try {
+      await updateItem(itemId, { expiry_date: newExpiryDate || null });
+      toast.success('Expiry date updated');
+      setEditingExpiryItemId(null);
+      setNewExpiryDate('');
+    } catch (error) {
+      console.error('Failed to save expiry date:', error);
+      toast.error('Failed to update expiry date');
+    }
+  };
+
   // Handle Mark as Purchased - connects shopping list to inventory
   const handleMarkAsPurchased = async (item) => {
     setProcessingPurchase(item.id);
