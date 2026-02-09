@@ -510,7 +510,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : capturedImage ? (
                 <div className="space-y-3">
-                  <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+                  <img src={capturedImage} alt="Captured" className="w-full max-h-[40vh] object-cover rounded-lg" />
                   <div className="flex gap-2">
                     <Button onClick={() => { setCapturedImage(null); startCamera(); }} variant="outline" className="flex-1">
                       <RotateCcw className="w-4 h-4 mr-2" />
@@ -621,7 +621,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                 </div>
               ) : capturedImage ? (
                 <div className="space-y-3">
-                  <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+                  <img src={capturedImage} alt="Captured" className="w-full max-h-[40vh] object-cover rounded-lg" />
                   <div className="flex gap-2">
                     <Button onClick={() => { setCapturedImage(null); startCamera(); }} variant="outline" className="flex-1">
                       <RotateCcw className="w-4 h-4 mr-2" />
