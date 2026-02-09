@@ -90,6 +90,28 @@ const ShoppingPage = () => {
   const [processingPurchase, setProcessingPurchase] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
+  // Real-time sync - refresh shopping list when other household members make changes
+  const handleShoppingChange = useCallback((action, data) => {
+    console.log('[Shopping] Real-time update:', action, data);
+    // Refresh the shopping list to get the latest data
+    fetchShoppingList();
+    
+    // Show toast notification for status changes
+    if (action === 'status' && data.data?.item?.shopping_status === 'bought') {
+      const buyerName = data.data?.by || 'Someone';
+      const itemName = data.data?.item?.name_en || 'an item';
+      toast.info(`${buyerName} purchased ${itemName}`, {
+        icon: '🛒'
+      });
+    }
+  }, [fetchShoppingList]);
+
+  // Connect to real-time sync
+  useRealtimeSync({
+    onShoppingChange: handleShoppingChange,
+    enabled: true
+  });
+
   // Check if item already exists in shopping list (case-insensitive)
   const isItemDuplicate = (itemName) => {
     const nameLower = itemName.toLowerCase().trim();
