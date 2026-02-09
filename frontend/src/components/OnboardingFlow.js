@@ -299,7 +299,7 @@ const OnboardingFlow = ({ onComplete }) => {
 
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
-  const handleNext = () => {
+  // const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(prev => prev + 1);
     }
