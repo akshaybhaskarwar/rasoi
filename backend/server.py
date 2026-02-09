@@ -1477,10 +1477,28 @@ async def update_monthly_quantity(item_id: str, quantity: int, unit: str):
 # ============ SHOPPING LIST ENDPOINTS ============
 
 @api_router.post("/shopping", response_model=ShoppingItem)
-async def create_shopping_item(item: ShoppingItemCreate):
-    """Create shopping list item"""
+async def create_shopping_item(
+    item: ShoppingItemCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create shopping list item for user's active household"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = decode_token(credentials.credentials)
+    user_id = payload.get("sub")
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    household_id = user.get("active_household")
+    if not household_id:
+        raise HTTPException(status_code=400, detail="No active household. Please create or join a kitchen first.")
+    
     item_dict = item.model_dump()
     shopping_item = ShoppingItem(**item_dict)
+    shopping_item.household_id = household_id  # Set household
     
     # If Marathi name provided, use it; otherwise translate
     if item.name_mr:
@@ -1503,6 +1521,7 @@ async def create_shopping_item(item: ShoppingItemCreate):
     
     doc = shopping_item.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['household_id'] = household_id
     
     await db.shopping_list.insert_one(doc)
     return shopping_item
