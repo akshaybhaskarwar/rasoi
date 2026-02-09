@@ -1524,12 +1524,29 @@ async def create_shopping_item(
     doc['household_id'] = household_id
     
     await db.shopping_list.insert_one(doc)
+    
+    # Notify household members about new shopping item
+    await notify_shopping_change(household_id, "add", doc, user.get("name"))
+    
     return shopping_item
 
 
 @api_router.put("/shopping/{item_id}")
-async def update_shopping_item(item_id: str, updates: Dict[str, Any]):
+async def update_shopping_item(
+    item_id: str, 
+    updates: Dict[str, Any],
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """Update shopping list item"""
+    # Get user info for notification
+    user = None
+    household_id = None
+    if credentials:
+        payload = decode_token(credentials.credentials)
+        user_id = payload.get("sub")
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        household_id = user.get("active_household") if user else None
+    
     result = await db.shopping_list.update_one(
         {"id": item_id},
         {"$set": updates}
@@ -1537,6 +1554,12 @@ async def update_shopping_item(item_id: str, updates: Dict[str, Any]):
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Notify household members about update
+    if household_id:
+        updated_item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+        if updated_item:
+            await notify_shopping_change(household_id, "update", updated_item, user.get("name") if user else None)
     
     return {"message": "Updated successfully"}
 
