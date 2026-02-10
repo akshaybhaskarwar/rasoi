@@ -357,6 +357,9 @@ const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded 
   };
 
   const handleModalSuccess = ({ date, dayName, mealSlot }) => {
+    // Play success sound
+    playSuccessSound();
+    
     // Update planned status for this video
     if (selectedVideo) {
       setPlannedVideos(prev => ({
@@ -370,6 +373,11 @@ const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded 
       }));
     }
     setSelectedVideo(null);
+    
+    // Notify parent to refresh meal plans
+    if (onMealAdded) {
+      onMealAdded();
+    }
   };
 
   return (
