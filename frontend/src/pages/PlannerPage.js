@@ -276,7 +276,10 @@ const PlannerPage = () => {
       </div>
 
       {/* Personalized Recipe Stream - Cook with Your Stock */}
-      <PersonalizedRecipeStream />
+      <PersonalizedRecipeStream 
+        addMealPlan={addMealPlan} 
+        onMealAdded={fetchMealPlans} 
+      />
 
       {/* Favorite Channels Section - Inline */}
       <Card className="shadow-sm border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50" data-testid="favorite-channels-section">
