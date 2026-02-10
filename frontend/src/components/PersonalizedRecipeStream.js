@@ -216,6 +216,9 @@ const PersonalizedRecipeStream = () => {
   const [minMatches, setMinMatches] = useState(1);
   const { getLabel } = useLanguage();
   
+  // Import addMealPlan from useMealPlanner hook to update UI state immediately
+  const { addMealPlan } = useMealPlanner();
+  
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
