@@ -115,11 +115,25 @@ const AddToPlannerModal = ({
         mealPlanData.recipe_source = 'youtube';
       }
       
-      await axios.post(`${API}/meal-plans`, mealPlanData);
+      // Use the addMealPlan function if provided, otherwise fallback to direct API call
+      if (addMealPlan) {
+        await addMealPlan(mealPlanData);
+      } else {
+        // Fallback for backwards compatibility
+        const token = localStorage.getItem('auth_token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        await axios.post(`${API}/meal-plans`, mealPlanData, { headers });
+      }
       
       // Find day name for success message
       const dayInfo = prepData?.week_dates?.find(d => d.date === selectedDate);
       const dayName = dayInfo?.day_name || 'Selected Day';
+      
+      // Show success toast
+      toast.success('Recipe added to planner!', {
+        description: `${video.title} scheduled for ${dayName}'s ${selectedMealSlot}`,
+        duration: 4000
+      });
       
       onSuccess?.({ date: selectedDate, dayName, mealSlot: selectedMealSlot });
       onClose();
