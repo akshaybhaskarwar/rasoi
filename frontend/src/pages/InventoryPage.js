@@ -134,12 +134,22 @@ const InventoryPage = () => {
     return statusA.days - statusB.days;
   });
 
+  // Helper function to get calculated stock level for an item
+  const getCalculatedStockLevel = (item) => {
+    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
+    const currentStock = item.current_stock || 0;
+    const monthlyNeed = item.monthly_quantity || defaults.quantity;
+    return calculateStockStatus(currentStock, monthlyNeed).value;
+  };
+
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.name_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (item.name_gu && item.name_gu.includes(searchQuery)) ||
                          (item.name_mr && item.name_mr.includes(searchQuery));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesStockLevel = selectedStockLevel === 'all' || item.stock_level === selectedStockLevel;
+    // Use calculated stock level for filtering (not the stored one)
+    const calculatedStockLevel = getCalculatedStockLevel(item);
+    const matchesStockLevel = selectedStockLevel === 'all' || calculatedStockLevel === selectedStockLevel;
     return matchesSearch && matchesCategory && matchesStockLevel;
   });
 
