@@ -154,9 +154,11 @@ def create_household_routes(db, decode_token_func):
         while await db.households.find_one({"kitchen_code": kitchen_code}):
             kitchen_code = generate_kitchen_code()
         
+        household_id = str(uuid.uuid4())
+        
         # Create household
         household = {
-            "id": str(uuid.uuid4()),
+            "id": household_id,
             "name": data.name,
             "kitchen_code": kitchen_code,
             "created_by": user["id"],
@@ -169,21 +171,26 @@ def create_household_routes(db, decode_token_func):
             }],
             "settings": {
                 "language": user.get("home_language", "en"),
-                "city": user.get("city", "Pune")
+                "city": user.get("city", "Pune"),
+                "essentials_loaded": True  # Flag to show welcome banner
             },
             "created_at": datetime.now(timezone.utc)
         }
         
         await db.households.insert_one(household)
         
-        # Add household to user's list and set as active
-        # Note: Don't mark onboarding_complete here - let the onboarding flow continue to pantry step
+        # Auto-populate with essentials pack
+        items_added = await populate_essentials(db, household_id, user["id"])
+        
+        # Add household to user's list, set as active, and mark essentials loaded
         await db.users.update_one(
             {"id": user["id"]},
             {
                 "$addToSet": {"households": household["id"]},
                 "$set": {
-                    "active_household": household["id"]
+                    "active_household": household["id"],
+                    "essentials_loaded": True,
+                    "show_essentials_banner": True
                 }
             }
         )
@@ -195,7 +202,9 @@ def create_household_routes(db, decode_token_func):
             "members": household["members"],
             "member_count": 1,
             "is_owner": True,
-            "message": f"Kitchen created! Share code '{kitchen_code}' with family members."
+            "essentials_loaded": True,
+            "items_added": items_added,
+            "message": f"Kitchen created with {items_added} essential items! Share code '{kitchen_code}' with family."
         }
     
     @household_router.post("/join")
