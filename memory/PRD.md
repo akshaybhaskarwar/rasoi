@@ -533,19 +533,22 @@ Full code architecture documentation available at `/app/docs/CODE_ARCHITECTURE.m
 ## February 10, 2025 (Session 2) - Meal Planner Bug Fix
 
 ### Issue Fixed: Meal Planner Not Updating Immediately
-**Problem:** When adding a recipe from "Cook with Your Stock" section (PersonalizedRecipeStream component), the meal planner did not update immediately - required a page refresh to see the newly added recipe.
+**Problem:** When adding a recipe from "Cook with Your Stock" section (PersonalizedRecipeStream component), the meal planner calendar below did not update immediately - required a page refresh to see the newly added recipe.
 
-**Root Cause:** `AddToPlannerModal.js` was being rendered in `PersonalizedRecipeStream.js` without passing the `addMealPlan` function from the `useMealPlanner` hook. This caused the modal to fall back to a direct `axios.post` call, which didn't update the shared React state.
+**Root Cause:** `PersonalizedRecipeStream` and `PlannerPage` each had their own SEPARATE instances of the `useMealPlanner` hook. When a meal was added via PersonalizedRecipeStream, it only updated that component's local state, not PlannerPage's state which renders the calendar.
 
 **Fix Applied:**
-1. Imported `useMealPlanner` hook in `PersonalizedRecipeStream.js`
-2. Destructured `addMealPlan` from the hook
-3. Passed `addMealPlan` as a prop to `AddToPlannerModal`
+1. `PlannerPage.js` now passes `addMealPlan` and `fetchMealPlans` (as `onMealAdded`) props to `PersonalizedRecipeStream`
+2. `PersonalizedRecipeStream.js` accepts these props and uses the parent's functions instead of its own hook
+3. After successful add, `onMealAdded()` is called to refresh the parent's meal plan state
+4. Added notification sound using Web Audio API for satisfying user feedback
 
 **Files Modified:**
-- `/app/frontend/src/components/PersonalizedRecipeStream.js` (lines 8, 210, 350)
+- `/app/frontend/src/pages/PlannerPage.js` (lines 26, 279-282)
+- `/app/frontend/src/components/PersonalizedRecipeStream.js` (lines 208, 218-219, 340-343)
+- `/app/frontend/src/components/AddToPlannerModal.js` (lines 11-42, 166)
 
-**Verification:** Testing agent confirmed 100% success rate - recipes now show "Planned" badge immediately and appear in calendar without page refresh.
+**Verification:** Testing agent confirmed 100% success rate - recipes now appear in calendar immediately without refresh, and a pleasant "ding-ding" notification sound plays on success.
 
 ---
 *Last updated: February 10, 2025*
