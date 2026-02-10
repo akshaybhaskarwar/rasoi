@@ -439,6 +439,37 @@ A mobile-first web application for intelligent Indian kitchen management with bi
  is_published, likes, created_at, updated_at}
 ```
 
+## February 10, 2025 - Onboarding Flow Revamp
+
+### New Streamlined Onboarding
+**Problem Solved:** Previously, new users had to manually select items and then load templates. Now essentials are pre-loaded automatically.
+
+**New Flow:**
+1. User signs up → Welcome step (language/city selection)
+2. Kitchen step → Create or Join kitchen
+3. **Kitchen auto-populated with 22 essential items**
+4. Ready step → "You're All Set!" with link to Inventory
+
+**Backend Changes (`households.py`):**
+- Added `ESSENTIALS_PACK` - 22 essential Indian kitchen items
+- Added `populate_essentials()` function - auto-adds items when kitchen is created
+- Updated `create_household` endpoint to:
+  - Auto-populate inventory with essentials
+  - Set `show_essentials_banner: True` flag on user
+  - Return items_added count in response
+
+**Essentials Pack (22 items):**
+- **Grains (6):** Rice, Wheat Flour, Rava, Poha, Sugar, Jaggery
+- **Spices (7):** Turmeric, Chili, Cumin, Coriander, Garam Masala, Mustard, Salt
+- **Pulses (4):** Toor Dal, Moong Dal, Chana Dal, Masoor Dal
+- **Oils (2):** Cooking Oil, Ghee
+- **Dairy (2):** Milk, Curd
+- **Beverages (1):** Tea Leaves
+
+**Frontend Changes:**
+- `OnboardingFlow.js` - Simplified to 3 steps (Welcome → Kitchen → Ready)
+- `HomePage.js` - Added essentials banner for new users with "Go to Inventory" CTA
+
 ## February 10, 2025 - Bug Fixes
 
 ### Unit Display Fix for Oils Category
