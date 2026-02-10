@@ -162,6 +162,9 @@ const AddToPlannerModal = ({
       const dayInfo = prepData?.week_dates?.find(d => d.date === selectedDate);
       const dayName = dayInfo?.day_name || 'Selected Day';
       
+      // Play success sound
+      playSuccessSound();
+      
       // Show success toast
       toast.success('Recipe added to planner!', {
         description: `${video.title} scheduled for ${dayName}'s ${selectedMealSlot}`,
