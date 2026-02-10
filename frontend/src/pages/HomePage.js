@@ -1,16 +1,59 @@
 import { useInventory, useMealPlanner, useGapAnalysis } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Package2, Calendar, ShoppingCart, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Package2, Calendar, ShoppingCart, AlertCircle, Package, X, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { DigitalDadiWidget } from '@/components/DigitalDadiWidget';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 const HomePage = () => {
   const { inventory } = useInventory();
   const { mealPlans } = useMealPlanner();
   const { analysis } = useGapAnalysis();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { getLabel } = useLanguage();
+  const { getLabel, language } = useLanguage();
+  
+  // Show essentials banner for new users
+  const [showEssentialsBanner, setShowEssentialsBanner] = useState(false);
+  
+  useEffect(() => {
+    // Check if user just completed onboarding and hasn't dismissed banner
+    const bannerDismissed = localStorage.getItem('essentials_banner_dismissed');
+    const hasEssentials = user?.show_essentials_banner || user?.essentials_loaded;
+    
+    if (hasEssentials && !bannerDismissed) {
+      setShowEssentialsBanner(true);
+    }
+  }, [user]);
+  
+  const dismissBanner = () => {
+    localStorage.setItem('essentials_banner_dismissed', 'true');
+    setShowEssentialsBanner(false);
+  };
+  
+  // Translations for the essentials banner
+  const essentialsBannerText = {
+    en: {
+      title: "We've loaded the 'Essentials' pack for you!",
+      description: "Please update the quantities to match your kitchen.",
+      button: "Go to Inventory"
+    },
+    hi: {
+      title: "हमने आपके लिए 'आवश्यक वस्तुएं' पैक लोड कर दिया है!",
+      description: "कृपया अपनी रसोई के अनुसार मात्रा अपडेट करें।",
+      button: "इन्वेंट्री पर जाएं"
+    },
+    mr: {
+      title: "आम्ही तुमच्यासाठी 'आवश्यक वस्तू' पॅक लोड केला आहे!",
+      description: "कृपया तुमच्या किचनशी जुळणारी मात्रा अपडेट करा.",
+      button: "इन्व्हेंटरीवर जा"
+    }
+  };
+  
+  const bannerText = essentialsBannerText[language] || essentialsBannerText.en;
 
   const stats = [
     {
