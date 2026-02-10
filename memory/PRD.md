@@ -439,5 +439,51 @@ A mobile-first web application for intelligent Indian kitchen management with bi
  is_published, likes, created_at, updated_at}
 ```
 
+## Backend Refactoring - Added Feb 10, 2025
+
+The backend `server.py` was refactored from 3600+ lines into a modular architecture:
+
+### New Directory Structure
+```
+/app/backend/
+├── server.py            # Main entry point (~200 lines)
+├── models/              # Pydantic data models
+│   ├── inventory.py     # InventoryItem, InventoryItemCreate
+│   ├── shopping.py      # ShoppingItem, ShoppingItemCreate
+│   ├── meal_plans.py    # MealPlan, MealPlanCreate
+│   ├── translation.py   # TranslationRequest, TranslationEntry
+│   ├── recipes.py       # Recipe, RecipeCreate
+│   ├── preferences.py   # UserPreferences
+│   └── common.py        # FestivalAlert, OCRRequest
+│
+├── data/                # Static data (no DB dependency)
+│   ├── translations.py  # 65+ pre-verified Hindi/Marathi translations
+│   ├── recipes.py       # 30+ local recipe database
+│   ├── festivals.py     # Festival calendar
+│   └── categories.py    # Category keywords for auto-categorization
+│
+├── services/            # Business logic services
+│   ├── translation.py   # TranslationService (Google API + caching)
+│   └── youtube.py       # YouTubeService (search, playlist, caching)
+│
+└── routes/              # API route handlers
+    ├── inventory.py     # /api/inventory/* endpoints
+    ├── shopping.py      # /api/shopping/* endpoints
+    ├── meal_plans.py    # /api/meal-plans/* endpoints
+    ├── translation.py   # /api/translate/* endpoints
+    ├── youtube.py       # /api/youtube/* endpoints
+    ├── preferences.py   # /api/preferences/* endpoints
+    └── barcode.py       # /api/barcode/*, /api/ocr/* endpoints
+```
+
+### Benefits
+- **Maintainability**: Each module has single responsibility
+- **Testability**: Services and routes can be unit tested independently
+- **Readability**: ~200 line entry point vs 3600+ lines
+- **Reusability**: Models and services can be imported where needed
+
+### Documentation
+Full code architecture documentation available at `/app/docs/CODE_ARCHITECTURE.md`
+
 ---
-*Last updated: February 8, 2025*
+*Last updated: February 10, 2025*
