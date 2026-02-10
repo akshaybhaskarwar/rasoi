@@ -3,6 +3,7 @@ import { X, Calendar, Clock, Users, Check, ChefHat, Loader2, Youtube, Package, A
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -12,7 +13,8 @@ const AddToPlannerModal = ({
   onClose, 
   video, 
   matchedIngredients = [],
-  onSuccess 
+  onSuccess,
+  addMealPlan  // Accept addMealPlan function from parent
 }) => {
   // State
   const [isLoading, setIsLoading] = useState(true);
