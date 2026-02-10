@@ -349,6 +349,7 @@ const PersonalizedRecipeStream = () => {
         video={selectedVideo}
         matchedIngredients={selectedVideo?.inventory_match?.matched_items || []}
         onSuccess={handleModalSuccess}
+        addMealPlan={addMealPlan}
       />
 
       {/* Header */}
