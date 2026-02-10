@@ -391,7 +391,7 @@ const InventoryPage = () => {
           >
             <CardContent className="p-6">
               <div className="text-3xl font-bold">
-                {inventory.filter(i => i.stock_level === 'full').length}
+                {inventory.filter(i => getCalculatedStockLevel(i) === 'full').length}
               </div>
               <div className="text-sm opacity-90">{getLabel('fullStock')}</div>
               {selectedStockLevel === 'full' && (
@@ -410,7 +410,7 @@ const InventoryPage = () => {
           >
             <CardContent className="p-6">
               <div className="text-3xl font-bold">
-                {inventory.filter(i => i.stock_level === 'half').length}
+                {inventory.filter(i => getCalculatedStockLevel(i) === 'half').length}
               </div>
               <div className="text-sm opacity-90">{getLabel('halfStock')}</div>
               {selectedStockLevel === 'half' && (
@@ -429,7 +429,7 @@ const InventoryPage = () => {
           >
             <CardContent className="p-6">
               <div className="text-3xl font-bold">
-                {inventory.filter(i => i.stock_level === 'low').length}
+                {inventory.filter(i => getCalculatedStockLevel(i) === 'low').length}
               </div>
               <div className="text-sm opacity-90">{getLabel('lowStock')}</div>
               {selectedStockLevel === 'low' && (
@@ -448,7 +448,7 @@ const InventoryPage = () => {
           >
             <CardContent className="p-6">
               <div className="text-3xl font-bold">
-                {inventory.filter(i => i.stock_level === 'empty').length}
+                {inventory.filter(i => getCalculatedStockLevel(i) === 'empty').length}
               </div>
               <div className="text-sm opacity-90">{getLabel('emptyStock')}</div>
               {selectedStockLevel === 'empty' && (
