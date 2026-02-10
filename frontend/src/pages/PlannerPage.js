@@ -23,7 +23,7 @@ const MEAL_TYPES = [
 ];
 
 const PlannerPage = () => {
-  const { mealPlans, addMealPlan, deleteMealPlan, suggestions, fetchSuggestions } = useMealPlanner();
+  const { mealPlans, addMealPlan, deleteMealPlan, suggestions, fetchSuggestions, fetchMealPlans } = useMealPlanner();
   const { searchLocalRecipes } = useRecipes();
   const { inventory } = useInventory();
   const { favoriteChannels, addFavoriteChannel, removeFavoriteChannel } = useFavoriteChannels();
