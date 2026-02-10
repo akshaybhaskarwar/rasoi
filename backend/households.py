@@ -64,6 +64,69 @@ def generate_kitchen_code() -> str:
     chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     return ''.join(random.choices(chars, k=6))
 
+
+# Essential items to pre-load for new kitchens
+ESSENTIALS_PACK = [
+    # Grains & Cereals
+    {"name_en": "Rice", "name_mr": "तांदूळ", "name_hi": "चावल", "category": "grains", "unit": "kg", "monthly_quantity": 5000, "current_stock": 0},
+    {"name_en": "Wheat Flour", "name_mr": "गव्हाचे पीठ", "name_hi": "गेहूं का आटा", "category": "grains", "unit": "kg", "monthly_quantity": 5000, "current_stock": 0},
+    {"name_en": "Rava", "name_mr": "रवा", "name_hi": "रवा", "category": "grains", "unit": "g", "monthly_quantity": 1000, "current_stock": 0},
+    {"name_en": "Poha", "name_mr": "पोहे", "name_hi": "पोहा", "category": "grains", "unit": "g", "monthly_quantity": 500, "current_stock": 0},
+    # Pulses
+    {"name_en": "Toor Dal", "name_mr": "तूर डाळ", "name_hi": "तूर दाल", "category": "pulses", "unit": "g", "monthly_quantity": 1000, "current_stock": 0},
+    {"name_en": "Moong Dal", "name_mr": "मूग डाळ", "name_hi": "मूंग दाल", "category": "pulses", "unit": "g", "monthly_quantity": 500, "current_stock": 0},
+    {"name_en": "Chana Dal", "name_mr": "हरभरा डाळ", "name_hi": "चना दाल", "category": "pulses", "unit": "g", "monthly_quantity": 500, "current_stock": 0},
+    {"name_en": "Masoor Dal", "name_mr": "मसूर डाळ", "name_hi": "मसूर दाल", "category": "pulses", "unit": "g", "monthly_quantity": 500, "current_stock": 0},
+    # Spices
+    {"name_en": "Turmeric Powder", "name_mr": "हळद पावडर", "name_hi": "हल्दी पाउडर", "category": "spices", "unit": "g", "monthly_quantity": 100, "current_stock": 0},
+    {"name_en": "Red Chili Powder", "name_mr": "लाल मिरची पूड", "name_hi": "लाल मिर्च पाउडर", "category": "spices", "unit": "g", "monthly_quantity": 100, "current_stock": 0},
+    {"name_en": "Cumin Seeds", "name_mr": "जिरे", "name_hi": "जीरा", "category": "spices", "unit": "g", "monthly_quantity": 100, "current_stock": 0},
+    {"name_en": "Coriander Powder", "name_mr": "धणे पूड", "name_hi": "धनिया पाउडर", "category": "spices", "unit": "g", "monthly_quantity": 100, "current_stock": 0},
+    {"name_en": "Garam Masala", "name_mr": "गरम मसाला", "name_hi": "गरम मसाला", "category": "spices", "unit": "g", "monthly_quantity": 50, "current_stock": 0},
+    {"name_en": "Mustard Seeds", "name_mr": "मोहरी", "name_hi": "राई", "category": "spices", "unit": "g", "monthly_quantity": 50, "current_stock": 0},
+    {"name_en": "Salt", "name_mr": "मीठ", "name_hi": "नमक", "category": "spices", "unit": "g", "monthly_quantity": 500, "current_stock": 0},
+    # Oils & Dairy
+    {"name_en": "Cooking Oil", "name_mr": "तेल", "name_hi": "तेल", "category": "oils", "unit": "L", "monthly_quantity": 2000, "current_stock": 0},
+    {"name_en": "Ghee", "name_mr": "तूप", "name_hi": "घी", "category": "oils", "unit": "ml", "monthly_quantity": 500, "current_stock": 0},
+    {"name_en": "Milk", "name_mr": "दूध", "name_hi": "दूध", "category": "dairy", "unit": "L", "monthly_quantity": 15000, "current_stock": 0},
+    {"name_en": "Curd", "name_mr": "दही", "name_hi": "दही", "category": "dairy", "unit": "ml", "monthly_quantity": 2000, "current_stock": 0},
+    # Sugar & Sweeteners
+    {"name_en": "Sugar", "name_mr": "साखर", "name_hi": "चीनी", "category": "grains", "unit": "kg", "monthly_quantity": 2000, "current_stock": 0},
+    {"name_en": "Jaggery", "name_mr": "गूळ", "name_hi": "गुड़", "category": "grains", "unit": "g", "monthly_quantity": 500, "current_stock": 0},
+    # Beverages
+    {"name_en": "Tea Leaves", "name_mr": "चहा पावडर", "name_hi": "चाय पत्ती", "category": "beverages", "unit": "g", "monthly_quantity": 250, "current_stock": 0},
+]
+
+
+async def populate_essentials(db, household_id: str, user_id: str):
+    """Populate a new kitchen with essential items"""
+    items_to_insert = []
+    for item in ESSENTIALS_PACK:
+        items_to_insert.append({
+            "id": str(uuid.uuid4()),
+            "household_id": household_id,
+            "name_en": item["name_en"],
+            "name_mr": item["name_mr"],
+            "name_hi": item["name_hi"],
+            "category": item["category"],
+            "unit": item["unit"],
+            "stock_level": "empty",
+            "current_stock": 0,
+            "monthly_quantity": item["monthly_quantity"],
+            "freshness": None,
+            "is_secret_stash": False,
+            "expiry_date": None,
+            "barcode": None,
+            "reserved_for": [],
+            "last_updated_by": user_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    if items_to_insert:
+        await db.inventory.insert_many(items_to_insert)
+    
+    return len(items_to_insert)
+
 # ============ ROUTES ============
 
 def create_household_routes(db, decode_token_func):
