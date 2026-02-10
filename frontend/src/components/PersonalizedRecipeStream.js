@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useMealPlanner } from '@/hooks/useRasoiSync';
 import AddToPlannerModal from './AddToPlannerModal';
 import axios from 'axios';
 
