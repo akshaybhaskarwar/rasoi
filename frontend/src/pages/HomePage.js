@@ -92,6 +92,39 @@ const HomePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 pb-24 md:pb-6 space-y-6" data-testid="home-page">
+      {/* Essentials Banner for New Users */}
+      {showEssentialsBanner && (
+        <div className="relative bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-amber-200 shadow-md animate-pulse-once" data-testid="essentials-banner">
+          <button 
+            onClick={dismissBanner}
+            className="absolute top-3 right-3 p-1 rounded-full hover:bg-amber-200 transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="w-5 h-5 text-amber-600" />
+          </button>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Package className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-amber-800 text-lg">{bannerText.title}</h3>
+              <p className="text-sm text-amber-700 mt-1 mb-3">{bannerText.description}</p>
+              <Button
+                onClick={() => {
+                  dismissBanner();
+                  navigate('/inventory');
+                }}
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                data-testid="essentials-banner-btn"
+              >
+                {bannerText.button}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-[#FF9933] to-[#FFCC00] rounded-2xl p-6 text-white shadow-lg">
         <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeMessage')}</h2>
