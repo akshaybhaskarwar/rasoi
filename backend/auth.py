@@ -228,7 +228,10 @@ def create_auth_routes(db):
         
         await db.users.update_one(
             {"id": user_id},
-            {"$set": {"onboarding_complete": True}}
+            {"$set": {
+                "onboarding_complete": True,
+                "show_essentials_banner": True  # Show banner on home page
+            }}
         )
         
         return {"message": "Onboarding marked as complete"}
