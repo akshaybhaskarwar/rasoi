@@ -205,7 +205,41 @@ const VideoCard = ({ video, onOpenModal, plannedInfo, labels }) => {
   );
 };
 
-const PersonalizedRecipeStream = () => {
+// Notification sound function
+const playSuccessSound = () => {
+  try {
+    // Create a pleasant notification sound using Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // First tone - higher pitch
+    const oscillator1 = audioContext.createOscillator();
+    const gainNode1 = audioContext.createGain();
+    oscillator1.connect(gainNode1);
+    gainNode1.connect(audioContext.destination);
+    oscillator1.frequency.value = 880; // A5
+    oscillator1.type = 'sine';
+    gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    oscillator1.start(audioContext.currentTime);
+    oscillator1.stop(audioContext.currentTime + 0.2);
+    
+    // Second tone - even higher for a cheerful "ding-ding"
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode2 = audioContext.createGain();
+    oscillator2.connect(gainNode2);
+    gainNode2.connect(audioContext.destination);
+    oscillator2.frequency.value = 1174.66; // D6
+    oscillator2.type = 'sine';
+    gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime + 0.15);
+    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+    oscillator2.start(audioContext.currentTime + 0.15);
+    oscillator2.stop(audioContext.currentTime + 0.4);
+  } catch (e) {
+    console.log('Audio not supported');
+  }
+};
+
+const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded }) => {
   const [channels, setChannels] = useState([]);
   const [feed, setFeed] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
@@ -216,8 +250,9 @@ const PersonalizedRecipeStream = () => {
   const [minMatches, setMinMatches] = useState(1);
   const { getLabel } = useLanguage();
   
-  // Import addMealPlan from useMealPlanner hook to update UI state immediately
-  const { addMealPlan } = useMealPlanner();
+  // Use parent's addMealPlan if provided, otherwise fallback to own hook
+  const { addMealPlan: hookAddMealPlan } = useMealPlanner();
+  const addMealPlan = parentAddMealPlan || hookAddMealPlan;
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
