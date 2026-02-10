@@ -439,6 +439,20 @@ A mobile-first web application for intelligent Indian kitchen management with bi
  is_published, likes, created_at, updated_at}
 ```
 
+## February 10, 2025 - Bug Fixes
+
+### Unit Display Fix for Oils Category
+- Fixed: Items in "Oils & Condiments" category now correctly display **"L" (Liters)** instead of "kg"
+- Updated `IndianPantryTemplate.js` to assign appropriate units based on category:
+  - `oils` and `dairy` → `L` (Liters)
+  - `household` and `bakery` → `pcs` (pieces)
+  - All other categories → `kg` (kilograms)
+- Added `household` and `cleaning` categories to `DEFAULT_MONTHLY` config in `InventoryPage.js`
+
+### Verified Working Features
+- **Delete button**: Working correctly - deletes items from inventory
+- **Stock level filter**: Working correctly - clicking Full/Half/Low/Empty filters items
+
 ## Backend Refactoring - Added Feb 10, 2025
 
 The backend `server.py` was refactored from 3600+ lines into a modular architecture:
