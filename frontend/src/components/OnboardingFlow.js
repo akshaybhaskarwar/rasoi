@@ -1,218 +1,128 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChefHat, Home, Users, ShoppingBasket, Calendar, 
-  Sparkles, ArrowRight, ArrowLeft, Check, X,
-  Globe, MapPin, Package, Heart
+  ChefHat, Home, Users, Check, Globe, MapPin, Sparkles, Package, ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-// Translations for onboarding flow
+// Multi-language translations
 const TRANSLATIONS = {
   en: {
-    // Step indicators
-    stepOf: 'Step {current} of {total}',
-    skipSetup: 'Skip setup',
     steps: {
       welcome: 'Welcome',
-      household: 'Your Kitchen',
-      pantry: 'Stock Pantry',
-      tour: 'Quick Tour'
+      household: 'Kitchen',
+      ready: 'Ready!'
     },
-    // Step 1: Welcome
+    stepOf: 'Step {current} of {total}',
+    skipSetup: 'Skip',
     welcomeTo: 'Welcome to',
     appName: 'Rasoi-Sync',
-    appTagline: 'Your intelligent Indian kitchen manager',
+    appTagline: 'Your Intelligent Indian Kitchen Manager',
     chooseLanguage: 'Choose your language',
     yourCity: 'Your city',
-    // Step 2: Household
     setUpKitchen: 'Set Up Your Kitchen',
-    setUpKitchenDesc: 'Create a new kitchen or join your family\'s',
+    setUpKitchenDesc: 'Create your own kitchen or join a family member\'s kitchen',
     createNew: 'Create New',
     joinFamily: 'Join Family',
-    createKitchenInfo: '🏠 Create your digital kitchen and get a code to share with family',
-    joinKitchenInfo: '👨‍👩‍👧‍👦 Enter the 6-digit code shared by your family member',
+    createKitchenInfo: 'Create a kitchen and invite family members to collaborate on grocery lists and meal planning!',
+    joinKitchenInfo: 'Enter the 6-digit code shared by your family member to join their kitchen.',
     kitchenName: 'Kitchen Name',
     kitchenNamePlaceholder: 'e.g., Sharma Family Kitchen',
     createKitchen: 'Create Kitchen',
-    kitchenCode: 'Kitchen Code',
+    kitchenCode: '6-Digit Code',
     joinKitchen: 'Join Kitchen',
-    kitchenCreated: 'Kitchen Created! 🎉',
+    kitchenCreated: 'Kitchen Created!',
     shareCode: 'Share this code with family:',
-    // Step 3: Pantry
-    quickPantrySetup: 'Quick Pantry Setup',
-    selectItems: 'Select items you usually have at home',
-    itemsSelected: '{count} items selected',
-    addMoreLater: 'Add more later',
-    // Step 4: Tour
-    allSet: 'You\'re All Set! 🎉',
-    hereIsWhatYouCanDo: 'Here\'s what you can do with Rasoi-Sync',
-    dadiTip: 'Dadi\'s Tip',
-    dadiMessage: '"Start by adding items you use daily. I\'ll help track expiry dates and suggest recipes!"',
-    // Tour highlights
-    inventory: 'Inventory',
-    inventoryDesc: 'Track what\'s in your kitchen with smart stock levels',
-    shoppingList: 'Shopping List',
-    shoppingListDesc: 'Auto-generated lists synced with family members',
-    mealPlanner: 'Meal Planner',
-    mealPlannerDesc: 'Plan weekly meals with YouTube recipe integration',
-    digitalDadi: 'Digital Dadi',
-    digitalDadiDesc: 'Your AI kitchen assistant with smart suggestions',
-    // Buttons
-    continue: 'Continue',
-    back: 'Back',
-    skip: 'Skip',
-    addAndContinue: 'Add & Continue',
-    startCooking: 'Start Cooking!',
-    // Pantry categories
-    grains: '🌾 Grains',
-    pulses: '🫘 Pulses',
-    spices: '🌶️ Spices',
-    oils: '🧴 Oils'
+    continueBtn: 'Continue',
+    allSet: "You're All Set! 🎉",
+    essentialsLoaded: "We've loaded the 'Essentials' pack for you!",
+    essentialsDesc: "Your kitchen now has 22 essential items pre-loaded. Update quantities to match your actual stock.",
+    goToInventory: 'Go to Inventory',
+    startExploring: 'Start Exploring',
+    inventoryHint: 'Update your pantry quantities in the Inventory section'
   },
   hi: {
-    // Step indicators
-    stepOf: 'चरण {current} / {total}',
-    skipSetup: 'छोड़ें',
     steps: {
       welcome: 'स्वागत',
-      household: 'आपका किचन',
-      pantry: 'राशन भरें',
-      tour: 'परिचय'
+      household: 'किचन',
+      ready: 'तैयार!'
     },
-    // Step 1: Welcome
-    welcomeTo: 'आपका स्वागत है',
+    stepOf: 'चरण {current} / {total}',
+    skipSetup: 'छोड़ें',
+    welcomeTo: 'स्वागत है',
     appName: 'रसोई-सिंक',
     appTagline: 'आपका बुद्धिमान भारतीय रसोई प्रबंधक',
     chooseLanguage: 'अपनी भाषा चुनें',
     yourCity: 'आपका शहर',
-    // Step 2: Household
     setUpKitchen: 'अपना किचन सेट करें',
-    setUpKitchenDesc: 'नया किचन बनाएं या परिवार से जुड़ें',
+    setUpKitchenDesc: 'नया किचन बनाएं या परिवार के किचन से जुड़ें',
     createNew: 'नया बनाएं',
     joinFamily: 'परिवार से जुड़ें',
-    createKitchenInfo: '🏠 अपना डिजिटल किचन बनाएं और परिवार के साथ कोड शेयर करें',
-    joinKitchenInfo: '👨‍👩‍👧‍👦 परिवार के सदस्य द्वारा शेयर किया गया 6-अंकों का कोड दर्ज करें',
+    createKitchenInfo: 'किचन बनाएं और परिवार के सदस्यों को आमंत्रित करें!',
+    joinKitchenInfo: 'परिवार के सदस्य द्वारा साझा किया गया 6-अंकों का कोड दर्ज करें।',
     kitchenName: 'किचन का नाम',
-    kitchenNamePlaceholder: 'जैसे: शर्मा परिवार का किचन',
+    kitchenNamePlaceholder: 'जैसे, शर्मा परिवार किचन',
     createKitchen: 'किचन बनाएं',
-    kitchenCode: 'किचन कोड',
-    joinKitchen: 'किचन से जुड़ें',
-    kitchenCreated: 'किचन बन गया! 🎉',
-    shareCode: 'यह कोड परिवार के साथ शेयर करें:',
-    // Step 3: Pantry
-    quickPantrySetup: 'जल्दी राशन सेटअप',
-    selectItems: 'जो सामान आमतौर पर घर में होता है उसे चुनें',
-    itemsSelected: '{count} सामान चुने गए',
-    addMoreLater: 'बाद में और जोड़ें',
-    // Step 4: Tour
-    allSet: 'सब तैयार है! 🎉',
-    hereIsWhatYouCanDo: 'रसोई-सिंक में आप यह कर सकते हैं',
-    dadiTip: 'दादी की सलाह',
-    dadiMessage: '"रोज़ाना इस्तेमाल होने वाली चीज़ें पहले जोड़ें। मैं एक्सपायरी डेट और रेसिपी में मदद करूंगी!"',
-    // Tour highlights
-    inventory: 'स्टॉक',
-    inventoryDesc: 'किचन में क्या है, स्मार्ट तरीके से ट्रैक करें',
-    shoppingList: 'खरीदारी सूची',
-    shoppingListDesc: 'परिवार के साथ ऑटो-सिंक होने वाली सूची',
-    mealPlanner: 'भोजन योजना',
-    mealPlannerDesc: 'YouTube रेसिपी के साथ साप्ताहिक मेन्यू',
-    digitalDadi: 'डिजिटल दादी',
-    digitalDadiDesc: 'स्मार्ट सुझाव देने वाली AI सहायक',
-    // Buttons
-    continue: 'आगे बढ़ें',
-    back: 'वापस',
-    skip: 'छोड़ें',
-    addAndContinue: 'जोड़ें और आगे बढ़ें',
-    startCooking: 'खाना बनाना शुरू करें!',
-    // Pantry categories
-    grains: '🌾 अनाज',
-    pulses: '🫘 दालें',
-    spices: '🌶️ मसाले',
-    oils: '🧴 तेल'
+    kitchenCode: '6-अंकों का कोड',
+    joinKitchen: 'किचन में शामिल हों',
+    kitchenCreated: 'किचन बन गया!',
+    shareCode: 'परिवार के साथ कोड साझा करें:',
+    continueBtn: 'जारी रखें',
+    allSet: 'आप तैयार हैं! 🎉',
+    essentialsLoaded: "हमने आपके लिए 'आवश्यक वस्तुएं' पैक लोड कर दिया है!",
+    essentialsDesc: 'आपके किचन में 22 आवश्यक वस्तुएं पहले से लोड हैं। अपने स्टॉक के अनुसार मात्रा अपडेट करें।',
+    goToInventory: 'इन्वेंट्री पर जाएं',
+    startExploring: 'एक्सप्लोर करें',
+    inventoryHint: 'इन्वेंट्री सेक्शन में अपनी पेंट्री की मात्रा अपडेट करें'
   },
   mr: {
-    // Step indicators
-    stepOf: 'पायरी {current} / {total}',
-    skipSetup: 'वगळा',
     steps: {
       welcome: 'स्वागत',
-      household: 'तुमचे किचन',
-      pantry: 'साठा भरा',
-      tour: 'ओळख'
+      household: 'किचन',
+      ready: 'तयार!'
     },
-    // Step 1: Welcome
+    stepOf: 'पायरी {current} / {total}',
+    skipSetup: 'वगळा',
     welcomeTo: 'स्वागत आहे',
     appName: 'रसोई-सिंक',
-    appTagline: 'तुमचा हुशार भारतीय स्वयंपाकघर व्यवस्थापक',
+    appTagline: 'तुमचा बुद्धिमान भारतीय किचन व्यवस्थापक',
     chooseLanguage: 'तुमची भाषा निवडा',
     yourCity: 'तुमचे शहर',
-    // Step 2: Household
     setUpKitchen: 'तुमचे किचन सेट करा',
-    setUpKitchenDesc: 'नवीन किचन तयार करा किंवा कुटुंबात सामील व्हा',
+    setUpKitchenDesc: 'नवीन किचन तयार करा किंवा कुटुंबाच्या किचनमध्ये सामील व्हा',
     createNew: 'नवीन तयार करा',
     joinFamily: 'कुटुंबात सामील व्हा',
-    createKitchenInfo: '🏠 तुमचे डिजिटल किचन तयार करा आणि कुटुंबासोबत कोड शेअर करा',
-    joinKitchenInfo: '👨‍👩‍👧‍👦 कुटुंबातील सदस्याने शेअर केलेला 6-अंकी कोड टाका',
+    createKitchenInfo: 'किचन तयार करा आणि कुटुंबातील सदस्यांना आमंत्रित करा!',
+    joinKitchenInfo: 'कुटुंबातील सदस्याने शेअर केलेला 6-अंकी कोड टाका.',
     kitchenName: 'किचनचे नाव',
-    kitchenNamePlaceholder: 'उदा: शर्मा कुटुंबाचे किचन',
+    kitchenNamePlaceholder: 'उदा., शर्मा कुटुंब किचन',
     createKitchen: 'किचन तयार करा',
-    kitchenCode: 'किचन कोड',
+    kitchenCode: '6-अंकी कोड',
     joinKitchen: 'किचनमध्ये सामील व्हा',
-    kitchenCreated: 'किचन तयार झाले! 🎉',
-    shareCode: 'हा कोड कुटुंबासोबत शेअर करा:',
-    // Step 3: Pantry
-    quickPantrySetup: 'जलद साठा सेटअप',
-    selectItems: 'सहसा घरी असलेल्या वस्तू निवडा',
-    itemsSelected: '{count} वस्तू निवडल्या',
-    addMoreLater: 'नंतर अधिक जोडा',
-    // Step 4: Tour
-    allSet: 'सगळं तयार आहे! 🎉',
-    hereIsWhatYouCanDo: 'रसोई-सिंक मध्ये तुम्ही हे करू शकता',
-    dadiTip: 'आजीची टीप',
-    dadiMessage: '"रोज वापरल्या जाणाऱ्या गोष्टी आधी जोडा. मी एक्सपायरी डेट आणि रेसिपीमध्ये मदत करेन!"',
-    // Tour highlights
-    inventory: 'साठा',
-    inventoryDesc: 'किचनमध्ये काय आहे, स्मार्ट पद्धतीने ट्रॅक करा',
-    shoppingList: 'खरेदी यादी',
-    shoppingListDesc: 'कुटुंबासोबत ऑटो-सिंक होणारी यादी',
-    mealPlanner: 'जेवण नियोजन',
-    mealPlannerDesc: 'YouTube रेसिपीसह साप्ताहिक मेनू',
-    digitalDadi: 'डिजिटल आजी',
-    digitalDadiDesc: 'स्मार्ट सूचना देणारी AI सहाय्यक',
-    // Buttons
-    continue: 'पुढे चला',
-    back: 'मागे',
-    skip: 'वगळा',
-    addAndContinue: 'जोडा आणि पुढे चला',
-    startCooking: 'स्वयंपाक सुरू करा!',
-    // Pantry categories
-    grains: '🌾 धान्य',
-    pulses: '🫘 कडधान्ये',
-    spices: '🌶️ मसाले',
-    oils: '🧴 तेल'
+    kitchenCreated: 'किचन तयार झाले!',
+    shareCode: 'कुटुंबासोबत कोड शेअर करा:',
+    continueBtn: 'पुढे जा',
+    allSet: 'तुम्ही तयार आहात! 🎉',
+    essentialsLoaded: "आम्ही तुमच्यासाठी 'आवश्यक वस्तू' पॅक लोड केला आहे!",
+    essentialsDesc: 'तुमच्या किचनमध्ये 22 आवश्यक वस्तू आधीच लोड आहेत. तुमच्या स्टॉकनुसार प्रमाण अपडेट करा.',
+    goToInventory: 'इन्व्हेंटरीवर जा',
+    startExploring: 'एक्सप्लोर करा',
+    inventoryHint: 'इन्व्हेंटरी सेक्शनमध्ये तुमच्या पेंट्रीचे प्रमाण अपडेट करा'
   }
 };
 
-// Onboarding steps configuration (will be translated)
+// Onboarding steps (simplified - removed pantry step)
 const STEPS_CONFIG = [
   { id: 'welcome', key: 'welcome', icon: ChefHat },
   { id: 'household', key: 'household', icon: Home },
-  { id: 'pantry', key: 'pantry', icon: Package },
-  { id: 'tour', key: 'tour', icon: Sparkles },
+  { id: 'ready', key: 'ready', icon: Sparkles },
 ];
 
 const LANGUAGES = [
@@ -226,50 +136,14 @@ const CITIES = [
   'Kolkata', 'Hyderabad', 'Ahmedabad', 'Jaipur', 'Other'
 ];
 
-// Quick pantry essentials for onboarding
-const QUICK_PANTRY_ITEMS = [
-  { categoryKey: 'grains', items: ['Rice (चावल)', 'Wheat Flour (गेहूं आटा)', 'Rava (रवा)'] },
-  { categoryKey: 'pulses', items: ['Toor Dal (तूर दाल)', 'Moong Dal (मूंग दाल)', 'Chana (चना)'] },
-  { categoryKey: 'spices', items: ['Turmeric (हळद)', 'Red Chili (लाल मिर्च)', 'Cumin (जीरा)'] },
-  { categoryKey: 'oils', items: ['Cooking Oil (तेल)', 'Ghee (तूप)', 'Mustard Oil (सरसों तेल)'] },
-];
-
-const TOUR_HIGHLIGHTS = [
-  {
-    icon: Package,
-    titleKey: 'inventory',
-    descKey: 'inventoryDesc',
-    color: 'bg-amber-500'
-  },
-  {
-    icon: ShoppingBasket,
-    titleKey: 'shoppingList',
-    descKey: 'shoppingListDesc',
-    color: 'bg-green-500'
-  },
-  {
-    icon: Calendar,
-    titleKey: 'mealPlanner',
-    descKey: 'mealPlannerDesc',
-    color: 'bg-blue-500'
-  },
-  {
-    icon: Sparkles,
-    titleKey: 'digitalDadi',
-    descKey: 'digitalDadiDesc',
-    color: 'bg-purple-500'
-  },
-];
-
 const OnboardingFlow = ({ onComplete }) => {
   const { user, updateProfile, createHousehold, joinHousehold, households } = useAuth();
+  const navigate = useNavigate();
   
   // Determine start step based on user state
-  // - If user has language from signup, skip welcome step (start at household)
-  // - If user has household, skip to pantry step
   const getInitialStep = () => {
     if (households && households.length > 0) {
-      return 2; // Start at pantry step
+      return 2; // Start at ready step (kitchen already exists)
     }
     if (user?.home_language) {
       return 1; // Start at household step (skip welcome/language)
@@ -280,14 +154,14 @@ const OnboardingFlow = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(getInitialStep);
   const [isVisible, setIsVisible] = useState(true);
   
-  // Form state - use user's existing preferences if available
+  // Form state
   const [selectedLanguage, setSelectedLanguage] = useState(user?.home_language || 'en');
   const [selectedCity, setSelectedCity] = useState(user?.city || 'Pune');
   const [householdMode, setHouseholdMode] = useState('create');
   const [householdName, setHouseholdName] = useState('');
   const [kitchenCode, setKitchenCode] = useState('');
   const [createdCode, setCreatedCode] = useState('');
-  const [selectedPantryItems, setSelectedPantryItems] = useState([]);
+  const [essentialsCount, setEssentialsCount] = useState(22);
   const [loading, setLoading] = useState(false);
 
   // Get translations for current language
@@ -305,14 +179,7 @@ const OnboardingFlow = ({ onComplete }) => {
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    }
-  };
-
   const handleSkip = async () => {
-    // Mark onboarding complete on server
     try {
       const token = localStorage.getItem('auth_token');
       if (token) {
@@ -330,7 +197,6 @@ const OnboardingFlow = ({ onComplete }) => {
   };
 
   const handleComplete = async () => {
-    // Mark onboarding complete on server
     try {
       const token = localStorage.getItem('auth_token');
       if (token) {
@@ -345,17 +211,21 @@ const OnboardingFlow = ({ onComplete }) => {
     localStorage.setItem('onboarding_completed', 'true');
     setIsVisible(false);
     const successMsg = selectedLanguage === 'hi' 
-      ? '🎉 रसोई-सिंक में आपका स्वागत है! आपका किचन तैयार है।'
+      ? '🎉 रसोई-सिंक में आपका स्वागत है!'
       : selectedLanguage === 'mr'
-        ? '🎉 रसोई-सिंक मध्ये स्वागत! तुमचे किचन तयार आहे।'
-        : '🎉 Welcome to Rasoi-Sync! Your kitchen is ready.';
+        ? '🎉 रसोई-सिंक मध्ये स्वागत!'
+        : '🎉 Welcome to Rasoi-Sync!';
     toast.success(successMsg);
     onComplete?.();
   };
 
+  const handleGoToInventory = async () => {
+    await handleComplete();
+    navigate('/inventory');
+  };
+
   const handleLanguageSelect = async (lang) => {
     setSelectedLanguage(lang);
-    // Update user profile
     if (user) {
       await updateProfile({ home_language: lang, city: selectedCity });
     }
@@ -372,7 +242,8 @@ const OnboardingFlow = ({ onComplete }) => {
     
     if (result.success) {
       setCreatedCode(result.data.kitchen_code);
-      toast.success('Kitchen created! 🏠');
+      setEssentialsCount(result.data.items_added || 22);
+      toast.success(`Kitchen created with ${result.data.items_added || 22} essential items! 🏠`);
     } else {
       toast.error(result.error);
     }
@@ -397,78 +268,6 @@ const OnboardingFlow = ({ onComplete }) => {
     setLoading(false);
   };
 
-  const togglePantryItem = (item) => {
-    setSelectedPantryItems(prev => 
-      prev.includes(item) 
-        ? prev.filter(i => i !== item)
-        : [...prev, item]
-    );
-  };
-
-  const addPantryItems = async () => {
-    if (selectedPantryItems.length === 0) {
-      handleNext();
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-      const token = localStorage.getItem('auth_token');
-      
-      // Group items by category for proper categorization
-      const categoryMap = {
-        'grains': ['Rice', 'Wheat Flour', 'Rava', 'चावल', 'गेहूं आटा', 'रवा'],
-        'pulses': ['Toor Dal', 'Moong Dal', 'Chana', 'तूर दाल', 'मूंग दाल', 'चना'],
-        'spices': ['Turmeric', 'Red Chili', 'Cumin', 'हळद', 'लाल मिर्च', 'जीरा'],
-        'oils': ['Cooking Oil', 'Ghee', 'Mustard Oil', 'तेल', 'तूप', 'सरसों तेल']
-      };
-      
-      const getCategory = (itemName) => {
-        for (const [category, items] of Object.entries(categoryMap)) {
-          if (items.some(i => itemName.includes(i))) {
-            return category;
-          }
-        }
-        return 'other';
-      };
-      
-      for (const item of selectedPantryItems) {
-        // Extract English name (before parentheses)
-        const nameEn = item.split(' (')[0].trim();
-        const category = getCategory(item);
-        
-        // Use household-scoped endpoint
-        const response = await fetch(`${API}/inventory/household`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            name_en: nameEn,
-            category: category,
-            stock_level: 'full',
-            unit: category === 'oils' ? 'L' : 'kg',
-            current_stock: 1,
-            monthly_quantity: 1
-          })
-        });
-        
-        if (!response.ok) {
-          console.error('Failed to add item:', nameEn, await response.text());
-        }
-      }
-      
-      toast.success(`Added ${selectedPantryItems.length} items to your pantry! 🎉`);
-      handleNext();
-    } catch (error) {
-      console.error('Failed to add items:', error);
-      toast.error('Failed to add some items');
-    }
-    setLoading(false);
-  };
-
   if (!isVisible) return null;
 
   return (
@@ -479,10 +278,10 @@ const OnboardingFlow = ({ onComplete }) => {
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center"
       >
-        {/* Dimmed Backdrop with Blur */}
+        {/* Dimmed Backdrop */}
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         
-        {/* Spotlight Container */}
+        {/* Modal Container */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -514,27 +313,27 @@ const OnboardingFlow = ({ onComplete }) => {
                     idx <= currentStep ? 'text-orange-600' : 'text-gray-300'
                   }`}
                 >
-                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                     idx < currentStep 
                       ? 'bg-green-500 text-white' 
                       : idx === currentStep 
-                        ? 'bg-orange-500 text-white ring-2 sm:ring-4 ring-orange-100' 
+                        ? 'bg-orange-500 text-white ring-4 ring-orange-100' 
                         : 'bg-gray-100'
                   }`}>
                     {idx < currentStep ? (
-                      <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <Check className="w-4 h-4" />
                     ) : (
-                      <step.icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <step.icon className="w-4 h-4" />
                     )}
                   </div>
-                  <span className="text-[9px] sm:text-[10px] font-medium hidden xs:block">{step.title}</span>
+                  <span className="text-[10px] font-medium">{step.title}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Step Content */}
-          <div className="p-4 sm:p-6 flex-1 overflow-y-auto min-h-0">
+          <div className="p-6 flex-1 overflow-y-auto min-h-0">
             <AnimatePresence mode="wait">
               {/* Step 1: Welcome */}
               {currentStep === 0 && (
@@ -543,55 +342,53 @@ const OnboardingFlow = ({ onComplete }) => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4 sm:space-y-6"
+                  className="space-y-5"
                 >
                   <div className="text-center">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
-                      <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <ChefHat className="w-10 h-10 text-white" />
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-bold text-gray-800">
                       {LANGUAGES.find(l => l.value === selectedLanguage)?.greeting || 'Hello!'} 
                       <span className="ml-2">🙏</span>
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+                    <p className="text-base text-gray-600 mt-2">
                       {t.welcomeTo} <span className="font-semibold text-orange-600">{t.appName}</span>
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
-                      {t.appTagline}
-                    </p>
+                    <p className="text-sm text-gray-500 mt-1">{t.appTagline}</p>
                   </div>
 
-                  <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-4">
                     <div>
-                      <Label className="text-xs sm:text-sm font-medium flex items-center gap-2 mb-2">
-                        <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
+                      <Label className="text-sm font-medium flex items-center gap-2 mb-2">
+                        <Globe className="w-4 h-4 text-orange-500" />
                         {t.chooseLanguage}
                       </Label>
-                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         {LANGUAGES.map(lang => (
                           <button
                             key={lang.value}
                             onClick={() => handleLanguageSelect(lang.value)}
-                            className={`p-2 sm:p-3 rounded-xl border-2 transition-all ${
+                            className={`p-3 rounded-xl border-2 transition-all ${
                               selectedLanguage === lang.value
                                 ? 'border-orange-500 bg-orange-50 shadow-md'
                                 : 'border-gray-200 hover:border-orange-300'
                             }`}
                           >
-                            <span className="text-xl sm:text-2xl">{lang.flag}</span>
-                            <p className="text-xs sm:text-sm font-medium mt-0.5 sm:mt-1">{lang.label}</p>
+                            <span className="text-2xl">{lang.flag}</span>
+                            <p className="text-sm font-medium mt-1">{lang.label}</p>
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <Label className="text-xs sm:text-sm font-medium flex items-center gap-2 mb-2">
-                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
+                      <Label className="text-sm font-medium flex items-center gap-2 mb-2">
+                        <MapPin className="w-4 h-4 text-orange-500" />
                         {t.yourCity}
                       </Label>
                       <Select value={selectedCity} onValueChange={setSelectedCity}>
-                        <SelectTrigger className="h-9 sm:h-10">
+                        <SelectTrigger className="h-10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -618,12 +415,8 @@ const OnboardingFlow = ({ onComplete }) => {
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
                       <Home className="w-8 h-8 text-white" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">
-                      {t.setUpKitchen}
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {t.setUpKitchenDesc}
-                    </p>
+                    <h2 className="text-xl font-bold text-gray-800">{t.setUpKitchen}</h2>
+                    <p className="text-sm text-gray-500 mt-1">{t.setUpKitchenDesc}</p>
                   </div>
 
                   {!createdCode ? (
@@ -657,9 +450,7 @@ const OnboardingFlow = ({ onComplete }) => {
                       {householdMode === 'create' ? (
                         <div className="space-y-4">
                           <div className="p-4 bg-orange-50 rounded-xl text-center">
-                            <p className="text-sm text-gray-600">
-                              {t.createKitchenInfo}
-                            </p>
+                            <p className="text-sm text-gray-600">{t.createKitchenInfo}</p>
                           </div>
                           <div>
                             <Label>{t.kitchenName}</Label>
@@ -681,9 +472,7 @@ const OnboardingFlow = ({ onComplete }) => {
                       ) : (
                         <div className="space-y-4">
                           <div className="p-4 bg-blue-50 rounded-xl text-center">
-                            <p className="text-sm text-gray-600">
-                              {t.joinKitchenInfo}
-                            </p>
+                            <p className="text-sm text-gray-600">{t.joinKitchenInfo}</p>
                           </div>
                           <div>
                             <Label>{t.kitchenCode}</Label>
@@ -706,7 +495,7 @@ const OnboardingFlow = ({ onComplete }) => {
                       )}
                     </>
                   ) : (
-                    /* Created - Show Code */
+                    /* Kitchen Created - Show Code */
                     <div className="space-y-4 text-center">
                       <div className="p-5 bg-green-50 rounded-xl">
                         <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -725,160 +514,78 @@ const OnboardingFlow = ({ onComplete }) => {
                 </motion.div>
               )}
 
-              {/* Step 3: Quick Pantry Setup */}
+              {/* Step 3: Ready - Essentials Loaded */}
               {currentStep === 2 && (
                 <motion.div
-                  key="pantry"
+                  key="ready"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-3 sm:space-y-4"
+                  className="space-y-5"
                 >
                   <div className="text-center">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
-                      <Package className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <Sparkles className="w-10 h-10 text-white" />
                     </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-                      {t.quickPantrySetup}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                      {t.selectItems}
-                    </p>
+                    <h2 className="text-2xl font-bold text-gray-800">{t.allSet}</h2>
                   </div>
 
-                  <div className="space-y-2 sm:space-y-3 max-h-[180px] sm:max-h-[220px] overflow-y-auto pr-1 sm:pr-2">
-                    {QUICK_PANTRY_ITEMS.map((category) => (
-                      <div key={category.categoryKey} className="space-y-1.5 sm:space-y-2">
-                        <p className="text-xs sm:text-sm font-medium text-gray-700">{t[category.categoryKey]}</p>
-                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                          {category.items.map((item) => (
-                            <button
-                              key={item}
-                              onClick={() => togglePantryItem(item)}
-                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm transition-all ${
-                                selectedPantryItems.includes(item)
-                                  ? 'bg-green-500 text-white shadow-md'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                            >
-                              {selectedPantryItems.includes(item) && (
-                                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-0.5 sm:mr-1" />
-                              )}
-                              {item}
-                            </button>
-                          ))}
-                        </div>
+                  {/* Essentials Loaded Banner */}
+                  <div className="p-5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Package className="w-5 h-5 text-white" />
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-xs sm:text-sm text-gray-500">
-                      {t.itemsSelected.replace('{count}', selectedPantryItems.length)}
-                    </span>
-                    <Badge variant="outline" className="text-[10px] sm:text-xs">
-                      {t.addMoreLater}
-                    </Badge>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Step 4: Quick Tour */}
-              {currentStep === 3 && (
-                <motion.div
-                  key="tour"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-3 sm:space-y-4"
-                >
-                  <div className="text-center">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
-                      <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-                      {t.allSet}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                      {t.hereIsWhatYouCanDo}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    {TOUR_HIGHLIGHTS.map((item, idx) => (
-                      <motion.div
-                        key={item.titleKey}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        className="p-2 sm:p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow"
-                      >
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 ${item.color} rounded-lg flex items-center justify-center mb-1.5 sm:mb-2`}>
-                          <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold text-xs sm:text-sm text-gray-800">{t[item.titleKey]}</h3>
-                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 line-clamp-2">{t[item.descKey]}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <div className="text-2xl sm:text-3xl">👵</div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-800 text-xs sm:text-sm">Dadi's Tip</p>
-                        <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-                          "Start by adding items you use daily. I'll help track expiry dates and suggest recipes!"
-                        </p>
+                      <div>
+                        <h3 className="font-bold text-amber-800 text-lg">{t.essentialsLoaded}</h3>
+                        <p className="text-sm text-amber-700 mt-1">{t.essentialsDesc}</p>
                       </div>
                     </div>
                   </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleGoToInventory}
+                      className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 h-12 text-base"
+                      data-testid="go-to-inventory-btn"
+                    >
+                      <Package className="w-5 h-5 mr-2" />
+                      {t.goToInventory}
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={handleComplete}
+                      className="w-full h-11"
+                      data-testid="start-exploring-btn"
+                    >
+                      {t.startExploring}
+                    </Button>
+                  </div>
+
+                  <p className="text-xs text-center text-gray-500">
+                    💡 {t.inventoryHint}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
           {/* Navigation Buttons */}
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 flex gap-2 sm:gap-3 border-t bg-white flex-shrink-0">
-            {currentStep > 0 && (
+          {currentStep < 2 && (
+            <div className="px-6 pb-6 pt-2">
               <Button
-                variant="outline"
-                onClick={handleBack}
-                className="flex-1 h-10 sm:h-11 text-sm"
+                onClick={handleNext}
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                disabled={currentStep === 1 && !createdCode && householdMode === 'create'}
               >
-                <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Back
+                {t.continueBtn}
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-            )}
-            
-            {currentStep < STEPS.length - 1 ? (
-              <Button
-                onClick={currentStep === 2 ? addPantryItems : handleNext}
-                className="flex-1 h-10 sm:h-11 text-sm bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
-                disabled={loading || (currentStep === 1 && !createdCode && householdMode === 'create')}
-              >
-                {loading ? 'Please wait...' : (
-                  <>
-                    <span className="truncate">
-                      {currentStep === 2 
-                        ? (selectedPantryItems.length > 0 ? 'Add & Continue' : 'Skip')
-                        : 'Continue'
-                      }
-                    </span>
-                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 flex-shrink-0" />
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleComplete}
-                className="flex-1 h-10 sm:h-11 text-sm bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-              >
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Start Cooking!
-              </Button>
-            )}
-          </div>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
