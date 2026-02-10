@@ -530,5 +530,22 @@ The backend `server.py` was refactored from 3600+ lines into a modular architect
 ### Documentation
 Full code architecture documentation available at `/app/docs/CODE_ARCHITECTURE.md`
 
+## February 10, 2025 (Session 2) - Meal Planner Bug Fix
+
+### Issue Fixed: Meal Planner Not Updating Immediately
+**Problem:** When adding a recipe from "Cook with Your Stock" section (PersonalizedRecipeStream component), the meal planner did not update immediately - required a page refresh to see the newly added recipe.
+
+**Root Cause:** `AddToPlannerModal.js` was being rendered in `PersonalizedRecipeStream.js` without passing the `addMealPlan` function from the `useMealPlanner` hook. This caused the modal to fall back to a direct `axios.post` call, which didn't update the shared React state.
+
+**Fix Applied:**
+1. Imported `useMealPlanner` hook in `PersonalizedRecipeStream.js`
+2. Destructured `addMealPlan` from the hook
+3. Passed `addMealPlan` as a prop to `AddToPlannerModal`
+
+**Files Modified:**
+- `/app/frontend/src/components/PersonalizedRecipeStream.js` (lines 8, 210, 350)
+
+**Verification:** Testing agent confirmed 100% success rate - recipes now show "Planned" badge immediately and appear in calendar without page refresh.
+
 ---
 *Last updated: February 10, 2025*
