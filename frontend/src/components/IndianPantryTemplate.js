@@ -491,12 +491,20 @@ export const IndianPantryTemplate = ({ isOpen, onClose, existingInventory = [], 
             category = 'household';
           }
           
+          // Determine appropriate unit based on category
+          let unit = 'kg'; // default
+          if (category === 'household' || category === 'bakery') {
+            unit = 'pcs';
+          } else if (category === 'oils' || category === 'dairy') {
+            unit = 'L';
+          }
+          
           allSelectedItems.push({
             name_en: item.en,
             name_mr: item.mr,  // Include Marathi translation
             category: category,
             stock_level: 'empty',
-            unit: category === 'household' ? 'pcs' : 'kg'
+            unit: unit
           });
         });
       });
