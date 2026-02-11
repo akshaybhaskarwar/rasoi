@@ -531,10 +531,11 @@ def create_dadi_routes(db, decode_token):
             is_in_stock = any(ing_base in inv_name or inv_name in ing_base for inv_name in inventory_names)
             
             if not is_in_stock:
-                # Check if already in shopping list (using shopping_list collection)
+                # Check if already in shopping list (escape regex special chars)
+                escaped_ingredient = re.escape(ingredient)
                 existing = await db.shopping_list.find_one({
                     "household_id": household_id,
-                    "name_en": {"$regex": f"^{ingredient}$", "$options": "i"},
+                    "name_en": {"$regex": f"^{escaped_ingredient}$", "$options": "i"},
                     "shopping_status": {"$ne": "bought"}
                 })
                 
