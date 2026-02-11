@@ -21,6 +21,17 @@ const AdminFestivalManager = () => {
   const [uploadResult, setUploadResult] = useState(null);
   const [editingFestival, setEditingFestival] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newFestival, setNewFestival] = useState({
+    name: '',
+    name_mr: '',
+    name_hi: '',
+    date: '',
+    significance: '',
+    key_ingredients: [],
+    is_fasting_day: false,
+    region: 'Maharashtra'
+  });
   const [expandedFestival, setExpandedFestival] = useState(null);
 
   // Fetch festivals on mount
@@ -41,6 +52,36 @@ const AdminFestivalManager = () => {
       toast.error('Failed to load festivals');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddFestival = async () => {
+    if (!newFestival.name || !newFestival.date) {
+      toast.error('Festival name and date are required');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      await axios.post(`${API}/dadi/festivals`, newFestival, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Festival added successfully!');
+      setIsAddDialogOpen(false);
+      setNewFestival({
+        name: '',
+        name_mr: '',
+        name_hi: '',
+        date: '',
+        significance: '',
+        key_ingredients: [],
+        is_fasting_day: false,
+        region: 'Maharashtra'
+      });
+      fetchFestivals();
+    } catch (error) {
+      console.error('Error adding festival:', error);
+      toast.error('Failed to add festival');
     }
   };
 
