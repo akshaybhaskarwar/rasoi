@@ -132,16 +132,22 @@ const FestivalCard = ({ festival, onAddToShopping, isAdding, isAlreadyAdded }) =
                       e.stopPropagation();
                       onAddToShopping(festival.id);
                     }}
-                    disabled={isAdding}
-                    className="bg-orange-500 hover:bg-orange-600 text-white text-xs gap-1"
+                    disabled={isAdding || isAlreadyAdded}
+                    className={`text-white text-xs gap-1 ${
+                      isAlreadyAdded 
+                        ? 'bg-green-500 hover:bg-green-500 cursor-not-allowed' 
+                        : 'bg-orange-500 hover:bg-orange-600'
+                    }`}
                     data-testid={`add-missing-btn-${festival.id}`}
                   >
                     {isAdding ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : isAlreadyAdded ? (
+                      <CheckCircle className="w-3 h-3" />
                     ) : (
                       <ShoppingCart className="w-3 h-3" />
                     )}
-                    Add {festival.missing_ingredients.length} Missing
+                    {isAlreadyAdded ? 'Added to List' : `Add ${festival.missing_ingredients.length} Missing`}
                   </Button>
                 )}
               </div>
