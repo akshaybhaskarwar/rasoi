@@ -54,8 +54,11 @@ const IngredientBadge = ({ ingredient, status }) => {
 };
 
 // Single Festival Card
-const FestivalCard = ({ festival, onAddToShopping, isAdding, isAlreadyAdded }) => {
+const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Use backend flag for whether items are already in shopping list
+  const isAlreadyAdded = festival.all_missing_in_shopping;
   
   // Calculate urgency based on days until
   const getUrgencyColor = (days) => {
