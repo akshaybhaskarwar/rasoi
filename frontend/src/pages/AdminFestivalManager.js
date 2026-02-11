@@ -190,15 +190,25 @@ Ganesh Chaturthi,गणेश चतुर्थी,गणेश चतुर्
               <p className="text-gray-600">Festival Calendar Management</p>
             </div>
           </div>
-          <Button
-            onClick={fetchFestivals}
-            variant="outline"
-            className="gap-2"
-            data-testid="refresh-festivals-btn"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
+              data-testid="add-festival-btn"
+            >
+              <Plus className="w-4 h-4" />
+              Add Festival
+            </Button>
+            <Button
+              onClick={fetchFestivals}
+              variant="outline"
+              className="gap-2"
+              data-testid="refresh-festivals-btn"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Upload Section */}
