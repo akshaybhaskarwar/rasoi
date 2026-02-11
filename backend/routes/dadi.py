@@ -527,7 +527,7 @@ def create_dadi_routes(db, decode_token):
                         "unit": "",
                         "category": "festival",
                         "is_purchased": False,
-                        "added_by": user.get("user_id"),
+                        "added_by": user_id,
                         "notes": f"For {festival.get('name')}",
                         "created_at": datetime.now(timezone.utc).isoformat()
                     }
