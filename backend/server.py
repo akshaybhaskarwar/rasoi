@@ -172,6 +172,7 @@ app.include_router(youtube_router)
 app.include_router(preferences_router)
 app.include_router(barcode_router)
 app.include_router(pantry_router)
+app.include_router(dadi_router)
 
 # ============ CORS MIDDLEWARE ============
 
