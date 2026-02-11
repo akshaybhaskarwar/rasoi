@@ -233,7 +233,7 @@ const DigitalDadi = () => {
   const handleAddToShopping = async (festivalId) => {
     setIsAddingToShopping(festivalId);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await axios.post(
         `${API}/dadi/add-missing-to-shopping?festival_id=${festivalId}`,
         {},
