@@ -433,6 +433,21 @@ def create_dadi_routes(db, decode_token):
                     total_ingredients = len(festival.get("key_ingredients", []))
                     readiness_score = int((in_stock_count / total_ingredients * 100)) if total_ingredients > 0 else 100
                     
+                    # Check if any missing ingredients are already in shopping list
+                    items_in_shopping = 0
+                    if missing:
+                        for ing in missing:
+                            existing_in_shopping = await db.shopping_list.find_one({
+                                "household_id": household_id,
+                                "name_en": {"$regex": f"^{ing}$", "$options": "i"},
+                                "shopping_status": {"$ne": "bought"}
+                            })
+                            if existing_in_shopping:
+                                items_in_shopping += 1
+                    
+                    # Determine if all missing items are already in shopping list
+                    all_missing_in_shopping = items_in_shopping == len(missing) if missing else False
+                    
                     upcoming.append({
                         "id": festival.get("id"),
                         "name": festival.get("name"),
@@ -446,6 +461,8 @@ def create_dadi_routes(db, decode_token):
                         "ingredient_status": ingredient_status,
                         "readiness_score": readiness_score,
                         "missing_ingredients": missing,
+                        "items_in_shopping_list": items_in_shopping,
+                        "all_missing_in_shopping": all_missing_in_shopping,
                         "is_fasting_day": festival.get("is_fasting_day", False),
                         "tips": festival.get("tips", []),
                         "recipes": festival.get("recipes", [])
