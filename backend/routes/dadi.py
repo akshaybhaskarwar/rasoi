@@ -438,9 +438,11 @@ def create_dadi_routes(db, decode_token):
                     items_in_shopping = 0
                     if missing:
                         for ing in missing:
+                            # Escape regex special characters in ingredient name
+                            escaped_ing = re.escape(ing)
                             existing_in_shopping = await db.shopping_list.find_one({
                                 "household_id": household_id,
-                                "name_en": {"$regex": f"^{ing}$", "$options": "i"},
+                                "name_en": {"$regex": f"^{escaped_ing}$", "$options": "i"},
                                 "shopping_status": {"$ne": "bought"}
                             })
                             if existing_in_shopping:
