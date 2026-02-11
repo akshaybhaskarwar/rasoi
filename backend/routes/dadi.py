@@ -543,36 +543,99 @@ def create_dadi_routes(db, decode_token):
     
     
     @dadi_router.get("/tip-of-day")
-    async def get_tip_of_day():
-        """Get a random cooking tip from Dadi"""
+    async def get_tip_of_day(lang: str = "en"):
+        """Get a random cooking tip from Dadi in the requested language"""
         # Get tips from festivals
         festivals_with_tips = await db.festivals.find(
             {"tips": {"$exists": True, "$ne": []}},
-            {"_id": 0, "tips": 1, "name": 1}
+            {"_id": 0, "tips": 1, "name": 1, "name_mr": 1, "name_hi": 1}
         ).to_list(50)
         
         all_tips = []
         for f in festivals_with_tips:
             for tip in f.get("tips", []):
-                all_tips.append({"tip": tip, "context": f.get("name")})
+                # Get festival name in requested language
+                if lang == "mr" and f.get("name_mr"):
+                    context = f.get("name_mr")
+                elif lang == "hi" and f.get("name_hi"):
+                    context = f.get("name_hi")
+                else:
+                    context = f.get("name")
+                all_tips.append({"tip_en": tip, "context": context})
         
-        # Add some general tips if no festival tips
+        # Multilingual general tips
         general_tips = [
-            {"tip": "Always taste your food while cooking to adjust seasonings", "context": "General"},
-            {"tip": "Let dal rest for 5 minutes after cooking for better consistency", "context": "Dal Tips"},
-            {"tip": "Add a pinch of sugar to balance acidity in tomato-based curries", "context": "Curry Tips"},
-            {"tip": "Roast spices before grinding for more aromatic flavor", "context": "Spice Tips"},
-            {"tip": "Soak rice for 30 minutes before cooking for fluffy texture", "context": "Rice Tips"},
+            {
+                "tip_en": "Always taste your food while cooking to adjust seasonings",
+                "tip_mr": "स्वयंपाक करताना नेहमी चव घ्या आणि मसाले समायोजित करा",
+                "tip_hi": "खाना बनाते समय हमेशा स्वाद चखें और मसाले समायोजित करें",
+                "context_en": "General", "context_mr": "सामान्य", "context_hi": "सामान्य"
+            },
+            {
+                "tip_en": "Let dal rest for 5 minutes after cooking for better consistency",
+                "tip_mr": "चांगल्या सुसंगततेसाठी डाळ शिजल्यानंतर 5 मिनिटे विश्रांती द्या",
+                "tip_hi": "बेहतर स्थिरता के लिए दाल पकाने के बाद 5 मिनट आराम करने दें",
+                "context_en": "Dal Tips", "context_mr": "डाळ टिप्स", "context_hi": "दाल टिप्स"
+            },
+            {
+                "tip_en": "Add a pinch of sugar to balance acidity in tomato-based curries",
+                "tip_mr": "टोमॅटो आधारित करीमध्ये आंबटपणा कमी करण्यासाठी चिमूटभर साखर घाला",
+                "tip_hi": "टमाटर आधारित करी में खटास कम करने के लिए चुटकी भर चीनी डालें",
+                "context_en": "Curry Tips", "context_mr": "करी टिप्स", "context_hi": "करी टिप्स"
+            },
+            {
+                "tip_en": "Roast spices before grinding for more aromatic flavor",
+                "tip_mr": "अधिक सुगंधित चवीसाठी मसाले वाटण्यापूर्वी भाजून घ्या",
+                "tip_hi": "अधिक सुगंधित स्वाद के लिए मसालों को पीसने से पहले भून लें",
+                "context_en": "Spice Tips", "context_mr": "मसाला टिप्स", "context_hi": "मसाला टिप्स"
+            },
+            {
+                "tip_en": "Soak rice for 30 minutes before cooking for fluffy texture",
+                "tip_mr": "फुलकट तांदळासाठी शिजवण्यापूर्वी 30 मिनिटे भिजवा",
+                "tip_hi": "फुलके चावल के लिए पकाने से पहले 30 मिनट भिगोएं",
+                "context_en": "Rice Tips", "context_mr": "भात टिप्स", "context_hi": "चावल टिप्स"
+            },
+            {
+                "tip_en": "Add hing (asafoetida) to hot oil for the best flavor release",
+                "tip_mr": "हिंगाचा उत्तम सुगंध येण्यासाठी गरम तेलात घाला",
+                "tip_hi": "हींग का सबसे अच्छा स्वाद पाने के लिए गर्म तेल में डालें",
+                "context_en": "Tempering Tips", "context_mr": "फोडणी टिप्स", "context_hi": "तड़का टिप्स"
+            },
+            {
+                "tip_en": "Use jaggery instead of sugar for authentic Maharashtrian taste",
+                "tip_mr": "खऱ्या महाराष्ट्रीयन चवीसाठी साखरेऐवजी गूळ वापरा",
+                "tip_hi": "असली महाराष्ट्रीयन स्वाद के लिए चीनी की जगह गुड़ का उपयोग करें",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Always add salt to bhaji after it's cooked to retain nutrients",
+                "tip_mr": "पोषकद्रव्ये टिकवण्यासाठी भाजी शिजल्यावरच मीठ घाला",
+                "tip_hi": "पोषक तत्व बनाए रखने के लिए सब्जी पकने के बाद ही नमक डालें",
+                "context_en": "Vegetable Tips", "context_mr": "भाजी टिप्स", "context_hi": "सब्जी टिप्स"
+            }
         ]
         
-        all_tips.extend(general_tips)
+        # Add general tips with language support
+        for tip in general_tips:
+            if lang == "mr":
+                all_tips.append({"tip_en": tip["tip_mr"], "context": tip["context_mr"]})
+            elif lang == "hi":
+                all_tips.append({"tip_en": tip["tip_hi"], "context": tip["context_hi"]})
+            else:
+                all_tips.append({"tip_en": tip["tip_en"], "context": tip["context_en"]})
         
         if all_tips:
             import random
             selected = random.choice(all_tips)
-            return {"tip": selected["tip"], "context": selected["context"]}
+            return {"tip": selected["tip_en"], "context": selected["context"]}
         
-        return {"tip": "Cook with love, food tastes better!", "context": "Dadi's Wisdom"}
+        # Default tip in requested language
+        default_tips = {
+            "en": {"tip": "Cook with love, food tastes better!", "context": "Dadi's Wisdom"},
+            "mr": {"tip": "प्रेमाने स्वयंपाक करा, जेवण चविष्ट होते!", "context": "दादीची शिकवण"},
+            "hi": {"tip": "प्यार से खाना बनाओ, खाना स्वादिष्ट होता है!", "context": "दादी की सीख"}
+        }
+        return default_tips.get(lang, default_tips["en"])
     
     
     return dadi_router
