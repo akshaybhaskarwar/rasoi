@@ -481,6 +481,96 @@ Ganesh Chaturthi,गणेश चतुर्थी,गणेश चतुर्
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Festival Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-orange-500" />
+              Add New Festival
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Festival Name (English) *</label>
+              <Input
+                value={newFestival.name}
+                onChange={(e) => setNewFestival({ ...newFestival, name: e.target.value })}
+                placeholder="e.g., Ganesh Chaturthi"
+                data-testid="add-festival-name"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Name (Marathi)</label>
+                <Input
+                  value={newFestival.name_mr}
+                  onChange={(e) => setNewFestival({ ...newFestival, name_mr: e.target.value })}
+                  placeholder="e.g., गणेश चतुर्थी"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Name (Hindi)</label>
+                <Input
+                  value={newFestival.name_hi}
+                  onChange={(e) => setNewFestival({ ...newFestival, name_hi: e.target.value })}
+                  placeholder="e.g., गणेश चतुर्थी"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Date *</label>
+              <Input
+                value={newFestival.date}
+                onChange={(e) => setNewFestival({ ...newFestival, date: e.target.value })}
+                placeholder="e.g., Sept 14 or 2026-09-14"
+                data-testid="add-festival-date"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Significance</label>
+              <Input
+                value={newFestival.significance}
+                onChange={(e) => setNewFestival({ ...newFestival, significance: e.target.value })}
+                placeholder="e.g., Lord Ganesha's birthday"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Key Ingredients (comma-separated)</label>
+              <Input
+                value={newFestival.key_ingredients.join(', ')}
+                onChange={(e) => setNewFestival({ 
+                  ...newFestival, 
+                  key_ingredients: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                })}
+                placeholder="e.g., Rice Flour, Coconut, Jaggery"
+                data-testid="add-festival-ingredients"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="add_is_fasting"
+                checked={newFestival.is_fasting_day}
+                onChange={(e) => setNewFestival({ ...newFestival, is_fasting_day: e.target.checked })}
+                className="rounded"
+              />
+              <label htmlFor="add_is_fasting" className="text-sm text-gray-700">Is Fasting Day</label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleAddFestival} 
+              className="bg-orange-500 hover:bg-orange-600"
+              data-testid="save-new-festival-btn"
+            >
+              Add Festival
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
