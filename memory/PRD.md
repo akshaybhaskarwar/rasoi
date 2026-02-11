@@ -551,4 +551,63 @@ Full code architecture documentation available at `/app/docs/CODE_ARCHITECTURE.m
 **Verification:** Testing agent confirmed 100% success rate - recipes now appear in calendar immediately without refresh, and a pleasant "ding-ding" notification sound plays on success.
 
 ---
+
+## February 10, 2025 (Session 2, Part 2) - Data Centralization Architecture
+
+### Issue Fixed: Jaggery Unit Mismatch (kg vs L)
+**Problem:** Jaggery was categorized differently across the codebase:
+- `households.py`: Under "Sugar & Sweeteners" with unit `g`
+- `IndianPantryTemplate.js`: Under "Oils, Sweeteners & Condiments" which mapped to `L` (Liters)
+
+This caused Jaggery to display with incorrect "L" unit instead of "g".
+
+**Root Cause:** Data duplication - pantry items were hardcoded in multiple places (backend + frontend) with inconsistent categorization and unit assignments.
+
+**Architectural Fix - SINGLE SOURCE OF TRUTH:**
+Created a centralized data layer that both backend and frontend use:
+
+1. **New File: `/app/backend/data/pantry_items.py`**
+   - `PANTRY_TEMPLATE`: Complete Indian pantry hierarchy (Grocery, Mandi, Bakery, Dairy, Household)
+   - `CATEGORY_UNITS`: Mapping of categories to their correct units
+   - `ESSENTIALS_LIST`: Items to pre-populate for new kitchens
+   - Helper functions: `get_essentials_pack()`, `get_item_details()`, `get_pantry_template_for_frontend()`
+
+2. **New API Routes: `/app/backend/routes/pantry_items.py`**
+   - `GET /api/pantry-items/template` - Full pantry template for frontend UI
+   - `GET /api/pantry-items/essentials` - Essentials pack for new kitchens
+   - `GET /api/pantry-items/item/{name}` - Item details by name
+   - `GET /api/pantry-items/categories` - Category-to-unit mapping
+
+3. **Updated: `/app/backend/households.py`**
+   - Now imports `get_essentials_pack()` from centralized data
+   - Removed hardcoded `ESSENTIALS_PACK` list
+
+4. **Rewritten: `/app/frontend/src/components/IndianPantryTemplate.js`**
+   - Fetches template from `/api/pantry-items/template` API on dialog open
+   - Uses `item.unit` and `item.category` from API response
+   - No more hardcoded item data in frontend
+
+**Category-Unit Mapping:**
+```python
+CATEGORY_UNITS = {
+    "grains": "kg",
+    "pulses": "g",
+    "spices": "g",
+    "oils": "L",
+    "dairy": "L",
+    "sweeteners": "g",  # Jaggery, Sugar, Honey etc.
+    "beverages": "g",
+    "vegetables": "kg",
+    "fruits": "kg",
+    "bakery": "pcs",
+    "household": "pcs",
+    "snacks": "g",
+    "fasting": "g",
+    "other": "pcs"
+}
+```
+
+**Verification:** Testing agent confirmed 100% success rate on all 14 tests. Jaggery now correctly returns `category='sweeteners'` and `unit='g'` from all API endpoints.
+
+---
 *Last updated: February 10, 2025*
