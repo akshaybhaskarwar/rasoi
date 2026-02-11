@@ -31,7 +31,7 @@ const AdminFestivalManager = () => {
   const fetchFestivals = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await axios.get(`${API}/dadi/festivals`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -57,7 +57,7 @@ const AdminFestivalManager = () => {
     setUploadResult(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const formData = new FormData();
       formData.append('file', file);
 
@@ -85,7 +85,7 @@ const AdminFestivalManager = () => {
     if (!window.confirm('Are you sure you want to delete this festival?')) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       await axios.delete(`${API}/dadi/festivals/${festivalId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -105,7 +105,7 @@ const AdminFestivalManager = () => {
     if (!editingFestival) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       await axios.put(`${API}/dadi/festivals/${editingFestival.id}`, editingFestival, {
         headers: { Authorization: `Bearer ${token}` }
       });
