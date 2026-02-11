@@ -18,6 +18,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 const AdminPage = () => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dashboard, setDashboard] = useState(null);
