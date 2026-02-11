@@ -474,9 +474,15 @@ def create_dadi_routes(db, decode_token):
         if not credentials:
             raise HTTPException(status_code=401, detail="Authentication required")
         
-        user = decode_token(credentials.credentials)
-        if not user:
+        token_data = decode_token(credentials.credentials)
+        if not token_data:
             raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Fetch user from database to get active_household
+        user_id = token_data.get("sub")
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
         
         household_id = user.get("active_household")
         if not household_id:
