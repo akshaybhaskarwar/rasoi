@@ -511,8 +511,8 @@ def create_dadi_routes(db, decode_token):
             is_in_stock = any(ing_base in inv_name or inv_name in ing_base for inv_name in inventory_names)
             
             if not is_in_stock:
-                # Check if already in shopping list
-                existing = await db.shopping.find_one({
+                # Check if already in shopping list (using shopping_list collection)
+                existing = await db.shopping_list.find_one({
                     "household_id": household_id,
                     "name": {"$regex": f"^{ingredient}$", "$options": "i"},
                     "is_purchased": False
@@ -531,7 +531,7 @@ def create_dadi_routes(db, decode_token):
                         "notes": f"For {festival.get('name')}",
                         "created_at": datetime.now(timezone.utc).isoformat()
                     }
-                    await db.shopping.insert_one(shopping_item)
+                    await db.shopping_list.insert_one(shopping_item)
                     added_items.append(ingredient)
         
         return {
