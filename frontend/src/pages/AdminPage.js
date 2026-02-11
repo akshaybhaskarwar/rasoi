@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { 
   Shield, Users, Home, Package, Languages, Calendar, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
   RefreshCw, ChevronDown, ChevronUp, Crown,
-  BarChart3, Activity
+  BarChart3, Activity, ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
