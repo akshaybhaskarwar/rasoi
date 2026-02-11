@@ -10,6 +10,7 @@ from typing import Optional, List
 import uuid
 import csv
 import io
+import re
 
 # Security
 security = HTTPBearer(auto_error=False)
