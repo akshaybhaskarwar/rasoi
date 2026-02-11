@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Package2, Calendar, ShoppingCart, AlertCircle, Package, X, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DigitalDadiWidget } from '@/components/DigitalDadiWidget';
+import DigitalDadi from '@/components/DigitalDadi';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
