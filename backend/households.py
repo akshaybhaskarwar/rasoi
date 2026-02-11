@@ -13,6 +13,9 @@ import uuid
 import random
 import string
 
+# Import centralized pantry data
+from data.pantry_items import get_essentials_pack
+
 # Security
 security = HTTPBearer(auto_error=False)
 
