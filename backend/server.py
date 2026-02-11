@@ -152,6 +152,7 @@ create_youtube_routes(db, decode_token, youtube_service, log_api_usage)
 create_preferences_routes(db)
 create_barcode_routes(db, EMERGENT_LLM_KEY)
 create_pantry_routes(None)  # No dependencies needed
+create_dadi_routes(db, decode_token)  # Digital Dadi routes
 
 # ============ INCLUDE ROUTERS ============
 
