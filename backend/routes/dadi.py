@@ -229,10 +229,10 @@ def create_dadi_routes(db, decode_token):
                         if parsed.year == 1900:  # Default year when not specified
                             parsed = parsed.replace(year=datetime.now().year)
                         return parsed
-                    except:
+                    except ValueError:
                         continue
                 return datetime.max
-            except:
+            except Exception:
                 return datetime.max
         
         festivals.sort(key=parse_date_for_sort)
