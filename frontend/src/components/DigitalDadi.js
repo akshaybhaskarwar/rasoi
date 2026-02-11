@@ -198,6 +198,7 @@ const DigitalDadi = () => {
   const [tipOfDay, setTipOfDay] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingToShopping, setIsAddingToShopping] = useState(null);
+  const { language } = useLanguage();
 
   const fetchUpcomingFestivals = useCallback(async () => {
     try {
@@ -215,12 +216,13 @@ const DigitalDadi = () => {
 
   const fetchTipOfDay = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/dadi/tip-of-day`);
+      // Pass language preference to get tip in regional language
+      const response = await axios.get(`${API}/dadi/tip-of-day?lang=${language}`);
       setTipOfDay(response.data);
     } catch (error) {
       console.error('Error fetching tip:', error);
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     const loadData = async () => {
