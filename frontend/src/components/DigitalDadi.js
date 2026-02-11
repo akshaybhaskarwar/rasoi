@@ -198,6 +198,7 @@ const DigitalDadi = () => {
   const [tipOfDay, setTipOfDay] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingToShopping, setIsAddingToShopping] = useState(null);
+  const [addedFestivals, setAddedFestivals] = useState(new Set()); // Track festivals with items added
   const { language } = useLanguage();
 
   const fetchUpcomingFestivals = useCallback(async () => {
@@ -247,11 +248,15 @@ const DigitalDadi = () => {
         toast.success(`Added ${response.data.count} items to shopping list`, {
           description: `For ${response.data.festival}`
         });
+        // Mark this festival as having items added
+        setAddedFestivals(prev => new Set([...prev, festivalId]));
       } else {
         toast.info('All items already in shopping list');
+        // Also disable button if all items already added
+        setAddedFestivals(prev => new Set([...prev, festivalId]));
       }
       
-      // Refresh festival data
+      // Refresh festival data to update readiness score
       fetchUpcomingFestivals();
     } catch (error) {
       toast.error('Failed to add items to shopping list');
