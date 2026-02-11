@@ -514,22 +514,29 @@ def create_dadi_routes(db, decode_token):
                 # Check if already in shopping list (using shopping_list collection)
                 existing = await db.shopping_list.find_one({
                     "household_id": household_id,
-                    "name": {"$regex": f"^{ingredient}$", "$options": "i"},
-                    "is_purchased": False
+                    "name_en": {"$regex": f"^{ingredient}$", "$options": "i"},
+                    "shopping_status": {"$ne": "bought"}
                 })
                 
                 if not existing:
+                    # Create shopping item matching the ShoppingItem model schema
                     shopping_item = {
                         "id": str(uuid.uuid4()),
                         "household_id": household_id,
-                        "name": ingredient,
-                        "quantity": 1,
-                        "unit": "",
+                        "name_en": ingredient,
+                        "name_mr": None,
+                        "name_hi": None,
                         "category": "festival",
-                        "is_purchased": False,
-                        "added_by": user_id,
+                        "quantity": "1",  # String as per model
+                        "stock_level": "empty",
+                        "monthly_quantity": None,
+                        "store_type": "grocery",
+                        "shopping_status": "pending",
+                        "claimed_by": None,
+                        "claimed_by_name": None,
+                        "bought_at": None,
                         "notes": f"For {festival.get('name')}",
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": datetime.now(timezone.utc)
                     }
                     await db.shopping_list.insert_one(shopping_item)
                     added_items.append(ingredient)
