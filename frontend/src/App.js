@@ -16,6 +16,7 @@ import CommunityPage from "@/pages/CommunityPage";
 import RecipesPage from "@/pages/RecipesPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
+import AdminFestivalManager from "@/pages/AdminFestivalManager";
 
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
