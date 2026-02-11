@@ -249,7 +249,7 @@ def create_dadi_routes(db, decode_token):
         if not credentials:
             raise HTTPException(status_code=401, detail="Authentication required")
         
-        user = await decode_token(credentials.credentials)
+        user = decode_token(credentials.credentials)
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         
@@ -275,7 +275,7 @@ def create_dadi_routes(db, decode_token):
         if not credentials:
             raise HTTPException(status_code=401, detail="Authentication required")
         
-        user = await decode_token(credentials.credentials)
+        user = decode_token(credentials.credentials)
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         
@@ -301,7 +301,7 @@ def create_dadi_routes(db, decode_token):
         if not credentials:
             raise HTTPException(status_code=401, detail="Authentication required")
         
-        user = await decode_token(credentials.credentials)
+        user = decode_token(credentials.credentials)
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         
@@ -327,7 +327,7 @@ def create_dadi_routes(db, decode_token):
         if not credentials:
             raise HTTPException(status_code=401, detail="Authentication required")
         
-        user = await decode_token(credentials.credentials)
+        user = decode_token(credentials.credentials)
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         
@@ -468,7 +468,7 @@ def create_dadi_routes(db, decode_token):
         if not credentials:
             raise HTTPException(status_code=401, detail="Authentication required")
         
-        user = await decode_token(credentials.credentials)
+        user = decode_token(credentials.credentials)
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         
