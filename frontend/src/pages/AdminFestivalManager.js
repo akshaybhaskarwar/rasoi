@@ -165,7 +165,11 @@ Makar Sankranti,मकर संक्रांती,मकर संक्र�
 Mahashivratri,महाशिवरात्री,महाशिवरात्रि,Feb 15,Major Fasting day,"Sabudana, Peanuts, Potatoes, Varai (Bhagar), Milk",Sabudana Khichdi|Sabudana Vada,Soak sabudana overnight for fluffy texture,Yes,Maharashtra
 Holi (Shimga),होळी,होली,March 4,Puran Poli / Sweets,"Chana Dal, Gul (Jaggery), Maida, Nutmeg (Jaiphal)",Puran Poli|Thandai,Start puran poli prep a day early,No,Maharashtra
 Gudi Padwa,गुढीपाडवा,गुड़ी पड़वा,March 19,Marathi New Year,"Shrikhand, Neem Leaves, Jaggery, Saffron, Ghee",Shrikhand|Puran Poli|Shreekhand Puri,Hang curd overnight for thick shrikhand,No,Maharashtra
-Ganesh Chaturthi,गणेश चतुर्थी,गणेश चतुर्थी,Sept 14,The Big One,"Modak Peeth (Rice Flour), Fresh Coconut, Gul, Cardamom",Ukdiche Modak|Fried Modak,Steam modaks for 15 mins on medium heat,No,Maharashtra`;
+Ganesh Chaturthi,गणेश चतुर्थी,गणेश चतुर्थी,Sept 14,The Big One,"Modak Peeth (Rice Flour), Fresh Coconut, Gul, Cardamom",Ukdiche Modak|Fried Modak,Steam modaks for 15 mins on medium heat,No,Maharashtra
+Gauri Pujan,गौरी पूजन,गौरी पूजन,Sept 16,Arrival of Goddess Gauri; specialized feast,"Mixed Veg, Ambemohar Rice, Dal	Gaurichi Bhaji, Puran Poli",Use 5 types of seasonal vegetables,No,Maharashtra
+Dussehra,दसरा,दशहरा,Oct 21,Victory of good over evil; Aapta leaves,"Besan, Sugar, Ghee, Jalebi, Fafda, Basundi",Buy Apta leaves early as they sell out fast,No,Maharashtra
+Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (snacks),"Besan, Poha, Rava, Maida, Ghee	Chivda, Chakli, Ladoo, Karanji",Make sweets that last longer first,No,Maharashtra
+`;
 
     const blob = new Blob([sampleData], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
