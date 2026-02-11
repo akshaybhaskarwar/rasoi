@@ -131,8 +131,8 @@ const HomePage = () => {
         <p className="text-white/90">{getLabel('intelligentKitchenCompanion')}</p>
       </div>
 
-      {/* Digital Dadi Widget */}
-      <DigitalDadiWidget />
+      {/* Digital Dadi - Festival Reminders & Tips */}
+      <DigitalDadi />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
