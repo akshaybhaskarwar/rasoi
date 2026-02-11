@@ -340,6 +340,7 @@ const DigitalDadi = () => {
               festival={festival}
               onAddToShopping={handleAddToShopping}
               isAdding={isAddingToShopping === festival.id}
+              isAlreadyAdded={addedFestivals.has(festival.id)}
             />
           ))}
         </div>
