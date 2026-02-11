@@ -90,7 +90,8 @@ class TestDigitalDadiAuthenticatedEndpoints:
         if response.status_code != 200:
             pytest.skip(f"Login failed: {response.status_code} - {response.text}")
         
-        self.token = response.json().get("token")
+        # Token is returned as 'access_token' not 'token'
+        self.token = response.json().get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
         print(f"✓ Logged in as {TEST_EMAIL}")
     
