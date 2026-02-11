@@ -54,7 +54,7 @@ const IngredientBadge = ({ ingredient, status }) => {
 };
 
 // Single Festival Card
-const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
+const FestivalCard = ({ festival, onAddToShopping, isAdding, isAlreadyAdded }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Calculate urgency based on days until
