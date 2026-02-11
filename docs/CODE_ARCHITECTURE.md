@@ -70,7 +70,16 @@ Rasoi-Sync is a full-stack Indian Kitchen Manager application built with:
 │   ├── translation.py   # /api/translate/* endpoints
 │   ├── youtube.py       # /api/youtube/* endpoints
 │   ├── preferences.py   # /api/preferences/* endpoints
-│   └── barcode.py       # /api/barcode/*, /api/ocr/* endpoints
+│   ├── barcode.py       # /api/barcode/*, /api/ocr/* endpoints
+│   └── pantry_items.py  # /api/pantry-items/* endpoints (centralized data)
+│
+├── data/                # Static data files
+│   ├── __init__.py      # Re-exports all data
+│   ├── categories.py    # Category detection keywords
+│   ├── festivals.py     # Festival calendar data
+│   ├── recipes.py       # Recipe suggestions
+│   ├── translations.py  # UI translations
+│   └── pantry_items.py  # *** SINGLE SOURCE OF TRUTH for all pantry items ***
 │
 └── tests/               # Pytest test files
 ```
@@ -95,11 +104,24 @@ The main server file that:
 - Multi-user kitchen support with 6-digit kitchen codes
 - Max 4 members per household
 - Routes: `/api/households/create`, `/api/households/join`, `/api/households/switch`
+- Uses `get_essentials_pack()` from `/data/pantry_items.py` to pre-populate new kitchens
 
 #### 4. `realtime.py` - Real-time Sync
 - Server-Sent Events (SSE) for live updates
 - `notify_inventory_change()`, `notify_shopping_change()` functions
 - Route: `/api/sse/stream` - clients connect to receive updates
+
+#### 5. `data/pantry_items.py` - Centralized Pantry Data (NEW)
+**SINGLE SOURCE OF TRUTH** for all pantry item definitions. Used by:
+- Essentials Pack (households.py) - pre-populates new kitchens
+- Indian Pantry Template (frontend) - fetches from `/api/pantry-items/template`
+- Category auto-detection - consistent unit assignment
+
+Key exports:
+- `PANTRY_TEMPLATE`: Complete Indian pantry hierarchy
+- `CATEGORY_UNITS`: Maps categories to correct units (e.g., "sweeteners" → "g")
+- `get_essentials_pack()`: Returns essential items for new kitchen setup
+- `get_pantry_template_for_frontend()`: Returns formatted data for frontend
 
 ### Route Module Pattern
 
