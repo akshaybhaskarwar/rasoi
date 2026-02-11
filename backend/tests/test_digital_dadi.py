@@ -193,7 +193,7 @@ class TestFestivalCRUDOperations:
         if response.status_code != 200:
             pytest.skip(f"Login failed: {response.status_code}")
         
-        self.token = response.json().get("token")
+        self.token = response.json().get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
     def test_create_festival(self):
@@ -335,7 +335,7 @@ class TestCSVUpload:
         if response.status_code != 200:
             pytest.skip(f"Login failed: {response.status_code}")
         
-        self.token = response.json().get("token")
+        self.token = response.json().get("access_token")
         self.headers = {"Authorization": f"Bearer {self.token}"}
     
     def test_csv_upload_requires_auth(self):
