@@ -610,4 +610,57 @@ CATEGORY_UNITS = {
 **Verification:** Testing agent confirmed 100% success rate on all 14 tests. Jaggery now correctly returns `category='sweeteners'` and `unit='g'` from all API endpoints.
 
 ---
-*Last updated: February 10, 2025*
+
+## February 11, 2025 - Digital Dadi Feature
+
+### New Feature: Digital Dadi - Festival Calendar & Reminders
+
+**Overview:** 
+Digital Dadi is an intelligent kitchen companion that provides festival reminders, ingredient alerts, and cooking tips. It helps users prepare for upcoming festivals by checking their inventory against required ingredients.
+
+**Use Cases Implemented:**
+1. **Admin CSV Upload for Festival Calendar** - Admins can upload festival data via CSV
+2. **Festival Reminders with Ingredient Alerts** - Users see upcoming festivals with readiness scores
+
+**Backend Components:**
+
+1. **New File: `/app/backend/routes/dadi.py`**
+   - `POST /api/dadi/festivals/upload` - Upload CSV with festival data
+   - `GET /api/dadi/festivals` - List all festivals
+   - `POST /api/dadi/festivals` - Create new festival
+   - `PUT /api/dadi/festivals/{id}` - Update festival
+   - `DELETE /api/dadi/festivals/{id}` - Delete festival
+   - `GET /api/dadi/upcoming` - Get upcoming festivals with inventory check
+   - `POST /api/dadi/add-missing-to-shopping` - Add missing ingredients to shopping list
+   - `GET /api/dadi/tip-of-day` - Get random cooking tip
+
+2. **MongoDB Collection: `festivals`**
+   - Fields: id, name, name_mr, name_hi, date, significance, key_ingredients, recipes, tips, is_fasting_day, region
+
+**Frontend Components:**
+
+1. **New File: `/app/frontend/src/pages/AdminFestivalManager.js`**
+   - CSV upload interface
+   - Festival list with expandable cards
+   - Edit/Delete functionality
+   - Download sample CSV
+
+2. **New File: `/app/frontend/src/components/DigitalDadi.js`**
+   - Dadi avatar and tip of day
+   - Upcoming festivals with countdown
+   - Readiness score with progress bar
+   - Ingredient status badges (in_stock/low/missing)
+   - "Add Missing to Shopping" button
+
+3. **Route Added: `/admin/festivals`**
+
+**CSV Format:**
+```
+Festival Name,Name (Marathi),Name (Hindi),Date,Significance,Key Ingredients,Recipes,Tips,Is Fasting Day,Region
+Makar Sankranti,मकर संक्रांती,मकर संक्रांति,Jan 14,Til-Gul interchange,"Til, Jaggery, Peanuts",Tilgul Ladoo,Make ladoos a day before,No,Maharashtra
+```
+
+**Verification:** Testing agent confirmed 100% success rate - 19 backend tests + frontend UI tests all passed.
+
+---
+*Last updated: February 11, 2025*
