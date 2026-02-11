@@ -37,6 +37,7 @@ from routes.youtube import create_youtube_routes, youtube_router
 from routes.preferences import create_preferences_routes, preferences_router
 from routes.barcode import create_barcode_routes, barcode_router
 from routes.pantry_items import create_pantry_routes, pantry_router
+from routes.dadi import create_dadi_routes, dadi_router
 
 # Import data for festival endpoint
 from data.festivals import FESTIVAL_CALENDAR
