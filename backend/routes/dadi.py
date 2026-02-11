@@ -372,7 +372,7 @@ def create_dadi_routes(db, decode_token):
                             parsed = parsed.replace(year=current_year)
                         festival_date = parsed
                         break
-                    except:
+                    except ValueError:
                         continue
                 
                 if not festival_date:
