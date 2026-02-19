@@ -646,7 +646,7 @@ Basmati Rice
 **Powered by:** OpenAI GPT-4 Vision (via Emergent LLM Key)
 
 **OCR Types:**
-1. **Product Name Extraction**
+1. ** Extraction**
    - Reads text from product packaging
    - Returns suggested category
 

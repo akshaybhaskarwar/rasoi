@@ -41,7 +41,7 @@ const getExpiryStatus = (expiryDate) => {
   return { status: 'ok', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
 };
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household', 'other'];
+const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'household', 'medicine', 'other'];
 
 // Category to unit type mapping
 const CATEGORY_UNITS = {
@@ -60,6 +60,7 @@ const CATEGORY_UNITS = {
   // Count-based items
   'bakery': { type: 'count', options: ['1 pack', '2 packs', '3 packs', '6 packs', '1 dozen'], default: '1 pack' },
   'household': { type: 'count', options: ['1 unit', '2 units', '1 pack', '2 packs', '1 box'], default: '1 unit' },
+  'medicine': { type: 'count', options: ['1 pack', '2 packs', '3 packs', '6 packs', '1 dozen'], default: '1 pack' },
   'other': { type: 'weight', options: ['100 g', '250 g', '500 g', '1 kg', '2 kg'], default: '500 g' }
 };
 
@@ -448,7 +449,7 @@ const ShoppingPage = () => {
                 data-testid="sync-inventory-btn"
               >
                 {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                <span className="hidden sm:inline">Sync</span> {getLowStockCount()}
+                <span className="sm:inline">Update</span> {getLowStockCount()}
               </Button>
             )}
             <Button 
@@ -458,7 +459,7 @@ const ShoppingPage = () => {
               data-testid="add-shopping-item-btn"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Item</span>
+              <span className="sm:inline">Add</span>
             </Button>
           </div>
         </div>

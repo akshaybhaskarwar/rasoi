@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household', 'other'];
+const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household','medicine', 'other'];
 
 export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   // Scan modes: 'choose' | 'barcode' | 'photo_name' | 'photo_expiry' | 'confirm'
@@ -311,6 +311,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     if (categoryLower.includes('oil')) return 'oils';
     if (categoryLower.includes('bakery') || categoryLower.includes('bread')) return 'bakery';
     if (categoryLower.includes('snack')) return 'snacks';
+    if (categoryLower.includes('medicine')) return 'medicine';
     if (categoryLower.includes('beverage') || categoryLower.includes('tea') || categoryLower.includes('coffee')) return 'beverages';
     return 'other';
   };

@@ -12,6 +12,7 @@ CATEGORY_KEYWORDS = {
     'snacks': ['chips', 'namkeen', 'bhujia', 'mixture', 'papad', 'crackers', 'wafers', 'popcorn', 'makhana', 'fox nuts'],
     'beverages': ['tea', 'chai', 'coffee', 'juice', 'drink', 'sharbat', 'lassi', 'buttermilk', 'chaas'],
     'vegetables': ['vegetable', 'sabzi', 'potato', 'aloo', 'onion', 'pyaaz', 'tomato', 'tamatar', 'carrot', 'gajar', 'peas', 'matar', 'beans', 'cabbage', 'cauliflower', 'gobi', 'spinach', 'palak', 'brinjal', 'baingan', 'okra', 'bhindi', 'capsicum', 'shimla mirch'],
+    'medicine': ['Citrizine'],
     'fruits': ['fruit', 'apple', 'banana', 'mango', 'aam', 'orange', 'santra', 'grapes', 'angoor', 'pomegranate', 'anar', 'papaya', 'guava', 'amrood', 'watermelon', 'pineapple']
 }
 
