@@ -60,7 +60,7 @@ const CATEGORY_UNITS = {
   // Count-based items
   'bakery': { type: 'count', options: ['1 pack', '2 packs', '3 packs', '6 packs', '1 dozen'], default: '1 pack' },
   'household': { type: 'count', options: ['1 unit', '2 units', '1 pack', '2 packs', '1 box'], default: '1 unit' },
-  'medicine': { type: 'count', options: ['1 pack', '2 packs', '3 packs', '6 packs', '1 dozen'], default: '1 pack' },
+  'medicine': { type: 'count', options: ['1 strip', '2 strips', '1 bottle', '1 box', '1 pack'], default: '1 strip' },
   'other': { type: 'weight', options: ['100 g', '250 g', '500 g', '1 kg', '2 kg'], default: '500 g' }
 };
 

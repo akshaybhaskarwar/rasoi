@@ -82,6 +82,7 @@ const CATEGORIES = [
   { value: 'fasting', label: '🔱 Upvas/Fasting', color: 'bg-purple-50' },
   { value: 'snacks', label: '🥣 Snacks & Ready Mix', color: 'bg-orange-100' },
   { value: 'beverages', label: '☕ Tea & Coffee', color: 'bg-brown-50' },
+  { value: 'medicine', label: '💊 Medicine', color: 'bg-rose-50' },
   { value: 'household', label: '🧹 Cleaning & Household', color: 'bg-cyan-50' },
   { value: 'other', label: '📦 Other', color: 'bg-gray-50' }
 ];

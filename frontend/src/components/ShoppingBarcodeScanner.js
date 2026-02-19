@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household', 'other'];
+const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household', 'medicine', 'other'];
 
 // Category to unit type mapping (replicated from ShoppingPage.js)
 const CATEGORY_UNITS = {
@@ -27,6 +27,7 @@ const CATEGORY_UNITS = {
   // Count-based items
   'bakery': { type: 'count', options: ['1 pack', '2 packs', '3 packs', '6 packs', '1 dozen'], default: '1 pack' },
   'household': { type: 'count', options: ['1 unit', '2 units', '1 pack', '2 packs', '1 box'], default: '1 unit' },
+  'medicine': { type: 'count', options: ['1 strip', '2 strips', '1 bottle', '1 box', '1 pack'], default: '1 strip' },
   'other': { type: 'weight', options: ['100 g', '250 g', '500 g', '1 kg', '2 kg'], default: '500 g' }
 };
 
@@ -342,6 +343,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     if (categoryLower.includes('oil')) return 'oils';
     if (categoryLower.includes('bakery') || categoryLower.includes('bread')) return 'bakery';
     if (categoryLower.includes('snack')) return 'snacks';
+    if (categoryLower.includes('medicine')) return 'medicine';
     if (categoryLower.includes('beverage') || categoryLower.includes('tea') || categoryLower.includes('coffee')) return 'beverages';
     return 'other';
   };
@@ -750,7 +752,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[250px] overflow-y-auto">
                       {CATEGORIES.map(cat => (
                         <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
                       ))}
