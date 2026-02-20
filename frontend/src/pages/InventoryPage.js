@@ -31,6 +31,7 @@ const DEFAULT_MONTHLY = {
   'fasting': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
   'household': { quantity: 1, unit: 'pcs', step: 1, display: '1 pcs' },
   'cleaning': { quantity: 1, unit: 'pcs', step: 1, display: '1 pcs' },
+  'medicine': { quantity: 1, unit: 'pcs', step: 1, display: '1 pcs' },
   'other': { quantity: 1000, unit: 'g', step: 250, display: '1 kg' }
 };
 
