@@ -55,6 +55,76 @@ const HomePage = () => {
   
   const bannerText = essentialsBannerText[language] || essentialsBannerText.en;
 
+  // Quick navigation shortcuts with vibrant colors
+  const quickNavItems = [
+    {
+      path: '/inventory',
+      icon: Package2,
+      labelKey: 'inventory',
+      description: 'Track your pantry',
+      descriptionHi: 'अपनी रसोई देखें',
+      descriptionMr: 'तुमची स्वयंपाकघर पहा',
+      color: '#10B981',
+      bgGradient: 'from-emerald-400 to-teal-500',
+      lightBg: 'bg-emerald-50',
+      testId: 'quick-nav-inventory'
+    },
+    {
+      path: '/shopping',
+      icon: ShoppingCart,
+      labelKey: 'shopping',
+      description: 'Shopping list',
+      descriptionHi: 'खरीदारी सूची',
+      descriptionMr: 'खरेदी यादी',
+      color: '#3B82F6',
+      bgGradient: 'from-blue-400 to-indigo-500',
+      lightBg: 'bg-blue-50',
+      testId: 'quick-nav-shopping'
+    },
+    {
+      path: '/planner',
+      icon: Calendar,
+      labelKey: 'planner',
+      description: 'Plan your meals',
+      descriptionHi: 'भोजन योजना',
+      descriptionMr: 'जेवण नियोजन',
+      color: '#8B5CF6',
+      bgGradient: 'from-purple-400 to-violet-500',
+      lightBg: 'bg-purple-50',
+      testId: 'quick-nav-planner'
+    },
+    {
+      path: '/recipes',
+      icon: BookOpen,
+      labelKey: 'recipes',
+      description: 'Discover recipes',
+      descriptionHi: 'रेसिपी खोजें',
+      descriptionMr: 'रेसिपी शोधा',
+      color: '#EC4899',
+      bgGradient: 'from-pink-400 to-rose-500',
+      lightBg: 'bg-pink-50',
+      testId: 'quick-nav-recipes'
+    },
+    {
+      path: '/community',
+      icon: Users,
+      labelKey: 'community',
+      description: 'Connect & share',
+      descriptionHi: 'जुड़ें और साझा करें',
+      descriptionMr: 'जोडा आणि शेअर करा',
+      color: '#F59E0B',
+      bgGradient: 'from-amber-400 to-orange-500',
+      lightBg: 'bg-amber-50',
+      testId: 'quick-nav-community'
+    }
+  ];
+
+  const getDescription = (item) => {
+    if (language === 'hi') return item.descriptionHi;
+    if (language === 'mr') return item.descriptionMr;
+    return item.description;
+  };
+
   const stats = [
     {
       icon: Package2,
