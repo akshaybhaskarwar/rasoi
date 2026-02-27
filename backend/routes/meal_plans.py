@@ -287,7 +287,7 @@ def create_meal_plan_routes(db, decode_token, youtube_service):
             try:
                 user = await get_user_from_token(credentials)
                 household_id = user.get("active_household")
-            except:
+            except Exception:
                 pass
         
         # Build query - only match this household's meal plans
