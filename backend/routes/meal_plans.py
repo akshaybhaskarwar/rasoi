@@ -276,10 +276,30 @@ def create_meal_plan_routes(db, decode_token, youtube_service):
         return {"suggestions": suggestions[:5]}
 
     @meal_plans_router.get("/meal-plans/check/{video_id}")
-    async def check_video_planned(video_id: str):
-        """Check if a video is already planned"""
+    async def check_video_planned(
+        video_id: str,
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+        """Check if a video is already planned for the current user's household"""
+        # Get user's active household to filter correctly
+        household_id = None
+        if credentials:
+            try:
+                user = await get_user_from_token(credentials)
+                household_id = user.get("active_household")
+            except:
+                pass
+        
+        # Build query - only match this household's meal plans
+        query = {"youtube_video_id": video_id}
+        if household_id:
+            query["household_id"] = household_id
+        else:
+            # If no household context, don't show as planned to prevent cross-user leakage
+            return {"is_planned": False}
+        
         existing = await db.meal_plans.find_one(
-            {"youtube_video_id": video_id},
+            query,
             {"_id": 0, "id": 1, "date": 1, "meal_type": 1}
         )
         
