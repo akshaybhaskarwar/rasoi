@@ -46,7 +46,7 @@ Rasoi-Sync is an intelligent kitchen management app built specifically for India
 ### Secondary Persona: Young Professional
 - **Age:** 25-35 years
 - **Role:** Living alone or with roommates, learning to cook
-- **Pain Points:** Not knowing what to cook, wasting ingredients
+- **Pain Points:** Not knowing what to cook, wasting ingredients, need protein rich diet
 - **Tech Comfort:** High
 
 ### Tertiary Persona: Joint Family Member
@@ -144,8 +144,7 @@ When a new household is created, automatically populate with 60+ essential India
 - Monthly Quantity (household's typical monthly usage)
 - Stock Level (calculated dynamically)
 - Expiry Date (optional)
-- Is Secret Stash (hidden from others)
-- Barcode (for scanning)
+- AI powered OCR (for scanning)
 - Reserved For (meal plan reservations)
 ```
 
@@ -155,8 +154,7 @@ When a new household is created, automatically populate with 60+ essential India
 - Expiry date tracking with alerts (expired, expiring today, expiring soon)
 - Filter by stock level (show only low stock items)
 - Search across English and regional names
-- Barcode scanning to add items
-- AI-powered OCR to read product names from photos
+- Add items using AI-powered OCR to read product name and expiry date from photos
 
 ---
 
@@ -237,7 +235,7 @@ When a meal is planned, users can reserve ingredients from inventory:
 ### 6. Recipe Discovery
 
 **Sources:**
-1. **Local Database:** 30+ pre-loaded Indian recipes with YouTube video IDs
+1. **Local Database:** 100+ pre-loaded Indian recipes with YouTube video IDs
 2. **YouTube Search:** Real-time search (API quota managed)
 3. **Favorite Channels Feed:** Personalized feed from user's favorite cooking channels
 
@@ -346,12 +344,8 @@ All labels, buttons, and messages available in all 3 languages.
 
 ---
 
-### 10. Barcode & OCR Scanning
+### 10. OCR Scanning
 
-**Barcode Scanning:**
-- Uses device camera + ZXing library
-- Looks up product in Open Food Facts database
-- Returns: name, brand, category, quantity, nutriscore, image
 
 **AI-Powered OCR:**
 - Uses OpenAI GPT-4 Vision
