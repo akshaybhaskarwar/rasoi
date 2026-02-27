@@ -204,6 +204,39 @@ const HomePage = () => {
       {/* Digital Dadi - Festival Reminders & Tips */}
       <DigitalDadi />
 
+      {/* Quick Navigation Shortcuts */}
+      <div className="space-y-3" data-testid="quick-nav-section">
+        <h3 className="text-lg font-bold text-gray-800 px-1">{getLabel('quickAccess') || 'Quick Access'}</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {quickNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`group flex flex-col items-center p-4 rounded-2xl ${item.lightBg} border border-transparent hover:border-gray-200 transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95`}
+                data-testid={item.testId}
+              >
+                <div 
+                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.bgGradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300`}
+                >
+                  <Icon className="w-6 h-6 text-white" strokeWidth={2} />
+                </div>
+                <span 
+                  className="text-xs font-semibold mt-2 text-center"
+                  style={{ color: item.color }}
+                >
+                  {getLabel(item.labelKey)}
+                </span>
+                <span className="text-[10px] text-gray-500 mt-0.5 text-center hidden sm:block">
+                  {getDescription(item)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat, index) => {
