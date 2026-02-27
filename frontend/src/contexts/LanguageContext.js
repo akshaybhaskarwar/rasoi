@@ -113,6 +113,7 @@ export const UI_LABELS = {
     goldVerified: 'Gold Verified',
     
     // Common phrases
+    quickAccess: 'Quick Access',
     itemsInStock: 'Items in Stock',
     itemsTotal: 'items total',
     lastUpdated: 'Last updated',
@@ -269,6 +270,7 @@ export const UI_LABELS = {
     goldVerified: 'गोल्ड सत्यापित',
     
     // Common phrases
+    quickAccess: 'त्वरित पहुंच',
     itemsInStock: 'स्टॉक में वस्तुएं',
     itemsTotal: 'कुल वस्तुएं',
     lastUpdated: 'अंतिम अपडेट',
@@ -425,6 +427,7 @@ export const UI_LABELS = {
     goldVerified: 'गोल्ड सत्यापित',
     
     // Common phrases
+    quickAccess: 'जलद प्रवेश',
     itemsInStock: 'साठ्यातील वस्तू',
     itemsTotal: 'एकूण वस्तू',
     lastUpdated: 'शेवटचे अपडेट',
