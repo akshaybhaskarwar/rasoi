@@ -286,11 +286,14 @@ const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded 
   };
 
   const checkPlannedStatus = async () => {
-    // Check planned status for each video
+    // Check planned status for each video - include auth token for household filtering
     const newPlannedStatus = {};
+    const token = localStorage.getItem('auth_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
     for (const video of feed) {
       try {
-        const response = await axios.get(`${API}/meal-plans/check/${video.video_id}`);
+        const response = await axios.get(`${API}/meal-plans/check/${video.video_id}`, { headers });
         if (response.data.is_planned) {
           newPlannedStatus[video.video_id] = response.data;
         }
