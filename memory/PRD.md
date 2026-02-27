@@ -708,3 +708,22 @@ Added new label `quickAccess` with translations:
 
 ---
 *Last updated: February 27, 2025*
+
+---
+
+## Bug Fix - Feb 27, 2025
+
+### Fixed: Incorrect "Planned" Status on Recipe Cards
+
+**Issue:** When a user added a recipe to their meal plan (e.g., Monday's Breakfast), other unrelated recipe cards would incorrectly display planned status (e.g., "Wednesday's Lunch") even though those recipes were not added by the current user.
+
+**Root Cause:** The `/api/meal-plans/check/{video_id}` endpoint was missing `household_id` filtering, causing it to return meal plan data from ANY user's household instead of just the current user's household.
+
+**Files Fixed:**
+- `/app/backend/routes/meal_plans.py` - Added `household_id` filtering to `check_video_planned` endpoint
+- `/app/frontend/src/components/PersonalizedRecipeStream.js` - Added auth token to API calls
+
+**Fix Details:**
+- Backend now requires authentication and filters by the user's `active_household`
+- If no valid household context exists, the endpoint returns `is_planned: false` to prevent cross-user data leakage
+- Frontend now passes the auth token when checking planned status
