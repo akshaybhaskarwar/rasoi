@@ -22,12 +22,15 @@ const CITIES = [
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { login, signup, createHousehold, joinHousehold } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, signup, createHousehold, joinHousehold, forgotPassword, resetPassword } = useAuth();
   
   // Auth state
-  const [mode, setMode] = useState('login'); // login, signup, forgot, onboarding, household
+  const [mode, setMode] = useState('login'); // login, signup, forgot, reset, household
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
   
   // Form data
   const [email, setEmail] = useState('');
@@ -36,12 +39,24 @@ const AuthPage = () => {
   const [name, setName] = useState('');
   const [homeLanguage, setHomeLanguage] = useState('en');
   const [city, setCity] = useState('Pune');
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   
   // Household
   const [householdMode, setHouseholdMode] = useState('create'); // create or join
   const [householdName, setHouseholdName] = useState('');
   const [kitchenCode, setKitchenCode] = useState('');
   const [createdCode, setCreatedCode] = useState('');
+
+  // Check for reset token in URL on mount
+  useEffect(() => {
+    const token = searchParams.get('reset_token');
+    if (token) {
+      setResetToken(token);
+      setMode('reset');
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
