@@ -6,10 +6,11 @@ Server-Sent Events (SSE) Module for Real-time Updates
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Dict, Set, AsyncGenerator
+from typing import Dict, Set, AsyncGenerator, Any
 import asyncio
 import json
 from datetime import datetime, timezone
+from bson import ObjectId
 
 # Security
 security = HTTPBearer(auto_error=False)
@@ -41,6 +42,20 @@ SHOPPING_STATUS = {
     "IN_CART": "in_cart",  # Someone is buying this
     "BOUGHT": "bought"
 }
+
+# ============ JSON SERIALIZATION HELPER ============
+
+def serialize_for_json(obj: Any) -> Any:
+    """Recursively convert ObjectIds to strings for JSON serialization"""
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, dict):
+        return {key: serialize_for_json(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [serialize_for_json(item) for item in obj]
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    return obj
 
 # ============ CONNECTION MANAGEMENT ============
 
