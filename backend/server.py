@@ -74,6 +74,12 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Root-level health check for Kubernetes (without /api prefix)
+@app.get("/health")
+async def root_health():
+    """Health check endpoint for Kubernetes liveness/readiness probes"""
+    return {"status": "healthy"}
+
 # Initialize services
 translate_service = TranslationService(db, GOOGLE_TRANSLATE_API_KEY, log_api_usage)
 youtube_service = YouTubeService(YOUTUBE_API_KEY, db, log_api_usage)
