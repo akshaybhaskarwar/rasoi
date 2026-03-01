@@ -207,6 +207,7 @@ const AuthPage = () => {
             {mode === 'login' && 'Welcome back to your kitchen'}
             {mode === 'signup' && 'Create your kitchen account'}
             {mode === 'forgot' && 'Reset your password'}
+            {mode === 'reset' && 'Create a new password'}
             {mode === 'household' && 'Set up your kitchen'}
           </CardDescription>
         </CardHeader>
