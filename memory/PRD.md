@@ -711,6 +711,34 @@ Added new label `quickAccess` with translations:
 
 ---
 
+## Password Reset Feature - Added Feb 27, 2025
+
+### Full Password Reset Flow Implementation
+**Files Modified:** `/app/frontend/src/pages/AuthPage.js`
+
+**Flow:**
+1. **Request Reset** - User clicks "Forgot password?" → enters email → clicks "Send Reset Instructions"
+2. **Check Email Screen** - Shows confirmation with email address, spam folder tip, and token entry option
+3. **Reset Password Form** - User enters new password and confirms → clicks "Reset Password"
+4. **Success Screen** - Shows completion message with "Go to Login" button
+
+**Features:**
+- Email validation before submission
+- Password confirmation matching
+- Minimum 6 character password requirement
+- Show/hide password toggle
+- Token-based reset via URL parameter (`?reset_token=xxx`)
+- Manual token entry for development/testing
+- Security: Does not reveal if email exists in database
+
+**Backend Endpoints (already existed):**
+- `POST /api/auth/forgot-password` - Generates reset token
+- `POST /api/auth/reset-password` - Validates token and updates password
+
+**Note:** In production, the `dev_token` response field should be removed and actual email sending should be implemented.
+
+---
+
 ## Bug Fix - Feb 27, 2025
 
 ### Fixed: Incorrect "Planned" Status on Recipe Cards
