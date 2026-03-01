@@ -546,42 +546,211 @@ const AuthPage = () => {
 
           {/* Forgot Password */}
           {mode === 'forgot' && (
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="text-center p-4 bg-gray-50 rounded-lg mb-4">
-                <p className="text-sm text-gray-600">
-                  Enter your email address and we'll send you a link to reset your password
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="forgot-email">Email</Label>
-                <Input
-                  id="forgot-email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500"
-                disabled={loading}
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Send Reset Link
-              </Button>
-              
-              <button
-                type="button"
-                onClick={() => setMode('login')}
-                className="w-full text-sm text-gray-500 hover:text-gray-700"
-              >
-                Back to login
-              </button>
-            </form>
+            <div className="space-y-4">
+              {!resetSent ? (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl mb-4">
+                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Mail className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Enter your email address and we'll send you instructions to reset your password
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email Address</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      data-testid="forgot-email-input"
+                    />
+                  </div>
+                  
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                    disabled={loading}
+                    data-testid="send-reset-btn"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                    Send Reset Instructions
+                  </Button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setMode('login')}
+                    className="w-full text-sm text-gray-500 hover:text-orange-600 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to login
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800">Check your email</h3>
+                  <p className="text-sm text-gray-600">
+                    If an account exists for <span className="font-medium text-gray-800">{email}</span>, you'll receive password reset instructions shortly.
+                  </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-left">
+                    <p className="text-xs text-amber-700">
+                      <strong>Tip:</strong> Check your spam folder if you don't see the email within a few minutes.
+                    </p>
+                  </div>
+                  
+                  {/* Dev mode: Show token entry for testing */}
+                  <div className="pt-4 border-t">
+                    <p className="text-xs text-gray-400 mb-2">Have a reset token?</p>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Enter reset token"
+                        value={resetToken}
+                        onChange={(e) => setResetToken(e.target.value)}
+                        className="text-sm"
+                        data-testid="reset-token-input"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (resetToken) {
+                            setMode('reset');
+                          }
+                        }}
+                        disabled={!resetToken}
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetSent(false);
+                      setMode('login');
+                    }}
+                    className="text-sm text-gray-500 hover:text-orange-600 transition-colors"
+                  >
+                    Return to login
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reset Password (with token) */}
+          {mode === 'reset' && (
+            <div className="space-y-4">
+              {!resetSuccess ? (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl mb-4">
+                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <KeyRound className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Create a new password for your account
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        data-testid="new-password-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-new-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      data-testid="confirm-new-password-input"
+                    />
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                    Password must be at least 6 characters
+                  </div>
+                  
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                    disabled={loading}
+                    data-testid="reset-password-btn"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyRound className="w-4 h-4 mr-2" />}
+                    Reset Password
+                  </Button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetToken('');
+                      setMode('login');
+                    }}
+                    className="w-full text-sm text-gray-500 hover:text-orange-600 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to login
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800">Password Reset Complete!</h3>
+                  <p className="text-sm text-gray-600">
+                    Your password has been successfully reset. You can now login with your new password.
+                  </p>
+                  
+                  <Button
+                    onClick={() => {
+                      setResetSuccess(false);
+                      setResetToken('');
+                      setNewPassword('');
+                      setConfirmNewPassword('');
+                      setMode('login');
+                    }}
+                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                    data-testid="go-to-login-btn"
+                  >
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Go to Login
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
