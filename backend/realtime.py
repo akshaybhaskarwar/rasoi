@@ -81,9 +81,12 @@ async def broadcast_to_household(household_id: str, event_type: str, data: dict,
     if household_id not in household_connections:
         return
     
+    # Serialize data to handle ObjectIds and other non-JSON types
+    serialized_data = serialize_for_json(data)
+    
     message = {
         "type": event_type,
-        "data": data,
+        "data": serialized_data,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
     
@@ -91,7 +94,7 @@ async def broadcast_to_household(household_id: str, event_type: str, data: dict,
         if conn_id != exclude_connection:
             try:
                 await queue.put(message)
-            except:
+            except Exception:
                 pass  # Connection might be closed
 
 def get_connection_count(household_id: str) -> int:
