@@ -143,8 +143,53 @@ const AuthPage = () => {
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    // TODO: Implement forgot password UI
-    toast.info('Password reset feature coming soon!');
+    
+    if (!email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    setLoading(true);
+    
+    const result = await forgotPassword(email);
+    
+    if (result.success) {
+      setResetSent(true);
+      toast.success('Reset instructions sent!');
+    } else {
+      // Still show success to not reveal if email exists
+      setResetSent(true);
+      toast.success('If this email exists, reset instructions have been sent');
+    }
+    
+    setLoading(false);
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmNewPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    
+    setLoading(true);
+    
+    const result = await resetPassword(resetToken, newPassword);
+    
+    if (result.success) {
+      setResetSuccess(true);
+      toast.success('Password reset successful!');
+    } else {
+      toast.error(result.error || 'Failed to reset password');
+    }
+    
+    setLoading(false);
   };
 
   return (
