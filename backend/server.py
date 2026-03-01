@@ -57,7 +57,7 @@ db = client[os.environ['DB_NAME']]
 YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 EMERGENT_API_KEY = os.environ.get('EMERGENT_API_KEY')
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
-GOOGLE_TRANSLATE_API_KEY = os.environ.get('GOOGLE_TRANSLATE_API_KEY', 'AIzaSyA3FWsJ4zdvXIm34KN3nWZKfDzsGnXc6FY')
+GOOGLE_TRANSLATE_API_KEY = os.environ.get('GOOGLE_TRANSLATE_API_KEY')
 
 # Supported languages for translation
 SUPPORTED_LANGUAGES = {
