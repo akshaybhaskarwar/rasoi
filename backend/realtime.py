@@ -149,7 +149,7 @@ def create_sse_routes(db, decode_token_func):
         # Decode token
         try:
             payload = decode_token_func(token)
-        except:
+        except Exception:
             raise HTTPException(status_code=401, detail="Invalid token")
         
         user_id = payload.get("sub")
