@@ -245,9 +245,8 @@ const AboutPage = () => {
       description: 'Shop smartly with auto-generated lists',
       details: [
         'View auto-generated shopping list based on gaps',
-        'Add items manually or scan barcodes',
-        'Mark items "In Cart" while shopping',
-        'Mark "Bought" to move items to inventory'
+        'Add items manually or using AI scan',
+        'Mark "Purchased" to move items to inventory'
       ]
     },
     {
