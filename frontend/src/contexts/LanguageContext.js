@@ -608,7 +608,72 @@ export const UI_LABELS = {
     fasting: 'उपवास',
     snacksCategory: 'नाश्ता आणि रेडी मिक्स',
     beverages: 'चहा आणि कॉफी',
-    other: 'इतर'
+    other: 'इतर',
+    
+    // About Page
+    aboutRasoiSync: 'रसोई-सिंक बद्दल',
+    aboutTagline: 'तुमचा स्मार्ट स्वयंपाकघर साथीदार - साठा व्यवस्थापित करा, जेवण नियोजित करा, पाककृती शोधा आणि कुटुंबासह खरेदी करा.',
+    backToHome: 'मुख्यपृष्ठावर परत जा',
+    quickSetupGuide: 'द्रुत सेटअप मार्गदर्शक',
+    getStartedSteps: '6 सोप्या चरणांमध्ये रसोई-सिंक सुरू करा',
+    featureGuide: 'वैशिष्ट्य मार्गदर्शक',
+    clickToLearn: 'उदाहरणांसह अधिक जाणून घेण्यासाठी प्रत्येक वैशिष्ट्यावर क्लिक करा',
+    completeWorkflow: 'संपूर्ण स्वयंपाकघर कार्यप्रवाह',
+    emptyToOrganized: 'रिकाम्या स्वयंपाकघरापासून व्यवस्थित स्वयंपाकघरापर्यंत',
+    whyRasoiSync: 'रसोई-सिंक का?',
+    builtForIndian: 'भारतीय कुटुंबांसाठी, भारतीय डेव्हलपर्सनी बनवलेले',
+    readyToOrganize: 'तुमचे स्वयंपाकघर व्यवस्थित करण्यास तयार?',
+    joinFamilies: 'हजारो कुटुंबांसोबत सामील व्हा जे आधीच रसोई-सिंक वापरत आहेत',
+    getStartedNow: 'आता सुरू करा',
+    madeWithLove: 'भारतात प्रेमाने बनवलेले',
+    appIdea: 'अॅप कल्पना',
+    appDevelopment: 'अॅप डेव्हलपमेंट',
+    poweredBy: 'द्वारे संचालित',
+    buildingForBharat: 'भारतासाठी निर्माण',
+    
+    // About - Features
+    familyKitchen: 'कुटुंब स्वयंपाकघर',
+    collaborativeHousehold: 'सहयोगी घरगुती व्यवस्थापन',
+    smartInventory: 'स्मार्ट साठा',
+    trackPantry: 'तुमचे स्वयंपाकघर कार्यक्षमतेने ट्रॅक करा',
+    smartShoppingList: 'स्मार्ट खरेदी यादी',
+    neverForget: 'पुन्हा कधीही वस्तू विसरू नका',
+    recipeDiscovery: 'पाककृती शोध',
+    cookWithWhat: 'जे आहे त्यातून शिजवा',
+    mealPlanner: 'जेवण नियोजक',
+    planWeekAhead: 'तुमच्या आठवड्याचे आधीच नियोजन करा',
+    communityKitchen: 'समुदाय स्वयंपाकघर',
+    shareWithNeighbors: 'शेजाऱ्यांसोबत शेअर करा',
+    
+    // About - Why sections
+    multiLanguage: 'बहुभाषिक',
+    availableIn: 'इंग्रजी, हिंदी आणि मराठीत उपलब्ध',
+    familyFocused: 'कुटुंब केंद्रित',
+    entireFamilyShops: 'संपूर्ण कुटुंब एकत्र खरेदी करते आणि व्यवस्थापित करते',
+    mobileFirst: 'मोबाइल प्रथम',
+    designedForShopping: 'चालताना खरेदीसाठी डिझाइन केलेले',
+    aiPowered: 'AI संचालित',
+    smartSuggestions: 'स्मार्ट सूचना आणि पाककृती जुळणी',
+    
+    // About - Setup Steps
+    createAccountKitchen: 'खाते आणि स्वयंपाकघर तयार करा',
+    signUpCreate: 'ईमेलने साइन अप करा आणि तुमचे कौटुंबिक स्वयंपाकघर तयार करा',
+    addInitialInventory: 'प्रारंभिक साठा जोडा',
+    addItemsCurrently: 'तुमच्या स्वयंपाकघरातील सध्याच्या वस्तू जोडा',
+    inviteFamilyMembers: 'कुटुंबातील सदस्यांना आमंत्रित करा',
+    shareKitchenCode: 'कुटुंबासोबत स्वयंपाकघर कोड शेअर करा',
+    useShoppingList: 'खरेदी यादी वापरा',
+    shopSmartly: 'स्वयंचलित याद्यांसह स्मार्ट खरेदी करा',
+    planYourMeals: 'तुमच्या जेवणाचे नियोजन करा',
+    neverWonderCook: 'काय शिजवायचे याचा कधीही विचार करू नका',
+    discoverRecipes: 'पाककृती शोधा',
+    cookWithWhatYouHave: 'तुमच्याकडे जे आहे त्यातून शिजवा',
+    
+    // About - Workflow Phases
+    dayOneSetup: 'पहिला दिवस: तुमचे स्वयंपाकघर सेट करा',
+    weeklyPlanShop: 'साप्ताहिक: नियोजन करा आणि खरेदी करा',
+    dailyCookEnjoy: 'दैनंदिन: शिजवा आणि आनंद घ्या',
+    monthlyReviewOptimize: 'मासिक: पुनरावलोकन करा आणि अनुकूल करा'
   }
 };
 
