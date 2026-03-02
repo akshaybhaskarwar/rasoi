@@ -116,6 +116,18 @@ const HomePage = () => {
       bgGradient: 'from-amber-400 to-orange-500',
       lightBg: 'bg-amber-50',
       testId: 'quick-nav-community'
+    },
+    {
+      path: '/about',
+      icon: Info,
+      labelKey: 'about',
+      description: 'About Rasoi-Sync',
+      descriptionHi: 'रसोई-सिंक के बारे में',
+      descriptionMr: 'रसोई-सिंक बद्दल',
+      color: '#6366F1',
+      bgGradient: 'from-indigo-400 to-purple-500',
+      lightBg: 'bg-indigo-50',
+      testId: 'quick-nav-about'
     }
   ];
 
