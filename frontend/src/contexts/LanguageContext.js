@@ -114,6 +114,7 @@ export const UI_LABELS = {
     
     // Common phrases
     quickAccess: 'Quick Access',
+    about: 'About',
     itemsInStock: 'Items in Stock',
     itemsTotal: 'items total',
     lastUpdated: 'Last updated',
