@@ -801,6 +801,29 @@ Created a detailed "About" page that serves as both marketing page and user guid
 
 ---
 
+## Multi-language About Page - Added Mar 2, 2025
+
+### Full Hindi and Marathi Translations Added
+**File:** `/app/frontend/src/pages/AboutPage.js`
+
+Complete translations for all About page content:
+- Hero section and tagline
+- Quick Setup Guide (6 steps)
+- Feature Guide with examples (Family Kitchen, Inventory, Shopping, Recipes, Planner, Community)
+- Complete Workflow phases
+- Why Rasoi-Sync section
+- CTA section
+- Credits footer
+
+**Languages Supported:**
+- English (en)
+- Hindi (hi) - हिंदी
+- Marathi (mr) - मराठी
+
+Language automatically switches based on user's selected language preference in the header.
+
+---
+
 ## Bug Fix - Feb 27, 2025
 
 ### Fixed: Incorrect "Planned" Status on Recipe Cards
