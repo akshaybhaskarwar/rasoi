@@ -15,6 +15,9 @@ import uuid
 import secrets
 import os
 
+# Import email service
+from email_service import send_password_reset_email, is_email_configured
+
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
