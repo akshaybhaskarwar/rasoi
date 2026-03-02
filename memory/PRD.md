@@ -771,6 +771,36 @@ FRONTEND_URL=<your-frontend-url>
 
 ---
 
+## About Rasoi-Sync Page - Added Feb 27, 2025
+
+### Comprehensive Documentation Page
+**File:** `/app/frontend/src/pages/AboutPage.js`
+
+Created a detailed "About" page that serves as both marketing page and user guide.
+
+**Sections:**
+1. **Hero Section** - App branding with key features grid
+2. **Quick Setup Guide** - 6-step cards for getting started
+3. **Feature Guide** - Expandable accordions with detailed examples:
+   - Family Kitchen (collaborative management)
+   - Smart Inventory (tracking & alerts)
+   - Smart Shopping List (barcode scanning, status flow)
+   - Recipe Discovery (YouTube integration)
+   - Meal Planner (weekly planning)
+   - Community Kitchen (sharing)
+4. **Complete Workflow** - Day 1 → Weekly → Daily → Monthly timeline
+5. **Why Rasoi-Sync** - Key differentiators
+6. **CTA Section** - Get Started call-to-action
+7. **Credits Footer**:
+   - App Idea: Tejasvi Shardul Wargantiwar, Chandrapur
+   - App Development: Akshay Arun Bhaskarwar, Pune
+   - Powered by: Anubandh.com Team
+
+**Route:** `/about` (public, no authentication required)
+**Access:** Info icon in header (both mobile and desktop)
+
+---
+
 ## Bug Fix - Feb 27, 2025
 
 ### Fixed: Incorrect "Planned" Status on Recipe Cards
