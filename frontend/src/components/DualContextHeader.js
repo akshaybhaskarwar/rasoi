@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Globe, Shield } from 'lucide-react';
+import { MapPin, Globe, Shield, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Select,
