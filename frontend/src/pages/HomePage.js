@@ -1,7 +1,7 @@
 import { useInventory, useMealPlanner, useGapAnalysis } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Package2, Calendar, ShoppingCart, AlertCircle, Package, X, ArrowRight, BookOpen, Users } from 'lucide-react';
+import { Package2, Calendar, ShoppingCart, AlertCircle, Package, X, ArrowRight, BookOpen, Users, Info } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import DigitalDadi from '@/components/DigitalDadi';
