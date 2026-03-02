@@ -81,6 +81,9 @@ function AppContent() {
             isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />
           } />
           
+          {/* Public About page - accessible without login */}
+          <Route path="/about" element={<AboutPage />} />
+          
           {/* Protected routes */}
           <Route path="/*" element={
             <ProtectedRoute>
