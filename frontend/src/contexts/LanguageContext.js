@@ -560,6 +560,7 @@ export const UI_LABELS = {
     
     // Common phrases
     quickAccess: 'जलद प्रवेश',
+    about: 'माहिती',
     itemsInStock: 'साठ्यातील वस्तू',
     itemsTotal: 'एकूण वस्तू',
     lastUpdated: 'शेवटचे अपडेट',
