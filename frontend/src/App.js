@@ -97,6 +97,7 @@ function AppContent() {
                       <Route path="/planner" element={<PlannerPage />} />
                       <Route path="/recipes" element={<RecipesPage />} />
                       <Route path="/community" element={<CommunityPage />} />
+                      <Route path="/about" element={<AboutPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/admin/festivals" element={<AdminFestivalManager />} />
                     </Routes>
