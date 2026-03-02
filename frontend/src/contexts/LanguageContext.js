@@ -337,6 +337,7 @@ export const UI_LABELS = {
     
     // Common phrases
     quickAccess: 'त्वरित पहुंच',
+    about: 'जानकारी',
     itemsInStock: 'स्टॉक में वस्तुएं',
     itemsTotal: 'कुल वस्तुएं',
     lastUpdated: 'अंतिम अपडेट',
