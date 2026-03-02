@@ -164,7 +164,72 @@ export const UI_LABELS = {
     fasting: 'Upvas/Fasting',
     snacksCategory: 'Snacks & Ready Mix',
     beverages: 'Tea & Coffee',
-    other: 'Other'
+    other: 'Other',
+    
+    // About Page
+    aboutRasoiSync: 'About Rasoi-Sync',
+    aboutTagline: 'Your Smart Kitchen Companion - Manage inventory, plan meals, discover recipes, and shop together as a family.',
+    backToHome: 'Back to Home',
+    quickSetupGuide: 'Quick Setup Guide',
+    getStartedSteps: 'Get started with Rasoi-Sync in 6 simple steps',
+    featureGuide: 'Feature Guide',
+    clickToLearn: 'Click on each feature to learn more with examples',
+    completeWorkflow: 'Complete Kitchen Workflow',
+    emptyToOrganized: 'From empty pantry to organized kitchen',
+    whyRasoiSync: 'Why Rasoi-Sync?',
+    builtForIndian: 'Built for Indian families, by Indian developers',
+    readyToOrganize: 'Ready to Organize Your Kitchen?',
+    joinFamilies: 'Join thousands of families already using Rasoi-Sync',
+    getStartedNow: 'Get Started Now',
+    madeWithLove: 'Made with love in India',
+    appIdea: 'App Idea',
+    appDevelopment: 'App Development',
+    poweredBy: 'Powered by',
+    buildingForBharat: 'Building for Bharat',
+    
+    // About - Features
+    familyKitchen: 'Family Kitchen',
+    collaborativeHousehold: 'Collaborative household management',
+    smartInventory: 'Smart Inventory',
+    trackPantry: 'Track your pantry efficiently',
+    smartShoppingList: 'Smart Shopping List',
+    neverForget: 'Never forget items again',
+    recipeDiscovery: 'Recipe Discovery',
+    cookWithWhat: 'Cook with what you have',
+    mealPlanner: 'Meal Planner',
+    planWeekAhead: 'Plan your week ahead',
+    communityKitchen: 'Community Kitchen',
+    shareWithNeighbors: 'Share with neighbors',
+    
+    // About - Why sections
+    multiLanguage: 'Multi-language',
+    availableIn: 'Available in English, Hindi, and Marathi',
+    familyFocused: 'Family Focused',
+    entireFamilyShops: 'Entire family shops & manages together',
+    mobileFirst: 'Mobile First',
+    designedForShopping: 'Designed for shopping on-the-go',
+    aiPowered: 'AI Powered',
+    smartSuggestions: 'Smart suggestions & recipe matching',
+    
+    // About - Setup Steps
+    createAccountKitchen: 'Create Account & Kitchen',
+    signUpCreate: 'Sign up with email and create your family kitchen',
+    addInitialInventory: 'Add Initial Inventory',
+    addItemsCurrently: 'Add items currently in your kitchen',
+    inviteFamilyMembers: 'Invite Family Members',
+    shareKitchenCode: 'Share kitchen code with family',
+    useShoppingList: 'Use Shopping List',
+    shopSmartly: 'Shop smartly with auto-generated lists',
+    planYourMeals: 'Plan Your Meals',
+    neverWonderCook: 'Never wonder what to cook',
+    discoverRecipes: 'Discover Recipes',
+    cookWithWhatYouHave: 'Cook with what you have',
+    
+    // About - Workflow Phases
+    dayOneSetup: 'Day 1: Setup Your Kitchen',
+    weeklyPlanShop: 'Weekly: Plan & Shop',
+    dailyCookEnjoy: 'Daily: Cook & Enjoy',
+    monthlyReviewOptimize: 'Monthly: Review & Optimize'
   },
   hi: {
     // App branding
