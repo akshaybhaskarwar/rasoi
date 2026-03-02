@@ -739,6 +739,38 @@ Added new label `quickAccess` with translations:
 
 ---
 
+## Gmail SMTP Email Integration - Added Feb 27, 2025
+
+### Email Service Implementation
+**File:** `/app/backend/email_service.py`
+
+Implemented Gmail SMTP integration for transactional emails:
+- Password reset emails with beautiful HTML templates
+- Welcome emails (ready for future use)
+- Proper error handling and logging
+
+**Configuration (backend/.env):**
+```
+SMTP_EMAIL=info@anubandh.com
+SMTP_PASSWORD=<app-password>
+FRONTEND_URL=<your-frontend-url>
+```
+
+**Features:**
+- HTML + plain text email fallback
+- Beautiful branded email templates with Rasoi-Sync styling
+- Reset link with embedded token
+- Security notice about 1-hour expiration
+- Spam folder tip
+- Automatic dev_token fallback when email not configured
+
+**Updated:** `/app/backend/auth.py`
+- Integrated email service into forgot-password endpoint
+- Emails only sent when SMTP is configured
+- Falls back to dev_token for local development
+
+---
+
 ## Bug Fix - Feb 27, 2025
 
 ### Fixed: Incorrect "Planned" Status on Recipe Cards
