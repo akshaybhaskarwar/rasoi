@@ -66,7 +66,7 @@ const AboutPage = () => {
           steps: [
             { title: 'Create Your Kitchen', description: 'Sign up and create a new household. Give it a name like "Sharma Family Kitchen".', example: 'Example: Mrs. Sharma creates "Sharma Kutumb Kitchen" and gets Kitchen Code: SK-7842' },
             { title: 'Invite Family Members', description: 'Share your Kitchen Code with family members.', example: 'Example: Son Rahul joins using code SK-7842 and can now see the same inventory' },
-            { title: 'Real-time Sync', description: 'When anyone adds items or marks something as purchased, everyone sees updates instantly.', example: 'Example: When Rahul buys milk, Mrs. Sharma sees it marked as "Bought" immediately' },
+            { title: 'Real-time Sync', description: 'When anyone adds items or marks something as bought, everyone sees updates instantly.', example: 'Example: When Rahul buys milk, Mrs. Sharma sees it marked as "Bought" immediately' },
             { title: 'Shop Together', description: 'Multiple family members can shop simultaneously.', example: 'Example: Father picks Rice (shows "In Cart"), Rahul picks Vegetables - no duplicates!' }
           ]
         },
@@ -84,7 +84,7 @@ const AboutPage = () => {
           steps: [
             { title: 'Auto-Generated List', description: 'Items automatically added based on gaps.', example: 'Example: Rice at 2 kg, need 10 kg - "Rice (8 kg)" auto-added' },
             { title: 'Scan Products', description: 'Use barcode scanner to quickly add items.', example: 'Example: Scan Fortune Oil - App adds "Fortune Sunflower Oil 1L"' },
-            { title: 'Mark Purchase Status', description: 'Mark "Purchased" after updating purchased quantity.', example: 'Example: Update Dal quantity → Mark "Purchased" → Goes to inventory' },
+            { title: 'Mark Purchase Status', description: Mark "Purchased" after updating purchased quantity.', example: 'Example: Update Dal quantity → Mark "Purchased" → Goes to inventory' },
             { title: 'Collaborative Shopping', description: 'Family members can shop different sections simultaneously.', example: 'Example: Wife handles grocery, Husband handles vegetables - both see progress' }
           ]
         },
@@ -193,7 +193,7 @@ const AboutPage = () => {
           steps: [
             { title: 'स्वचालित सूची', description: 'कमी के आधार पर स्वचालित जोड़।', example: 'उदाहरण: चावल 2 किलो, जरूरत 10 - "चावल (8 किलो)" जुड़ जाता है' },
             { title: 'स्कैन करें', description: 'बारकोड स्कैनर से जल्दी जोड़ें।', example: 'उदाहरण: फॉर्च्यून तेल स्कैन करें - ऐप जोड़ता है' },
-            { title: 'स्थिति चिह्नित करें', description: 'खरीदारी में "कार्ट में", चेकआउट पर "खरीदा"।', example: 'उदाहरण: दाल → "खरीदा" → इन्वेंटरी में' },
+            { title: 'स्थिति चिह्नित करें', description: 'खरीदारी में "कार्ट में", चेकआउट पर "खरीदा"।', example: 'उदाहरण: दाल उठाएं → "कार्ट में" → "खरीदा" → इन्वेंटरी में' },
             { title: 'सहयोगी खरीदारी', description: 'परिवार एक साथ अलग-अलग खरीदारी करे।', example: 'उदाहरण: पत्नी किराना, पति सब्जियां - दोनों प्रगति देखें' }
           ]
         },
@@ -302,7 +302,7 @@ const AboutPage = () => {
           steps: [
             { title: 'स्वयंचलित यादी', description: 'तफावतींवर आधारित स्वयंचलित जोड.', example: 'उदाहरण: तांदूळ 2 किलो, गरज 10 - "तांदूळ (8 किलो)" जोडले जाते' },
             { title: 'स्कॅन करा', description: 'बारकोड स्कॅनरने पटकन जोडा.', example: 'उदाहरण: Fortune तेल स्कॅन करा - अॅप जोडते' },
-            { title: 'स्थिती चिन्हांकित करा', description: 'खरेदीत "कार्टमध्ये", चेकआउटवर "खरेदी केले".', example: 'उदाहरण: डाळ → "खरेदी केले" → साठ्यात' },
+            { title: 'स्थिती चिन्हांकित करा', description: 'खरेदीत "कार्टमध्ये", चेकआउटवर "खरेदी केले".', example: 'उदाहरण: डाळ उचला → "कार्टमध्ये" → "खरेदी केले" → साठ्यात' },
             { title: 'सहयोगी खरेदी', description: 'कुटुंब एकाच वेळी वेगवेगळे खरेदी करू शकते.', example: 'उदाहरण: पत्नी किराणा, पती भाज्या - दोघेही प्रगती पाहतात' }
           ]
         },
@@ -367,16 +367,14 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-    {/* Hero Section */}
+      {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-amber-500/10"></div>
         <div className="max-w-6xl mx-auto px-4 py-12 relative">
           <Button variant="ghost" onClick={() => navigate('/')} className="mb-6 text-gray-600 hover:text-orange-600" data-testid="back-to-home">
             <ArrowLeft className="w-4 h-4 mr-2" />{t.backToHome}
           </Button>
-        </div>
-      </div>
-     <div className="text-center mb-12">
+          <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
               <ChefHat className="w-10 h-10 text-white" />
             </div>
@@ -384,7 +382,61 @@ const AboutPage = () => {
               {language === 'en' ? 'About ' : ''}<span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-600">Rasoi-Sync</span>{language === 'hi' ? ' के बारे में' : language === 'mr' ? ' बद्दल' : ''}
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t.aboutTagline}</p>
-      </div> 
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
+            {[
+              { icon: Package, label: getLabel('inventory'), color: '#10B981' },
+              { icon: ShoppingCart, label: getLabel('shopping'), color: '#3B82F6' },
+              { icon: Calendar, label: getLabel('planner'), color: '#8B5CF6' },
+              { icon: BookOpen, label: getLabel('recipes'), color: '#EC4899' },
+              { icon: Users, label: t.familyKitchen.split(' ')[0], color: '#F59E0B' },
+              { icon: Heart, label: getLabel('community'), color: '#EF4444' },
+            ].map((item, idx) => (
+              <div key={idx} className="bg-white/80 backdrop-blur rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center" style={{ backgroundColor: `${item.color}15` }}>
+                  <item.icon className="w-6 h-6" style={{ color: item.color }} />
+                </div>
+                <span className="text-sm font-medium text-gray-700">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Setup Guide */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-800 mb-3">{t.quickSetupGuide}</h2>
+          <p className="text-gray-600">{t.getStartedSteps}</p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {t.setupSteps.map((item, idx) => {
+            const Icon = setupIcons[idx];
+            return (
+              <Card key={idx} className="bg-white/80 backdrop-blur border-0 shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-white font-bold">{idx + 1}</div>
+                    <div>
+                      <CardTitle className="text-lg">{item.title}</CardTitle>
+                      <p className="text-sm text-gray-500">{item.description}</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {item.details.map((detail, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />{detail}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Feature Guide */}
       <div className="max-w-6xl mx-auto px-4 py-12">
@@ -436,7 +488,52 @@ const AboutPage = () => {
         </div>
       </div>
 
-    
+      {/* Complete Workflow */}
+      <div className="bg-white/50 py-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">{t.completeWorkflow}</h2>
+            <p className="text-gray-600">{t.emptyToOrganized}</p>
+          </div>
+          <div className="relative">
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-orange-500 via-amber-500 to-green-500 transform -translate-x-1/2"></div>
+            <div className="space-y-12">
+              {t.workflow.map((phase, idx) => {
+                const Icon = workflowIcons[idx];
+                return (
+                  <div key={idx} className={`flex items-center gap-8 ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+                    <div className={`flex-1 ${idx % 2 === 1 ? 'md:text-right' : ''}`}>
+                      <Card className="bg-white border-0 shadow-lg inline-block">
+                        <CardHeader className="pb-2">
+                          <div className={`flex items-center gap-3 ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: workflowColors[idx] }}>
+                              <Icon className="w-6 h-6 text-white" />
+                            </div>
+                            <CardTitle className="text-lg">{phase.title}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className={`space-y-2 ${idx % 2 === 1 ? 'md:text-right' : ''}`}>
+                            {phase.items.map((item, i) => (
+                              <li key={i} className={`flex items-center gap-2 text-sm text-gray-600 ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
+                                <ArrowRight className="w-3 h-3 flex-shrink-0" style={{ color: workflowColors[idx] }} />{item}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <div className="hidden md:flex w-12 h-12 rounded-full bg-white shadow-lg items-center justify-center z-10">
+                      <span className="text-lg font-bold" style={{ color: workflowColors[idx] }}>{idx + 1}</span>
+                    </div>
+                    <div className="flex-1 hidden md:block"></div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Why Rasoi-Sync */}
       <div className="max-w-6xl mx-auto px-4 py-16">
@@ -493,12 +590,13 @@ const AboutPage = () => {
                 <p className="font-semibold text-lg">Tejasvi Shardul Wargantiwar</p>
                 <p className="text-gray-500 text-sm">Chandrapur, Maharashtra</p>
               </div>
-              <div>
+             
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <Heart className="w-5 h-5 text-red-400" />
                   <span className="text-gray-400 text-sm">{t.poweredBy}</span>
                 </div>
-                <p className="font-semibold text-lg">Anubandh.com Team, Pune</p>
+                <p className="font-semibold text-lg">Anubandh.com Team</p>
+                <p className="text-gray-500 text-sm">Pune, Maharashtra</p>
                 <p className="text-gray-500 text-sm">{t.buildingForBharat}</p>
               </div>
             </div>
@@ -508,7 +606,7 @@ const AboutPage = () => {
           </div>
         </div>
       </div>
-</div>
+    </div>
   );
 };
 
