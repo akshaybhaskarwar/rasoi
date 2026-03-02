@@ -106,8 +106,16 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             </div>
           </div>
 
-          {/* Right side: Admin + Household + Language */}
+          {/* Right side: About + Admin + Household + Language */}
           <div className="flex items-center gap-4">
+            {/* About Link - Desktop */}
+            <Link to="/about">
+              <Button variant="outline" size="sm" className="gap-2 border-orange-300 text-orange-700 hover:bg-orange-50" data-testid="about-link-desktop">
+                <Info className="w-4 h-4" />
+                About
+              </Button>
+            </Link>
+            
             {/* Admin Link - Desktop */}
             {isAuthenticated && user?.is_admin && (
               <Link to="/admin">
