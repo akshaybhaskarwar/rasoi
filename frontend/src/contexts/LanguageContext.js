@@ -386,7 +386,72 @@ export const UI_LABELS = {
     fasting: 'उपवास',
     snacksCategory: 'नाश्ता और रेडी मिक्स',
     beverages: 'चाय और कॉफी',
-    other: 'अन्य'
+    other: 'अन्य',
+    
+    // About Page
+    aboutRasoiSync: 'रसोई-सिंक के बारे में',
+    aboutTagline: 'आपका स्मार्ट रसोई साथी - सामान प्रबंधन करें, भोजन योजना बनाएं, रेसिपी खोजें, और परिवार के साथ खरीदारी करें।',
+    backToHome: 'होम पर वापस जाएं',
+    quickSetupGuide: 'त्वरित सेटअप गाइड',
+    getStartedSteps: '6 आसान चरणों में रसोई-सिंक शुरू करें',
+    featureGuide: 'सुविधा गाइड',
+    clickToLearn: 'उदाहरणों के साथ अधिक जानने के लिए प्रत्येक सुविधा पर क्लिक करें',
+    completeWorkflow: 'पूर्ण रसोई वर्कफ़्लो',
+    emptyToOrganized: 'खाली रसोई से व्यवस्थित रसोई तक',
+    whyRasoiSync: 'रसोई-सिंक क्यों?',
+    builtForIndian: 'भारतीय परिवारों के लिए, भारतीय डेवलपर्स द्वारा बनाया गया',
+    readyToOrganize: 'अपनी रसोई व्यवस्थित करने के लिए तैयार?',
+    joinFamilies: 'हजारों परिवारों से जुड़ें जो पहले से रसोई-सिंक का उपयोग कर रहे हैं',
+    getStartedNow: 'अभी शुरू करें',
+    madeWithLove: 'भारत में प्यार से बनाया गया',
+    appIdea: 'ऐप आइडिया',
+    appDevelopment: 'ऐप डेवलपमेंट',
+    poweredBy: 'द्वारा संचालित',
+    buildingForBharat: 'भारत के लिए निर्माण',
+    
+    // About - Features
+    familyKitchen: 'परिवार रसोई',
+    collaborativeHousehold: 'सहयोगी घरेलू प्रबंधन',
+    smartInventory: 'स्मार्ट सामान',
+    trackPantry: 'अपनी रसोई को कुशलता से ट्रैक करें',
+    smartShoppingList: 'स्मार्ट खरीदारी सूची',
+    neverForget: 'फिर कभी सामान न भूलें',
+    recipeDiscovery: 'रेसिपी खोज',
+    cookWithWhat: 'जो है उससे पकाएं',
+    mealPlanner: 'भोजन योजनाकार',
+    planWeekAhead: 'अपने सप्ताह की योजना पहले से बनाएं',
+    communityKitchen: 'समुदाय रसोई',
+    shareWithNeighbors: 'पड़ोसियों के साथ साझा करें',
+    
+    // About - Why sections
+    multiLanguage: 'बहु-भाषा',
+    availableIn: 'अंग्रेजी, हिंदी और मराठी में उपलब्ध',
+    familyFocused: 'परिवार केंद्रित',
+    entireFamilyShops: 'पूरा परिवार एक साथ खरीदारी और प्रबंधन करे',
+    mobileFirst: 'मोबाइल पहले',
+    designedForShopping: 'चलते-फिरते खरीदारी के लिए डिज़ाइन किया गया',
+    aiPowered: 'AI संचालित',
+    smartSuggestions: 'स्मार्ट सुझाव और रेसिपी मिलान',
+    
+    // About - Setup Steps
+    createAccountKitchen: 'अकाउंट और रसोई बनाएं',
+    signUpCreate: 'ईमेल से साइन अप करें और अपनी पारिवारिक रसोई बनाएं',
+    addInitialInventory: 'प्रारंभिक सामान जोड़ें',
+    addItemsCurrently: 'अपनी रसोई में वर्तमान में मौजूद सामान जोड़ें',
+    inviteFamilyMembers: 'परिवार के सदस्यों को आमंत्रित करें',
+    shareKitchenCode: 'परिवार के साथ रसोई कोड साझा करें',
+    useShoppingList: 'खरीदारी सूची का उपयोग करें',
+    shopSmartly: 'स्वचालित सूची के साथ स्मार्ट खरीदारी करें',
+    planYourMeals: 'अपने भोजन की योजना बनाएं',
+    neverWonderCook: 'कभी न सोचें कि क्या पकाना है',
+    discoverRecipes: 'रेसिपी खोजें',
+    cookWithWhatYouHave: 'जो आपके पास है उससे पकाएं',
+    
+    // About - Workflow Phases
+    dayOneSetup: 'पहला दिन: अपनी रसोई सेट करें',
+    weeklyPlanShop: 'साप्ताहिक: योजना बनाएं और खरीदारी करें',
+    dailyCookEnjoy: 'दैनिक: पकाएं और आनंद लें',
+    monthlyReviewOptimize: 'मासिक: समीक्षा करें और अनुकूलित करें'
   },
   mr: {
     // App branding
