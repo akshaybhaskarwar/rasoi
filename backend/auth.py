@@ -258,12 +258,23 @@ def create_auth_routes(db):
             "used": False
         })
         
-        # In production, send email here
-        # For now, return token in response (development only)
-        return {
-            "message": "If this email exists, a reset link has been sent",
-            "dev_token": reset_token  # Remove in production
-        }
+        # Send password reset email
+        email_sent = False
+        if is_email_configured():
+            email_sent = await send_password_reset_email(
+                to_email=user["email"],
+                reset_token=reset_token,
+                user_name=user.get("name")
+            )
+        
+        response = {"message": "If this email exists, a reset link has been sent"}
+        
+        # Include dev_token only if email is not configured (for development)
+        if not is_email_configured() or not email_sent:
+            response["dev_token"] = reset_token
+            response["dev_note"] = "Email not sent. Use this token for testing."
+        
+        return response
     
     @auth_router.post("/reset-password")
     async def reset_password(data: PasswordResetConfirm):
