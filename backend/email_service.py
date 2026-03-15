@@ -25,7 +25,10 @@ SMTP_PORT = 587
 
 # App Configuration
 APP_NAME = "Rasoi-Sync"
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://rasoi-sync.emergent.host')
+
+def get_frontend_url():
+    """Get frontend URL dynamically from environment"""
+    return os.environ.get('FRONTEND_URL', 'https://rasoi-sync-2.emergent.host')
 
 
 def is_email_configured() -> bool:
@@ -102,7 +105,7 @@ async def send_password_reset_email(to_email: str, reset_token: str, user_name: 
     Returns:
         bool: True if email sent successfully
     """
-    reset_link = f"{FRONTEND_URL}/auth?reset_token={reset_token}"
+    reset_link = f"{get_frontend_url()}/auth?reset_token={reset_token}"
     
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
     
