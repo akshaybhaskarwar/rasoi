@@ -189,7 +189,7 @@ const HouseholdSwitcher = () => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
-            className="flex items-center gap-2 h-9 px-3 border-orange-200 bg-orange-50 hover:bg-orange-100"
+            className="flex items-center gap-2 h-9 px-1 border-orange-200 bg-orange-50 hover:bg-orange-100"
             data-testid="household-switcher"
           >
             <Home className="w-4 h-4 text-orange-600" />

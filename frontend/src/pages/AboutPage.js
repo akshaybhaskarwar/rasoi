@@ -117,11 +117,13 @@ const AboutPage = () => {
       },
       setupSteps: [
         { title: 'Create Account & Kitchen', description: 'Sign up and create family kitchen', details: ['Enter name, email, password', 'Create household with name', 'Select language', 'Choose city'] },
-        { title: 'Add Initial Inventory', description: 'Add current kitchen items', details: ['Go to Inventory', 'Add items with quantity', 'Set category', 'Set monthly requirement'] },
+        { title: 'Add Initial Inventory', description: 'Add current kitchen items', details: ['Go to Inventory', 'Browse Template to add items. Can\'t find an item? Just go to your Shopping List and tap "+ Add" at the top right.', 'Update monthly need and currently available quantity for each item', 'Add expiry date of the item, as required. This will show notification before the expiry of the item.'  ] },
         { title: 'Invite Family Members', description: 'Share kitchen code', details: ['Go to Settings → Kitchen Code', 'Share 6-digit code', 'They join during signup', 'Everyone sees same inventory'] },
-        { title: 'Use Shopping List', description: 'Shop with auto-generated lists', details: ['View auto-generated list', 'Add manually or scan', 'Mark "In Cart"', 'Mark "Bought"'] },
+        { title: 'Use Shopping List', description: 'Shop with auto-generated lists', details: ['Items with less than half stock will appear in Shopping list', 'Add additional items manually or using AI scan','Share final list on WhatsApp', 'After purchase, add item quantity, expiry date (optional) & mark as "Purchased" to update Inventory','You can also add Medicines and its expiry date' ] },
         { title: 'Plan Your Meals', description: 'Never wonder what to cook', details: ['Go to Meal Planner', 'View weekly calendar', 'Add recipes', 'Missing items auto-add'] },
-        { title: 'Discover Recipes', description: 'Cook with what you have', details: ['Browse matching recipes', 'Watch YouTube tutorials', 'Add favorite channels', 'Add to meal plan'] }
+        { title: 'Discover Recipes/ Upload Family Recipes', description: 'Community Recipe Space', details: ['Browse matching recipes / Create your own family recipe collection', 'Link your YouTube Recipes', 'Share your hit recipe with community', 'Add recipe to meal plan'] },
+        { title: 'Digital Dadi', description: 'An AI assistant', details: ['Receive upcoming Festival Reminders, related recipes, ingredients & Cooking Tips from Digital Grand Mother!'] }
+        
       ],
       workflow: [
         { title: 'Day 1: Setup Your Kitchen', items: ['Create account', 'Add pantry items', 'Set requirements', 'Invite family'] },
@@ -133,7 +135,7 @@ const AboutPage = () => {
     hi: {
       aboutTagline: 'आपका स्मार्ट रसोई साथी - सामान प्रबंधन करें, भोजन योजना बनाएं, रेसिपी खोजें, और परिवार के साथ खरीदारी करें।',
       backToHome: 'होम पर वापस जाएं',
-      quickSetupGuide: 'त्वरित सेटअप गाइड',
+      quickSetupGuide: 'डिजिटल रसोई सेटअप गाइड',
       getStartedSteps: '6 आसान चरणों में रसोई-सिंक शुरू करें',
       featureGuide: 'सुविधा गाइड',
       clickToLearn: 'उदाहरणों के साथ जानने के लिए क्लिक करें',
@@ -173,7 +175,7 @@ const AboutPage = () => {
         familyKitchen: {
           description: 'एक साझा रसोई स्थान जहां सभी परिवार के सदस्य योगदान कर सकें।',
           steps: [
-            { title: 'अपनी रसोई बनाएं', description: 'साइन अप करें और नया घर बनाएं।', example: 'उदाहरण: श्रीमती शर्मा "शर्मा कुटुंब किचन" बनाती हैं, कोड: SK-7842' },
+            { title: 'अपनी रसोई बनाएं', description: 'साइन अप करें और अपनी फैमिली किचन तैयार करें।', example: 'उदाहरण: श्रीमती शर्मा "शर्मा कुटुंब किचन" बनाती हैं, कोड: SK-7842' },
             { title: 'परिवार को आमंत्रित करें', description: 'किचन कोड परिवार के साथ साझा करें।', example: 'उदाहरण: बेटा राहुल कोड SK-7842 से जुड़ता है' },
             { title: 'रीयल-टाइम सिंक', description: 'सभी को तुरंत अपडेट दिखाई देता है।', example: 'उदाहरण: राहुल दूध खरीदता है, माँ को तुरंत दिखता है' },
             { title: 'एक साथ खरीदारी', description: 'कई सदस्य एक साथ खरीदारी कर सकते हैं।', example: 'उदाहरण: पिताजी चावल उठाते हैं, राहुल सब्जियां - कोई डुप्लिकेट नहीं!' }
@@ -185,7 +187,7 @@ const AboutPage = () => {
             { title: 'सामान जोड़ें', description: 'मात्रा और इकाई के साथ सामान जोड़ें।', example: 'उदाहरण: "चावल - 5 किलो", "तेल - 2 लीटर" जोड़ें' },
             { title: 'मासिक आवश्यकताएं सेट करें', description: 'प्रति माह कितना चाहिए परिभाषित करें।', example: 'उदाहरण: चावल 10 किलो सेट करें। 3 किलो से नीचे पर अलर्ट।' },
             { title: 'श्रेणी के अनुसार व्यवस्थित', description: 'स्वचालित वर्गीकरण।', example: 'उदाहरण: "हल्दी" → मसाले, "पनीर" → डेयरी' },
-            { title: 'स्टॉक ट्रैक करें', description: 'रंग संकेतक: अच्छा (हरा), कम (पीला), गंभीर (लाल)।', example: 'उदाहरण: तेल 0.5L जब जरूरत 2L - लाल दिखता है' }
+            { title: 'स्टॉक ट्रैक करें', description: 'रंग संकेतक: फुल स्टॉक (हरा), आधा स्टॉक (पीला), एकदम कम स्टॉक (लाल)।', example: 'उदाहरण: तेल 0.5L जब जरूरत 2L - लाल दिखता है' }
           ]
         },
         shopping: {
@@ -193,8 +195,8 @@ const AboutPage = () => {
           steps: [
             { title: 'स्वचालित सूची', description: 'कमी के आधार पर स्वचालित जोड़।', example: 'उदाहरण: चावल 2 किलो, जरूरत 10 - "चावल (8 किलो)" जुड़ जाता है' },
             { title: 'स्कैन करें', description: 'बारकोड स्कैनर से जल्दी जोड़ें।', example: 'उदाहरण: फॉर्च्यून तेल स्कैन करें - ऐप जोड़ता है' },
-            { title: 'स्थिति चिह्नित करें', description: 'खरीदारी में "कार्ट में", चेकआउट पर "खरीदा"।', example: 'उदाहरण: दाल → "खरीदा" → इन्वेंटरी में' },
-            { title: 'सहयोगी खरीदारी', description: 'परिवार एक साथ अलग-अलग खरीदारी करे।', example: 'उदाहरण: पत्नी किराना, पति सब्जियां - दोनों प्रगति देखें' }
+            { title: 'वस्तु का स्टॉक अपडेट करें', description: 'खरीदारी के बाद शॉपिंग लिस्ट में स्टॉक अपडेट करें और "Mark as Purchased" पर क्लिक करें।', example: 'उदाहरण: दाल → "Mark as Purchased" → इन्वेंटरी में' },
+            { title: 'फ़ैमिली खरीदारी', description: 'परिवार एक साथ अलग-अलग खरीदारी करे।', example: 'उदाहरण: पत्नी किराना, पति सब्जियां - दोनों अप्डेट देखें' }
           ]
         },
         recipes: {
@@ -225,12 +227,13 @@ const AboutPage = () => {
         }
       },
       setupSteps: [
-        { title: 'अकाउंट और रसोई बनाएं', description: 'साइन अप करें और रसोई बनाएं', details: ['नाम, ईमेल, पासवर्ड', 'घर का नाम', 'भाषा चुनें', 'शहर चुनें'] },
-        { title: 'प्रारंभिक सामान जोड़ें', description: 'रसोई में सामान जोड़ें', details: ['सामान अनुभाग', 'मात्रा के साथ जोड़ें', 'श्रेणी सेट करें', 'मासिक आवश्यकता'] },
-        { title: 'परिवार को आमंत्रित करें', description: 'किचन कोड साझा करें', details: ['सेटिंग्स → किचन कोड', '6-अंकीय कोड साझा', 'साइनअप में जुड़ें', 'सभी एक ही देखें'] },
-        { title: 'खरीदारी सूची उपयोग करें', description: 'स्मार्ट खरीदारी', details: ['स्वचालित सूची', 'स्कैन या जोड़ें', '"कार्ट में" चिह्नित', '"खरीदा" चिह्नित'] },
-        { title: 'भोजन योजना बनाएं', description: 'कभी न सोचें क्या पकाऊं', details: ['भोजन योजनाकार', 'साप्ताहिक कैलेंडर', 'रेसिपी जोड़ें', 'गायब स्वचालित जुड़े'] },
-        { title: 'रेसिपी खोजें', description: 'जो है उससे पकाएं', details: ['मिलती रेसिपी', 'YouTube देखें', 'पसंदीदा चैनल', 'योजना में जोड़ें'] }
+        { title: 'अकाउंट और रसोई बनाएं', description: 'साइन अप करें और अपनी फैमिली किचन तैयार करें', details: ['नाम, ईमेल और पासवर्ड डालें।', 'अपनी रसोई का एक नाम तय करें।', 'अपनी भाषा चुनें।', 'अपना शहर चुनें।'] },
+        { title: 'शुरुआत में स्टॉक भरें (Inventory)', description: 'रसोई में मौजूद मौजूदा सामान को लिस्ट में डालें', details: ['"Inventory" सेक्शन में जाएं।', 'सामान आसानी से जोड़ने के लिए "Template" का इस्तेमाल करें। कोई चीज़ नहीं मिल रही? बस "खरीदारी सूची" खोलें और ऊपर कोने में मौजूद "+ Add" बटन दबाकर उसे जोड़ लें।', 'हर सामान की महीने भर की जरूरत और अभी बची हुई मात्रा को अपडेट करें।', 'सामान की एक्सपायरी डेट डालें। इससे सामान खराब होने से पहले आपको नोटिफिकेशन मिल जाएगा।'] },
+        { title: 'परिवार के सदस्यों को जोड़ें', description: 'अपनी रसोई का कोड शेयर करें।', details: ['किचन नाम में जाए → Invite Family Member पे क्लिक करें।', '६ अंकों का कोड शेयर करें।', 'परिवार के सदस्य साइन अप के दौरान इस कोड से जुड़ सकते हैं।', 'सभी को सामान की एक ही लिस्ट दिखाई देगी।'] },
+        { title: 'खरीदारी की सूची (Shopping List) का उपयोग करें', description: 'अपने आप बनने वाली लिस्ट के साथ आसान शॉपिंग करें।', details: ['जो सामान आधे से कम बचा है, वह अपने आप "खरीदारी सूची" में आ जाएगा।', 'टाइप करके या "AI स्कैन" का उपयोग करके नया सामान लिस्ट में डालें', 'फाइनल लिस्ट को WhatsApp पर शेयर करें।', 'खरीदारी के बाद सामान की मात्रा और एक्सपायरी डेट भरें, फिर "Mark as Purchased" पर क्लिक करें; इससे आपकी इन्वेंट्री अपडेट हो जाएगी।','आप दवाइयां और उनकी एक्सपायरी डेट भी जोड़ सकते हैं।'] },
+        { title: 'खाने की प्लानिंग करें (Meal Plan)', description: '"आज क्या पकाएं?" इसकी टेंशन खत्म।', details: ['"भोजन योजना" पर जाएं।', 'हफ्ते भर का कैलेंडर देखें।', 'नई रेसिपी जोड़ें।', 'जरूरी सामान न होने पर वह अपने आप शॉपिंग लिस्ट में जुड़ जाएगा।'] },
+        { title: 'फ़ैमिली रेसिपी जोड़े', description: 'घर में मौजूद सामान से ही खाना बनाना सीखें।', details: ['उपलब्ध सामान से मेल खाने वाली रेसिपी देखें।', 'YouTube ट्यूटोरियल देखें।', 'अपने पसंदीदा चैनल जोड़ें।', 'रेसिपी को मील प्लान में शामिल करें।'] },
+        { title: 'डिजिटल दादी', description: 'एक AI असिस्टेंट', details: ['डिजिटल दादी से त्योहारों के रिमाइंडर, उनसे जुड़ी रेसिपीज़, ज़रूरी सामग्री और कुकिंग की खास टिप्स पाएं!'] }
       ],
       workflow: [
         { title: 'पहला दिन: रसोई सेट करें', items: ['अकाउंट बनाएं', 'सामान जोड़ें', 'आवश्यकताएं सेट', 'परिवार आमंत्रित'] },
@@ -240,10 +243,10 @@ const AboutPage = () => {
       ]
     },
     mr: {
-      aboutTagline: 'तुमचा स्मार्ट स्वयंपाकघर साथीदार - साठा व्यवस्थापित करा, जेवण नियोजित करा, पाककृती शोधा आणि कुटुंबासह खरेदी करा.',
+      aboutTagline: 'तुमचा स्मार्ट स्वयंपाकघर साथीदार - सामानाचा स्टॉक अप्डेट करा, जेवण नियोजित करा, पाककृती शोधा आणि कुटुंबासह खरेदी करा.',
       backToHome: 'मुख्यपृष्ठावर परत',
-      quickSetupGuide: 'द्रुत सेटअप मार्गदर्शक',
-      getStartedSteps: '6 सोप्या चरणांमध्ये रसोई-सिंक सुरू करा',
+      quickSetupGuide: 'डिजिटल कीचन सेटअप मार्गदर्शक',
+      getStartedSteps: '६ सोप्या स्टेप्समधे रसोई-सिंक सुरू करा',
       featureGuide: 'वैशिष्ट्य मार्गदर्शक',
       clickToLearn: 'उदाहरणांसह जाणून घेण्यासाठी क्लिक करा',
       completeWorkflow: 'संपूर्ण स्वयंपाकघर कार्यप्रवाह',
@@ -280,9 +283,9 @@ const AboutPage = () => {
       smartSuggestions: 'स्मार्ट सूचना आणि पाककृती जुळणी',
       features: {
         familyKitchen: {
-          description: 'सामायिक स्वयंपाकघर जिथे सर्व कुटुंब सदस्य योगदान देऊ शकतात.',
+          description: 'तुमचे डिजिटल किचन जिथे सर्व कुटुंब सदस्य योगदान देऊ शकतात.',
           steps: [
-            { title: 'तुमचे स्वयंपाकघर तयार करा', description: 'साइन अप करा आणि नवीन घर तयार करा.', example: 'उदाहरण: श्रीमती शर्मा "शर्मा कुटुंब किचन" तयार करतात, कोड: SK-7842' },
+            { title: 'तुमचे डिजिटल किचन तयार करा', description: 'साइन अप करा आणि तुमच्या कुटुंबाचे "फॅमिली किचन" तयार करा.', example: 'उदाहरण: श्रीमती शर्मा "शर्मा कुटुंब किचन" तयार करतात, कोड: SK-7842' },
             { title: 'कुटुंबाला आमंत्रित करा', description: 'किचन कोड कुटुंबासोबत शेअर करा.', example: 'उदाहरण: मुलगा राहुल कोड SK-7842 ने सामील होतो' },
             { title: 'रिअल-टाइम सिंक', description: 'सर्वांना लगेच अपडेट दिसतात.', example: 'उदाहरण: राहुल दूध घेतो, आईला लगेच दिसते' },
             { title: 'एकत्र खरेदी करा', description: 'अनेक सदस्य एकाच वेळी खरेदी करू शकतात.', example: 'उदाहरण: वडील तांदूळ उचलतात, राहुल भाज्या - डुप्लिकेट नाही!' }
@@ -294,15 +297,15 @@ const AboutPage = () => {
             { title: 'वस्तू जोडा', description: 'प्रमाण आणि युनिटसह वस्तू जोडा.', example: 'उदाहरण: "तांदूळ - 5 किलो", "तेल - 2 लिटर" जोडा' },
             { title: 'मासिक गरजा सेट करा', description: 'दरमहा किती हवे ते परिभाषित करा.', example: 'उदाहरण: तांदूळ 10 किलो सेट करा. 3 किलोखाली अलर्ट.' },
             { title: 'श्रेणीनुसार व्यवस्थित', description: 'स्वयंचलित वर्गीकरण.', example: 'उदाहरण: "हळद" → मसाले, "पनीर" → दुग्धजन्य' },
-            { title: 'साठा ट्रॅक करा', description: 'रंग संकेतक: चांगले (हिरवे), कमी (पिवळे), गंभीर (लाल).', example: 'उदाहरण: तेल 0.5L जेव्हा गरज 2L - लाल दिसते' }
+            { title: 'साठा ट्रॅक करा', description: 'रंग संकेतक: पूर्ण साठा (हिरवे), अर्धा साठा (पिवळे), अगदीच कमी साठा (लाल).', example: 'उदाहरण: तेल 0.5L जेव्हा गरज 2L - लाल दिसते' }
           ]
         },
         shopping: {
-          description: 'तफावतींवर आधारित स्वयंचलित खरेदी यादी, बारकोड स्कॅनिंगसह.',
+          description: 'स्टॉक तफावतींवर आधारित स्वयंचलित खरेदी यादी, बारकोड स्कॅनिंगसह.',
           steps: [
             { title: 'स्वयंचलित यादी', description: 'तफावतींवर आधारित स्वयंचलित जोड.', example: 'उदाहरण: तांदूळ 2 किलो, गरज 10 - "तांदूळ (8 किलो)" जोडले जाते' },
-            { title: 'स्कॅन करा', description: 'बारकोड स्कॅनरने पटकन जोडा.', example: 'उदाहरण: Fortune तेल स्कॅन करा - अॅप जोडते' },
-            { title: 'स्थिती चिन्हांकित करा', description: 'खरेदीत "कार्टमध्ये", चेकआउटवर "खरेदी केले".', example: 'उदाहरण: डाळ → "खरेदी केले" → साठ्यात' },
+            { title: 'स्कॅन करा', description: 'AI स्कॅनरने पटकन जोडा.', example: 'उदाहरण: Fortune तेल स्कॅन करा - अॅप जोडते' },
+            { title: 'वस्तूचा स्टॉक अपडेट करा', description: 'खरेदी केल्यावर शॉपिंग लिस्ट मध्ये स्टॉक अपडेट करून "Mark as Purchased" करा.', example: 'उदाहरण: डाळ → "Mark as Purchased" → साठ्यात' },
             { title: 'सहयोगी खरेदी', description: 'कुटुंब एकाच वेळी वेगवेगळे खरेदी करू शकते.', example: 'उदाहरण: पत्नी किराणा, पती भाज्या - दोघेही प्रगती पाहतात' }
           ]
         },
@@ -334,12 +337,13 @@ const AboutPage = () => {
         }
       },
       setupSteps: [
-        { title: 'खाते आणि स्वयंपाकघर तयार करा', description: 'साइन अप आणि स्वयंपाकघर तयार', details: ['नाव, ईमेल, पासवर्ड', 'घराचे नाव', 'भाषा निवडा', 'शहर निवडा'] },
-        { title: 'प्रारंभिक साठा जोडा', description: 'स्वयंपाकघरातील वस्तू जोडा', details: ['साठा विभाग', 'प्रमाणासह जोडा', 'श्रेणी सेट', 'मासिक गरज'] },
-        { title: 'कुटुंबाला आमंत्रित करा', description: 'किचन कोड शेअर', details: ['सेटिंग्ज → किचन कोड', '6-अंकी कोड शेअर', 'साइनअपमध्ये सामील', 'सर्व समान पाहतात'] },
-        { title: 'खरेदी यादी वापरा', description: 'स्मार्ट खरेदी', details: ['स्वयंचलित यादी', 'स्कॅन किंवा जोडा', '"कार्टमध्ये" चिन्हांकित', '"खरेदी केले" चिन्हांकित'] },
-        { title: 'जेवण नियोजित करा', description: 'काय शिजवायचे विचार नको', details: ['जेवण नियोजक', 'साप्ताहिक कॅलेंडर', 'पाककृती जोडा', 'गहाळ स्वयंचलित जोडले'] },
-        { title: 'पाककृती शोधा', description: 'जे आहे त्यातून शिजवा', details: ['जुळणाऱ्या पाककृती', 'YouTube पहा', 'आवडीचे चॅनेल', 'नियोजनात जोडा'] }
+        { title: 'खाते आणि किचन तयार करा', description: 'साइन अप करा आणि तुमच्या कुटुंबाचे "डिजिटल फॅमिली किचन" तयार करा.', details: ['नाव, ईमेल आणि पासवर्ड टाका.', 'किचनचे नाव देऊन प्रोफाईल तयार करा.', 'तुमची भाषा निवडा', 'तुमचे शहर निवडा'] },
+        { title: 'सुरुवातीचे सामान भरा (Inventory)', description: 'किचनमधील सध्याच्या सामानाचा स्टॉक अप्डेट करा', details: ['साठा/"Inventory" विभागात जा.', 'सामान झटपट ॲड करण्यासाठी "रेडीमेड टेम्पलेट" वापरा. एखादी वस्तू सापडली नाही, तर "खरेदी यादी" मध्ये जाऊन वर उजव्या बाजूला असलेल्या "+ Add" वर क्लिक करा.', 'प्रत्येक वस्तूची महिन्याची गरज आणि सध्या शिल्लक असलेले प्रमाण अपडेट करा.', 'वस्तूची एक्सपायरी डेट (संपण्याची तारीख) भरा. यामुळे वस्तू खराब होण्यापूर्वी तुम्हाला नोटिफिकेशन मिळेल.'] },
+        { title: 'कुटुंबातील सदस्यांना जोडा', description: 'किचनचा कोड शेअर करा', details: ['किचनच्या नावावर क्लिक करा → Invite Family Member वर क्लिक करा', '६ अंकी कोड शेअर करा.', 'तुमचे कुटुंबीय साइन अप करताना या कोडद्वारे किचनमध्ये सामील होऊ शकतात.', 'सर्वांना सामानाची एकच लिस्ट दिसेल.'] },
+        { title: 'खरेदीच्या यादीचा (Shopping List) वापर करा', description: 'ऑटो-जनरेटेड लिस्टसह खरेदी करा.', details: ['ज्या वस्तू अर्ध्यापेक्षा कमी आहेत, त्या आपोआप "Shopping List" मध्ये दिसतील.', 'स्वतः टाइप करून किंवा "AI Scan" वापरून नवीन वस्तू जोडा.', 'खरेदीची अंतिम यादी WhatsApp वर शेअर करा.', 'खरेदी झाल्यावर वस्तूचे प्रमाण आणि एक्सपायरी डेट भरा, मग "Mark as Purchased" वर क्लिक करा; यामुळे तुमची इन्व्हेंटरी आपोआप अपडेट होईल.','तुम्ही औषधे आणि त्यांच्या संपण्याची तारीख (Expiry Date) देखील जोडू शकता.'] },
+        { title: 'जेवणाचे नियोजन करा (Meal Plan)', description: '"आज काय बनवायचे?" याची चिंता सोडा.', details: ['जेवण नियोजक मध्ये जा.', 'आठवड्याचे वेळापत्रक पहा.', 'पाककृती जोडा', 'लागणारे सामान नसल्यास ते आपोआप शॉपिंग लिस्टमध्ये जोडले जाईल.'] },
+        { title: 'फॅमिली रेसिपी कलेक्शन तयार करा', description: 'फॅमिली रेसिपी शेअर करा', details: ['नवीन रेसिपी शेअर करा', 'YouTube वर असलेल्या फॅमिली रेसिपी शेअर करा/ नियोजनात जोडा', 'फॅमिली रेसिपी कम्युनिटी सोबत शेअर करा'] },
+        { title: 'डिजिटल दादी', description: 'एक AI असिस्टंट', details: ['डिजिटल आजीकडून सण-वारांचे रिमाइंडर्स, खास रेसिपीज, लागणारे साहित्य आणि स्वयंपाकाच्या टिप्स मिळवा!'] }
       ],
       workflow: [
         { title: 'पहिला दिवस: स्वयंपाकघर सेट करा', items: ['खाते तयार', 'वस्तू जोडा', 'गरजा सेट', 'कुटुंब आमंत्रित'] },
@@ -374,9 +378,7 @@ const AboutPage = () => {
           <Button variant="ghost" onClick={() => navigate('/')} className="mb-6 text-gray-600 hover:text-orange-600" data-testid="back-to-home">
             <ArrowLeft className="w-4 h-4 mr-2" />{t.backToHome}
           </Button>
-        </div>
-      </div>
-     <div className="text-center mb-12">
+          <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
               <ChefHat className="w-10 h-10 text-white" />
             </div>
@@ -384,8 +386,45 @@ const AboutPage = () => {
               {language === 'en' ? 'About ' : ''}<span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-600">Rasoi-Sync</span>{language === 'hi' ? ' के बारे में' : language === 'mr' ? ' बद्दल' : ''}
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t.aboutTagline}</p>
-      </div> 
+          </div>
+          
+        </div>
+      </div>
 
+ {/* Quick Setup Guide */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-800 mb-3">{t.quickSetupGuide}</h2>
+          <p className="text-gray-600">{t.getStartedSteps}</p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {t.setupSteps.map((item, idx) => {
+            const Icon = setupIcons[idx];
+            return (
+              <Card key={idx} className="bg-white/80 backdrop-blur border-0 shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-white font-bold">{idx + 1}</div>
+                    <div>
+                      <CardTitle className="text-lg">{item.title}</CardTitle>
+                      <p className="text-sm text-gray-500">{item.description}</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {item.details.map((detail, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />{detail}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
       {/* Feature Guide */}
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-10">

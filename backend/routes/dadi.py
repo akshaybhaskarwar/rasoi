@@ -640,6 +640,293 @@ def create_dadi_routes(db, decode_token):
                 "tip_mr": "पोषकद्रव्ये टिकवण्यासाठी भाजी शिजल्यावरच मीठ घाला",
                 "tip_hi": "पोषक तत्व बनाए रखने के लिए सब्जी पकने के बाद ही नमक डालें",
                 "context_en": "Vegetable Tips", "context_mr": "भाजी टिप्स", "context_hi": "सब्जी टिप्स"
+            },
+            {
+                "tip_en": "Keep coriander fresh for longer by wrapping it in a paper towel before refrigerating.",
+                "tip_mr": "कोथिंबीर जास्त काळ ताजी ठेवण्यासाठी ती कागदात गुंडाळून फ्रिजमध्ये ठेवा.",
+                "tip_hi": "धनिया को ज्यादा समय तक ताज़ा रखने के लिए उसे कागज़ में लपेटकर फ्रिज में रखें।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Use lukewarm water or a little milk while kneading dough for softer chapatis.",
+                "tip_mr": "मऊ चपात्यांसाठी पीठ मळताना कोमट पाणी किंवा थोडे दूध वापरा.",
+                "tip_hi": "नरम चपातियों के लिए आटा गूंथते समय गुनगुने पानी या थोड़े दूध का उपयोग करें।",
+                "context_en": "Roti Tips", "context_mr": "पोळी टिप्स", "context_hi": "रोटी टिप्स"
+            },
+            {
+                "tip_en": "Add a few bay leaves (Tejpatta) to your flour container to keep insects away.",
+                "tip_mr": "पिठाला किड लागू नये म्हणून पिठाच्या डब्यात २-३ तमालपत्र ठेवा.",
+                "tip_hi": "आटे को कीड़ों से बचाने के लिए डिब्बे में २-३ तेजपत्ता रखें।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "If a dish is too salty, drop in a small ball of kneaded dough for 5 minutes to absorb excess salt.",
+                "tip_mr": "भाजीत मीठ जास्त झाले तर पिठाचा गोळा टाका, तो जास्तीचे मीठ शोषून घेईल.",
+                "tip_hi": "अगर सब्जी में नमक ज्यादा हो जाए तो आटे की एक लोई डालें, वह अतिरिक्त नमक सोख लेगी।",
+                "context_en": "Troubleshooting", "context_mr": "निवारण टिप्स", "context_hi": "समाधान टिप्स"
+            },
+            {
+                "tip_en": "Soak garlic cloves in warm water for 10 minutes to peel them effortlessly.",
+                "tip_mr": "लसूण लवकर सोलण्यासाठी पाकळ्या १० मिनिटे कोमट पाण्यात भिजवून ठेवा.",
+                "tip_hi": "लहसुन जल्दी छीलने के लिए कलियों को १० मिनट के लिए गुनगुने पानी में भिगो दें।",
+                "context_en": "Prep Tips", "context_mr": "तयारी टिप्स", "context_hi": "तैयारी टिप्स"
+            },
+            {
+                "tip_en": "Add a teaspoon of hot oil to pakora batter for extra crispiness.",
+                "tip_mr": "भजी जास्त कुरकुरीत होण्यासाठी पिठात एक चमचा गरम तेल घाला.",
+                "tip_hi": "पकौड़े ज्यादा कुरकुरे बनाने के लिए घोल में एक चम्मच गर्म तेल डालें।",
+                "context_en": "Frying Tips", "context_mr": "तळणी टिप्स", "context_hi": "फ्राइंग टिप्स"
+            },
+            {
+                "tip_en": "Store ginger-garlic paste with a pinch of salt and oil to keep it fresh for weeks.",
+                "tip_mr": "आले-लसूण पेस्ट जास्त दिवस टिकवण्यासाठी त्यात थोडे मीठ आणि तेल मिसळा.",
+                "tip_hi": "अदरक-लहसुन पेस्ट को ज्यादा दिनों तक चलाने के लिए उसमें थोड़ा नमक और तेल मिलाएं।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            # Category: Storage & Freshness (साठवणूक टिप्स / स्टोरेज टिप्स)
+            {
+                "tip_en": "Keep a piece of jaggery in your chili powder container to prevent it from getting lumpy.",
+                "tip_mr": "लाल तिखटाला गुठळ्या होऊ नयेत म्हणून त्यात गुळाचा एक छोटा खडा ठेवा.",
+                "tip_hi": "लाल मिर्च पाउडर में गांठें न बनें, इसके लिए उसमें गुड़ का एक छोटा टुकड़ा रखें।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Store lemons in a jar filled with water in the fridge to keep them juicy for weeks.",
+                "tip_mr": "लिंबू जास्त दिवस ताजे आणि रसाळ राहण्यासाठी ते एका काचेच्या बरणीत पाणी भरून त्यात ठेवा.",
+                "tip_hi": "नींबू को हफ़्तों तक ताज़ा और रसीला रखने के लिए उन्हें पानी से भरे जार में रखकर फ्रिज में रखें।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Add 2-3 cloves to your sugar jar to keep ants away.",
+                "tip_mr": "साखरेच्या डब्यात मुंग्या होऊ नयेत म्हणून त्यात २-३ लवंगा टाका.",
+                "tip_hi": "चीनी के डिब्बे में चींटियों को आने से रोकने के लिए उसमें २-३ लौंग डालें।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Wrap green chilies in paper (without stems) to keep them fresh longer.",
+                "tip_mr": "मिरच्यांचे देठ काढून त्या कागदात गुंडाळून ठेवल्यास जास्त काळ टिकतात.",
+                "tip_hi": "मिर्चियों की डंठल तोड़कर उन्हें कागज में लपेटकर रखने से वे ज्यादा दिन तक ताजी रहती हैं।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Don't store onions and potatoes together; onions release gas that spoils potatoes faster.",
+                "tip_mr": "कांदा आणि बटाटे एकत्र ठेवू नका; कांद्यामुळे बटाटे लवकर खराब होतात.",
+                "tip_hi": "प्याज और आलू एक साथ न रखें; प्याज से निकलने वाली गैस आलू को जल्दी खराब कर देती है।",
+                "context_en": "Inventory Tips", "context_mr": "इन्व्हेंटरी टिप्स", "context_hi": "इन्वेंट्री टिप्स"
+            },
+            {
+                "tip_en": "Add a few grains of rice to your salt shaker to absorb moisture and prevent clumping.",
+                "tip_mr": "मिठाला ओलावा लागू नये म्हणून मिठाच्या बाटलीत थोडे तांदळाचे दाणे टाका.",
+                "tip_hi": "नमक को नमी से बचाने के लिए नमक की शीशी में थोड़े चावल के दाने डालें।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Rub a little oil on eggs to keep them fresh longer if not refrigerated.",
+                "tip_mr": "अंडी फ्रिजबाहेर जास्त दिवस टिकवण्यासाठी त्यांना थोडे तेल लावून ठेवा.",
+                "tip_hi": "अंडों को फ्रिज के बाहर ज्यादा दिन तक ताजा रखने के लिए उन पर थोड़ा तेल लगा दें।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Microwave lemons for 10-15 seconds before squeezing to get double the juice.",
+                "tip_mr": "लिंबाचा जास्त रस काढण्यासाठी पिळण्यापूर्वी ते १०-१५ सेकंद ओव्हनमध्ये गरम करा.",
+                "tip_hi": "नींबू का ज्यादा रस निकालने के लिए उसे निचोड़ने से पहले १०-१५ सेकंड माइक्रोवेव में गर्म करें।",
+                "context_en": "Kitchen Hacks", "context_mr": "किचन हॅक्स", "context_hi": "किचन हैक्स"
+            },
+            {
+                "tip_en": "Keep ginger in a container of sand or wrap it in a damp cloth to keep it from drying.",
+                "tip_mr": "आले सुकू नये म्हणून ते ओल्या कपड्यात गुंडाळून ठेवा.",
+                "tip_hi": "अदरक को सूखने से बचाने के लिए उसे गीले कपड़े में लपेटकर रखें।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Boil milk with a silver spoon or a clean coin to prevent it from spilling over.",
+                "tip_mr": "दूध उतू जाऊ नये म्हणून उकळताना त्यात एक स्वच्छ चमचा टाका.",
+                "tip_hi": "दूध उबालते समय उसमें एक साफ चम्मच डाल दें, इससे दूध पतीले से बाहर नहीं गिरेगा।",
+                "context_en": "Kitchen Hacks", "context_mr": "किचन हॅक्स", "context_hi": "किचन हैक्स"
+            },
+            # Category: Cooking Efficiency (स्वयंपाक सुलभता / कुकिंग टिप्स)
+            {
+                "tip_en": "Add a teaspoon of ghee while boiling dal to prevent it from frothing and spilling.",
+                "tip_mr": "डाळ शिजवताना त्यात एक चमचा तूप टाका, म्हणजे फेस येऊन कुकरच्या बाहेर येणार नाही.",
+                "tip_hi": "दाल उबालते समय उसमें एक चम्मच घी डालें, इससे दाल झाग बनकर बाहर नहीं आएगी।",
+                "context_en": "Dal Tips", "context_mr": "डाळ टिप्स", "context_hi": "दाल टिप्स"
+            },
+            {
+                "tip_en": "Add a pinch of salt while frying onions to make them brown faster.",
+                "tip_mr": "कांदा लवकर लाल होण्यासाठी तळताना त्यात चिमूटभर मीठ टाका.",
+                "tip_hi": "प्याज को जल्दी सुनहरा करने के लिए तलते समय उसमें चुटकी भर नमक डालें।",
+                "context_en": "Cooking Tips", "context_mr": "स्वयंपाक टिप्स", "context_hi": "कुकिंग टिप्स"
+            },
+            {
+                "tip_en": "Soak almonds in hot water for 15 minutes to peel the skin instantly.",
+                "tip_mr": "बदामाची साल झटपट काढण्यासाठी ते १५ मिनिटे गरम पाण्यात भिजवा.",
+                "tip_hi": "बादाम का छिलका तुरंत उतारने के लिए उन्हें १५ मिनट गर्म पानी में भिगोएं।",
+                "context_en": "Prep Tips", "context_mr": "तयारी टिप्स", "context_hi": "तैयारी टिप्स"
+            },
+            {
+                "tip_en": "Add a piece of dry mango (Amchur) or tamarind to prevent ladyfinger (Bhindi) from getting sticky.",
+                "tip_mr": "भेंडीची भाजी चिकट होऊ नये म्हणून त्यात थोडा आमसूल किंवा लिंबाचा रस टाका.",
+                "tip_hi": "भिंडी की सब्जी को चिपचिपा होने से बचाने के लिए उसमें थोड़ा अमचूर या नींबू का रस डालें।",
+                "context_en": "Vegetable Tips", "context_mr": "भाजी टिप्स", "context_hi": "सब्जी टिप्स"
+            },
+            {
+                "tip_en": "Grate cold butter for easier mixing into dough for biscuits or parathas.",
+                "tip_mr": "पिठात लोणी व्यवस्थित मिसळण्यासाठी ते किसणीने किसून घ्या.",
+                "tip_hi": "आटे में मक्खन को आसानी से मिलाने के लिए उसे कद्दूकस कर लें।",
+                "context_en": "Baking Tips", "context_mr": "बेकिंग टिप्स", "context_hi": "बेकिंग टिप्स"
+            },
+            {
+                "tip_en": "Use left-over whey (paneer water) to knead dough for extra soft and nutritious rotis.",
+                "tip_mr": "पनीर काढल्यानंतर उरलेले पाणी पीठ मळण्यासाठी वापरा, चपात्या मऊ आणि पौष्टिक होतील.",
+                "tip_hi": "पनीर निकालने के बाद बचे हुए पानी से आटा गूंथें, रोटियां नरम और पौष्टिक बनेंगी।",
+                "context_en": "Zero Waste", "context_mr": "शून्य कचरा", "context_hi": "जीरो वेस्ट"
+            },
+            {
+                "tip_en": "Always roast rava (semolina) before storing to prevent worms.",
+                "tip_mr": "रव्याला कीड लागू नये म्हणून तो नेहमी भाजून साठवून ठेवा.",
+                "tip_hi": "सूजी (रवा) को कीड़ों से बचाने के लिए हमेशा भूनकर स्टोर करें।",
+                "context_en": "Storage Tips", "context_mr": "साठवणूक टिप्स", "context_hi": "स्टोरेज टिप्स"
+            },
+            {
+                "tip_en": "Add a few drops of oil to the water while boiling pasta or noodles to stop them from sticking.",
+                "tip_mr": "पास्ता किंवा नूडल्स उकळताना पाण्यात थोडे तेल टाका, म्हणजे ते एकमेकांना चिकटणार नाहीत.",
+                "tip_hi": "पास्ता या नूडल्स उबालते समय पानी में तेल की कुछ बूंदें डालें, इससे वे आपस में नहीं चिपकेंगे।",
+                "context_en": "Pasta Tips", "context_mr": "पास्ता टिप्स", "context_hi": "पास्ता टिप्स"
+            },
+            {
+                "tip_en": "To make perfect curd in winter, keep the container in a warm place or wrap it in a woollen cloth.",
+                "tip_mr": "थंडीत दही चांगले लागण्यासाठी भांड्याला उबदार कापडात गुंडाळून ठेवा.",
+                "tip_hi": "सर्दियों में गाढ़ा दही जमाने के लिए बर्तन को किसी गर्म कपड़े में लपेटकर रखें।",
+                "context_en": "Dairy Tips", "context_mr": "डेअरी टिप्स", "context_hi": "डेयरी टिप्स"
+            },
+            {
+                "tip_en": "Drop a few small pieces of hing in the container of oil to keep the oil fresh and aromatic.",
+                "tip_mr": "तेलाचा वास छान राहण्यासाठी तेलाच्या डब्यात हिंगाचा एक छोटा खडा टाका.",
+                "tip_hi": "तेल को ताज़ा और सुगंधित रखने के लिए तेल के डिब्बे में हींग का एक छोटा टुकड़ा डालें।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            #Category: Cleaning & Maintenance (स्वच्छता टिप्स / सफाई टिप्स)
+            {
+                "tip_en": "To remove the smell of onion or garlic from your hands, rub them against a stainless steel spoon.",
+                "tip_mr": "हाताचा कांदा-लसणाचा वास घालवण्यासाठी हात स्टीलच्या चमच्यावर घासून धुवा.",
+                "tip_hi": "हाथों से प्याज या लहसुन की महक हटाने के लिए उन्हें स्टील के चम्मच पर रगड़कर धोएं।",
+                "context_en": "Cleaning", "context_mr": "स्वच्छता", "context_hi": "सफाई"
+            },
+            {
+                "tip_en": "Clean burnt vessels by boiling water with a little baking soda and vinegar in them.",
+                "tip_mr": "करपलेली भांडी स्वच्छ करण्यासाठी त्यात थोडे बेकिंग सोडा आणि व्हिनेगर टाकून पाणी उकळा.",
+                "tip_hi": "जले हुए बर्तनों को साफ करने के लिए उनमें थोड़ा बेकिंग सोडा और सिरका डालकर पानी उबालें।",
+                "context_en": "Cleaning", "context_mr": "स्वच्छता", "context_hi": "सफाई"
+            },
+            {
+                "tip_en": "Use used lemon halves to scrub your copper and brass vessels to make them shine.",
+                "tip_mr": "तांब्या-पितळेची भांडी चमकवण्यासाठी वापरलेल्या लिंबाच्या सालीने घासून घ्या.",
+                "tip_hi": "तांबे और पीतल के बर्तनों को चमकाने के लिए इस्तेमाल किए हुए नींबू के छिलकों का उपयोग करें।",
+                "context_en": "Cleaning", "context_mr": "स्वच्छता", "context_hi": "सफाई"
+            },
+            {
+                "tip_en": "Put dried orange peels in kitchen cabinets to keep them smelling fresh and drive away insects.",
+                "tip_mr": "किचनच्या कपाटात वाळलेली संत्र्याची सालं ठेवा, म्हणजे कपाटात छान वास येईल.",
+                "tip_hi": "किचन की अलमारी में संतरे के सूखे छिलके रखें, इससे अलमारी महकती रहेगी और कीड़े भी नहीं आएंगे।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Clean your mixer jar by grinding some salt in it once a month to sharpen the blades.",
+                "tip_mr": "मिक्सरचे ब्लेड धारदार करण्यासाठी महिन्यातून एकदा त्यात खडे मीठ टाकून फिरवा.",
+                "tip_hi": "मिक्सर के ब्लेड तेज करने के लिए महीने में एक बार उसमें थोड़ा नमक डालकर चलाएं।",
+                "context_en": "Maintenance", "context_mr": "देखभाल", "context_hi": "रखरखाव"
+            },
+            # Category: Flavor Enhancers (चव वाढवण्यासाठी / स्वाद बढ़ाने के लिए)
+            {
+                "tip_en": "Add a bit of kasuri methi at the end for a restaurant-like aroma in your curries.",
+                "tip_mr": "हॉटेलसारखा सुगंध येण्यासाठी भाजी तयार झाल्यावर त्यात थोडी कसुरी मेथी टाका.",
+                "tip_hi": "सब्जी में रेस्टोरेंट जैसी खुशबू के लिए अंत में थोड़ी कसूरी मेथी डालें।",
+                "context_en": "Curry Tips", "context_mr": "करी टिप्स", "context_hi": "करी टिप्स"
+            },
+            {
+                "tip_en": "Grate a small piece of ginger into your tea while boiling for a refreshing flavor.",
+                "tip_mr": "चहाची चव वाढवण्यासाठी त्यात थोडे आले किसून टाका.",
+                "tip_hi": "चाय का स्वाद बढ़ाने के लिए उसमें थोड़ा अदरक कद्दूकस करके डालें।",
+                "context_en": "Beverage Tips", "context_mr": "पेय टिप्स", "context_hi": "बेवरेज टिप्स"
+            },
+            {
+                "tip_en": "Add a spoonful of curd to your paratha dough to keep the parathas soft for hours.",
+                "tip_mr": "पराठे बराच वेळ मऊ राहण्यासाठी पिठात एक चमचा दही घाला.",
+                "tip_hi": "पराठों को घंटों नरम रखने के लिए आटे में एक चम्मच दही मिलाएं।",
+                "context_en": "Roti Tips", "context_mr": "पोळी टिप्स", "context_hi": "रोटी टिप्स"
+            },
+            {
+                "tip_en": "Always grind green chilies with a little salt to keep the color bright green.",
+                "tip_mr": "मिरची वाटताना त्यात थोडे मीठ टाका, म्हणजे तिचा हिरवा रंग कायम राहील.",
+                "tip_hi": "मिर्च पीसते समय उसमें थोड़ा नमक डालें, इससे उसका हरा रंग बरकरार रहेगा।",
+                "context_en": "Prep Tips", "context_mr": "तयारी टिप्स", "context_hi": "तैयारी टिप्स"
+            },
+            {
+                "tip_en": "Keep potatoes in salted water after cutting to prevent them from turning brown.",
+                "tip_mr": "बटाटे चिरल्यानंतर मिठाच्या पाण्यात ठेवा, म्हणजे ते काळे पडणार नाहीत.",
+                "tip_hi": "आलू काटने के बाद उन्हें नमक वाले पानी में रखें, इससे वे काले नहीं पड़ेंगे।",
+                "context_en": "Vegetable Tips", "context_mr": "भाजी टिप्स", "context_hi": "सब्जी टिप्स"
+            },
+            # Category: Health & Wellness (आरोग्य आणि आयुर्वेद)
+            {
+                "tip_en": "Drink a glass of warm water with lemon and honey every morning to boost immunity.",
+                "tip_mr": "प्रतिकारशक्ती वाढवण्यासाठी रोज सकाळी कोमट पाण्यात लिंबू आणि मध टाकून प्या.",
+                "tip_hi": "इम्युनिटी बढ़ाने के लिए हर सुबह गुनगुने पानी में नींबू और शहद डालकर पिएं।",
+                "context_en": "Health Tips", "context_mr": "आरोग्य टिप्स", "context_hi": "स्वास्थ्य टिप्स"
+            },
+            {
+                "tip_en": "Add a little turmeric and black pepper to your milk at night for better healing and sleep.",
+                "tip_mr": "चांगल्या झोपेसाठी आणि शरीरातील वेदना कमी करण्यासाठी रात्री दुधात हळद आणि मिरी पूड टाकून प्या.",
+                "tip_hi": "बेहतर स्वास्थ्य और नींद के लिए रात को दूध में हल्दी और काली मिर्च डालकर पिएं।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Chew a few fennel seeds (Saunf) after meals to improve digestion and freshen breath.",
+                "tip_mr": "जेवणानंतर पचन सुधारण्यासाठी आणि मुखशुद्धीसाठी थोडी बडीशेप खा.",
+                "tip_hi": "पाचन सुधारने और माउथ फ्रेशनर के लिए खाने के बाद थोड़ी सौंफ चबाएं।",
+                "context_en": "Health Tips", "context_mr": "आरोग्य टिप्स", "context_hi": "स्वास्थ्य टिप्स"
+            },
+            {
+                "tip_en": "Soak fenugreek seeds (Methi) overnight and drink the water in the morning to control blood sugar.",
+                "tip_mr": "रक्तातील साखर नियंत्रित ठेवण्यासाठी रात्री मेथी दाणे भिजवून सकाळी त्याचे पाणी प्या.",
+                "tip_hi": "ब्लड शुगर कंट्रोल करने के लिए रात भर मेथी दाने भिगोकर रखें और सुबह उसका पानी पिएं।",
+                "context_en": "Health Tips", "context_mr": "आरोग्य टिप्स", "context_hi": "स्वास्थ्य टिप्स"
+            },
+            {
+                "tip_en": "Eat a small piece of jaggery after lunch to aid digestion and prevent acidity.",
+                "tip_mr": "पचन सुधारण्यासाठी आणि ॲसिडिटी टाळण्यासाठी दुपारच्या जेवणानंतर गुळाचा एक छोटा खडा खा.",
+                "tip_hi": "पाचन में मदद और एसिडिटी से बचने के लिए दोपहर के भोजन के बाद गुड़ का एक छोटा टुकड़ा खाएं।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Keep water in a copper vessel overnight and drink it in the morning for better gut health.",
+                "tip_mr": "पोट साफ राहण्यासाठी तांब्याच्या भांड्यात रात्रभर ठेवलेले पाणी सकाळी प्या.",
+                "tip_hi": "पेट की सेहत के लिए तांबे के बर्तन में रात भर रखा हुआ पानी सुबह पिएं।",
+                "context_en": "Health Tips", "context_mr": "आरोग्य टिप्स", "context_hi": "स्वास्थ्य टिप्स"
+            },
+            {
+                "tip_en": "Add a pinch of carom seeds (Ajwain) to heavy foods like dal or potatoes to prevent bloating.",
+                "tip_mr": "गॅस किंवा अपचनाचा त्रास टाळण्यासाठी बटाटा किंवा डाळीच्या पदार्थात थोडा ओवा घाला.",
+                "tip_hi": "गैस या अपच से बचने के लिए दाल या आलू जैसे भारी खानों में चुटकी भर अजवाइन डालें।",
+                "context_en": "Health Tips", "context_mr": "आरोग्य टिप्स", "context_hi": "स्वास्थ्य टिप्स"
+            },
+            {
+                "tip_en": "Use rock salt (Sendha Namak) instead of regular salt to reduce water retention and bloating.",
+                "tip_mr": "शरीरातील सूज कमी करण्यासाठी साध्या मिठाऐवजी सैंधव मिठाचा वापर करा.",
+                "tip_hi": "शरीर की सूजन कम करने के लिए साधारण नमक की जगह सेंधा नमक का उपयोग करें।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
+            },
+            {
+                "tip_en": "Sniff fresh ginger or drink ginger tea to instantly relieve nausea and morning sickness.",
+                "tip_mr": "मळमळ कमी करण्यासाठी आल्याचा छोटा तुकडा हुंगा किंवा आल्याचा चहा प्या.",
+                "tip_hi": "जी मिचलाने पर ताज़ा अदरक सूंघें या अदरक वाली चाय पिएं, तुरंत आराम मिलेगा।",
+                "context_en": "Health Tips", "context_mr": "आरोग्य टिप्स", "context_hi": "स्वास्थ्य टिप्स"
+            },
+            {
+                "tip_en": "Apply a drop of ghee inside your nostrils during dry weather to prevent nosebleeds and dry skin.",
+                "tip_mr": "कोरड्या हवेमुळे होणारा त्रास टाळण्यासाठी नाकाच्या आत तुपाचा एक थेंब लावा.",
+                "tip_hi": "नाक के सूखेपन से बचने के लिए नथुनों के अंदर घी की एक बूंद लगाएं।",
+                "context_en": "Dadi's Wisdom", "context_mr": "दादीची शिकवण", "context_hi": "दादी की सीख"
             }
         ]
         

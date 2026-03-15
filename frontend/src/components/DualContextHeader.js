@@ -70,9 +70,9 @@ export const DualContextHeader = ({ onLanguageChange }) => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en" className="text-xs">🇬🇧 EN</SelectItem>
-                <SelectItem value="hi" className="text-xs">🇮🇳 हिंदी</SelectItem>
-                <SelectItem value="mr" className="text-xs">🇮🇳 मराठी</SelectItem>
+                <SelectItem value="en" className="text-xs">EN</SelectItem>
+                <SelectItem value="hi" className="text-xs">हिंदी</SelectItem>
+                <SelectItem value="mr" className="text-xs">मराठी</SelectItem>
               </SelectContent>
             </Select>
           </div>

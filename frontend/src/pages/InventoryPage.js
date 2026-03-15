@@ -343,14 +343,14 @@ const InventoryPage = () => {
             <span className="hidden md:inline">{getLabel('indianPantryTemplate')}</span>
             <span className="md:hidden">{getLabel('browseTemplate')}</span>
           </Button>
-          <Button 
+          {/* <Button
             onClick={() => setIsScannerOpen(true)}
             className="bg-[#138808] hover:bg-[#0d6606] text-white rounded-full shadow-md"
             data-testid="scan-item-btn"
           >
             <Camera className="w-5 h-5 mr-2" />
             {getLabel('scanProduct')}
-          </Button>
+          </Button> */}
         </div>
       </div>
 

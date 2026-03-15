@@ -11,7 +11,7 @@ export const SUPPORTED_LANGUAGES = {
 export const UI_LABELS = {
   en: {
     // App branding
-    appName: 'Rasoi-Sync',
+    appName: ' ',
     appTagline: 'Your Smart Kitchen Manager',
     indianKitchen: 'Indian Kitchen',
     
@@ -234,7 +234,7 @@ export const UI_LABELS = {
   },
   hi: {
     // App branding
-    appName: 'रसोई-सिंक',
+    appName: ' ',
     appTagline: 'आपका स्मार्ट रसोई प्रबंधक',
     indianKitchen: 'भारतीय रसोई',
     
@@ -457,7 +457,7 @@ export const UI_LABELS = {
   },
   mr: {
     // App branding
-    appName: 'रसोई-सिंक',
+    appName: ' ',
     appTagline: 'तुमचा स्मार्ट स्वयंपाकघर व्यवस्थापक',
     indianKitchen: 'भारतीय स्वयंपाकघर',
     
@@ -652,7 +652,7 @@ export const UI_LABELS = {
     multiLanguage: 'बहुभाषिक',
     availableIn: 'इंग्रजी, हिंदी आणि मराठीत उपलब्ध',
     familyFocused: 'कुटुंब केंद्रित',
-    entireFamilyShops: 'संपूर्ण कुटुंब एकत्र खरेदी करते आणि व्यवस्थापित करते',
+    entireFamilyShops: 'आता संपूर्ण कुटुंब मिळून खरेदी आणि किचनचे नियोजन करू शकतं.',
     mobileFirst: 'मोबाइल प्रथम',
     designedForShopping: 'चालताना खरेदीसाठी डिझाइन केलेले',
     aiPowered: 'AI संचालित',
@@ -662,7 +662,7 @@ export const UI_LABELS = {
     createAccountKitchen: 'खाते आणि स्वयंपाकघर तयार करा',
     signUpCreate: 'ईमेलने साइन अप करा आणि तुमचे कौटुंबिक स्वयंपाकघर तयार करा',
     addInitialInventory: 'प्रारंभिक साठा जोडा',
-    addItemsCurrently: 'तुमच्या स्वयंपाकघरातील सध्याच्या वस्तू जोडा',
+    addItemsCurrently: 'तुमच्या स्वयंपाकघरातील सध्याच्या वस्तू अपडेट करा',
     inviteFamilyMembers: 'कुटुंबातील सदस्यांना आमंत्रित करा',
     shareKitchenCode: 'कुटुंबासोबत स्वयंपाकघर कोड शेअर करा',
     useShoppingList: 'खरेदी यादी वापरा',
