@@ -27,8 +27,12 @@ SMTP_PORT = 587
 APP_NAME = "Rasoi-Sync"
 
 def get_frontend_url():
-    """Get frontend URL dynamically from environment"""
-    return os.environ.get('FRONTEND_URL', 'https://rasoi-sync-2.emergent.host')
+    """Get frontend URL - prioritize env var, fallback to production URL"""
+    url = os.environ.get('FRONTEND_URL', '').strip()
+    # Always use the production URL if env is empty or contains old values
+    if not url or 'rasoi-sync.emergent.host' in url and '-2' not in url:
+        return 'https://rasoi-sync-2.emergent.host'
+    return url
 
 
 def is_email_configured() -> bool:
