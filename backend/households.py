@@ -80,6 +80,7 @@ async def populate_essentials(db, household_id: str, user_id: str):
             "name_en": item["name_en"],
             "name_mr": item["name_mr"],
             "name_hi": item["name_hi"],
+            "aliases": item.get("aliases", []),
             "category": item["category"],
             "unit": item["unit"],
             "stock_level": "empty",

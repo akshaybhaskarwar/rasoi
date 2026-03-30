@@ -145,9 +145,12 @@ const InventoryPage = () => {
   };
 
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = item.name_en.toLowerCase().includes(query) ||
+                         (item.name_hi && item.name_hi.includes(searchQuery)) ||
+                         (item.name_mr && item.name_mr.includes(searchQuery)) ||
                          (item.name_gu && item.name_gu.includes(searchQuery)) ||
-                         (item.name_mr && item.name_mr.includes(searchQuery));
+                         (item.aliases && item.aliases.some(alias => alias.toLowerCase().includes(query)));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     // Use calculated stock level for filtering (not the stored one)
     const calculatedStockLevel = getCalculatedStockLevel(item);

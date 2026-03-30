@@ -24,6 +24,7 @@ class InventoryItem(BaseModel):
     barcode: Optional[str] = None
     monthly_quantity: Optional[int] = None
     monthly_unit: Optional[str] = None
+    aliases: List[str] = []  # English transliterations of regional names (e.g., ["Besan"] for Gram Flour)
     reserved_for: List[Dict[str, Any]] = []
     last_updated_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -43,6 +44,7 @@ class InventoryItemCreate(BaseModel):
     barcode: Optional[str] = None
     monthly_quantity: Optional[int] = None
     monthly_unit: Optional[str] = None
+    aliases: Optional[List[str]] = None  # English transliterations of regional names
 
 
 # Default monthly quantities by category
