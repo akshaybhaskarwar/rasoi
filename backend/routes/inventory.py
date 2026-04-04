@@ -28,7 +28,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
     @inventory_router.post("/inventory", response_model=InventoryItem)
     async def create_inventory_item(item: InventoryItemCreate, background_tasks: BackgroundTasks):
         """Create new inventory item with auto-translation"""
-        item_dict = item.model_dump()
+        item_dict = item.model_dump(exclude_none=True)
         inventory_item = InventoryItem(**item_dict)
         
         # Translate names
@@ -79,12 +79,12 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
     ):
         """Create inventory item for the user's active household"""
         user = await get_user_from_token(credentials)
-        
+
         household_id = user.get("active_household")
         if not household_id:
             raise HTTPException(status_code=400, detail="No active household")
-        
-        item_dict = item.model_dump()
+
+        item_dict = item.model_dump(exclude_none=True)
         inventory_item = InventoryItem(**item_dict)
         inventory_item.household_id = household_id
         
