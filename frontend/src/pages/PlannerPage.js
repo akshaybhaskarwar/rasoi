@@ -45,6 +45,7 @@ const PlannerPage = () => {
   const [textSearch, setTextSearch] = useState('');
   const [searchMode, setSearchMode] = useState('text');
   const [deletingMealId, setDeletingMealId] = useState(null);
+  const [customRecipeName, setCustomRecipeName] = useState('');
   
   // Favorite channels state
   const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(false);
@@ -212,6 +213,31 @@ const PlannerPage = () => {
     }
   };
 
+  // Quick add a custom homemade recipe by name
+  const handleQuickAddRecipe = async () => {
+    if (!customRecipeName.trim() || !selectedDate || !selectedMealType) return;
+    try {
+      await addMealPlan({
+        date: selectedDate,
+        meal_type: selectedMealType,
+        meal_name: customRecipeName.trim(),
+        ingredients_needed: [],
+        reserved_ingredients: [],
+      });
+      toast.success('Recipe added!', {
+        description: `${customRecipeName.trim()} added to ${MEAL_TYPES.find(m => m.value === selectedMealType)?.label}`,
+        duration: 3000
+      });
+      setCustomRecipeName('');
+      setIsRecipeDialogOpen(false);
+      setSelectedDate('');
+      setSelectedMealType('');
+    } catch (error) {
+      console.error('Error adding custom recipe:', error);
+      toast.error('Failed to add recipe');
+    }
+  };
+
   // Open recipe finder
   const openRecipeFinder = (date, mealType) => {
     setSelectedDate(date);
@@ -220,6 +246,7 @@ const PlannerPage = () => {
     setTotalFound(0);
     setTextSearch('');     // Clear text search
     setSelectedIngredients([]);  // Clear selected ingredients
+    setCustomRecipeName('');  // Clear custom recipe input
     setIsRecipeDialogOpen(true);
   };
 
@@ -814,6 +841,40 @@ const PlannerPage = () => {
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Quick Add - Custom Recipe Name */}
+            <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+              <Label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+                <ChefHat className="w-4 h-4 text-green-600" />
+                Quick Add Homemade Recipe
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  value={customRecipeName}
+                  onChange={(e) => setCustomRecipeName(e.target.value)}
+                  placeholder="e.g., Dal Rice, Poha, Chapati Bhaji..."
+                  className="flex-1 h-11 bg-white"
+                  onKeyDown={(e) => e.key === 'Enter' && customRecipeName.trim() && handleQuickAddRecipe()}
+                  data-testid="custom-recipe-input"
+                />
+                <Button
+                  onClick={handleQuickAddRecipe}
+                  disabled={!customRecipeName.trim()}
+                  className="h-11 px-6 bg-green-600 hover:bg-green-700 text-white"
+                  data-testid="quick-add-btn"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5">Type your recipe name and press Enter or click Add</p>
+            </div>
+
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="flex-shrink mx-4 text-xs text-gray-400 font-medium">OR search from YouTube</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+
             {/* Search Mode Toggle - 3 tabs */}
             <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
               {/* <button
