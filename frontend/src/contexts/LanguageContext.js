@@ -14,7 +14,10 @@ export const UI_LABELS = {
     appName: ' ',
     appTagline: 'Your Smart Kitchen Manager',
     indianKitchen: 'Indian Kitchen',
-    
+    unitSystem: 'Units',
+    metric: 'Metric (kg/L)',
+    usUnits: 'US (lb/oz)',
+
     // Navigation
     home: 'Home',
     inventory: 'Inventory',
@@ -237,7 +240,10 @@ export const UI_LABELS = {
     appName: ' ',
     appTagline: 'आपका स्मार्ट रसोई प्रबंधक',
     indianKitchen: 'भारतीय रसोई',
-    
+    unitSystem: 'इकाई',
+    metric: 'मीट्रिक (kg/L)',
+    usUnits: 'अमेरिकी (lb/oz)',
+
     // Navigation
     home: 'होम',
     inventory: 'सामान',
@@ -460,7 +466,10 @@ export const UI_LABELS = {
     appName: ' ',
     appTagline: 'तुमचा स्मार्ट स्वयंपाकघर व्यवस्थापक',
     indianKitchen: 'भारतीय स्वयंपाकघर',
-    
+    unitSystem: 'एकक',
+    metric: 'मीट्रिक (kg/L)',
+    usUnits: 'अमेरिकी (lb/oz)',
+
     // Navigation
     home: 'मुख्यपृष्ठ',
     inventory: 'साठा',

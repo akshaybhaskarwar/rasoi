@@ -10,11 +10,13 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUnits } from '@/contexts/UnitContext';
 import { useAuth } from '@/contexts/AuthContext';
 import HouseholdSwitcher from '@/components/HouseholdSwitcher';
 
 export const DualContextHeader = ({ onLanguageChange }) => {
   const { language, changeLanguage, getLabel } = useLanguage();
+  const { unitSystem, changeUnitSystem, UNIT_SYSTEMS } = useUnits();
   const { isAuthenticated, user } = useAuth();
 
   const handleLanguageChange = (value) => {
@@ -60,9 +62,23 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             
             {isAuthenticated && <HouseholdSwitcher />}
             
+            {/* Unit system toggle - compact */}
+            <Select value={unitSystem} onValueChange={changeUnitSystem}>
+              <SelectTrigger
+                className="w-[70px] h-8 border-[#138808] focus:ring-[#138808] text-xs px-2"
+                data-testid="unit-selector-mobile"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="metric" className="text-xs">kg/L</SelectItem>
+                <SelectItem value="us" className="text-xs">lb/oz</SelectItem>
+              </SelectContent>
+            </Select>
+
             {/* Language toggle - compact */}
             <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger 
+              <SelectTrigger
                 className="w-[80px] h-8 border-[#FF9933] focus:ring-[#FF9933] text-xs px-2"
                 data-testid="language-selector-mobile"
               >
@@ -129,11 +145,32 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             {/* Household Switcher */}
             {isAuthenticated && <HouseholdSwitcher />}
             
+            {/* Unit System Toggle */}
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚖️</span>
+              <Select value={unitSystem} onValueChange={changeUnitSystem}>
+                <SelectTrigger
+                  className="w-[130px] border-[#138808] focus:ring-[#138808]"
+                  data-testid="unit-selector"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="metric" data-testid="unit-metric">
+                    <span className="flex items-center gap-2">⚖️ Metric (kg/L)</span>
+                  </SelectItem>
+                  <SelectItem value="us" data-testid="unit-us">
+                    <span className="flex items-center gap-2">🇺🇸 US (lb/oz)</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Language Toggle */}
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-gray-600" />
               <Select value={language} onValueChange={handleLanguageChange}>
-                <SelectTrigger 
+                <SelectTrigger
                   className="w-[160px] border-[#FF9933] focus:ring-[#FF9933]"
                   data-testid="language-selector"
                 >

@@ -1,5 +1,6 @@
 import { useGapAnalysis, useShoppingList } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUnits } from '@/contexts/UnitContext';
 import { AlertTriangle, ChevronDown, ChevronUp, ShoppingCart, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 export const GapAnalysisSidebar = ({ isMobile = false }) => {
   const { analysis, loading } = useGapAnalysis();
   const { shoppingList, addItem } = useShoppingList();
+  const { getDefaultQuantity } = useUnits();
   const [isExpanded, setIsExpanded] = useState(!isMobile);
   const [adding, setAdding] = useState(false);
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ export const GapAnalysisSidebar = ({ isMobile = false }) => {
             name_en: item.ingredient,
             category: 'other',
             quantity: '-',
-            monthly_quantity: '1 kg',
+            monthly_quantity: getDefaultQuantity(item.category || 'other'),
             store_type: 'grocery',
             source: 'gap-analysis'
           });

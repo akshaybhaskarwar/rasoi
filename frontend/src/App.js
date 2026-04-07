@@ -6,6 +6,7 @@ import { DualContextHeader } from "@/components/DualContextHeader";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { GapAnalysisSidebar } from "@/components/GapAnalysisSidebar";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
+import { UnitProvider } from "@/contexts/UnitContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HomePage from "@/pages/HomePage";
@@ -126,7 +127,9 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <AppContent />
+        <UnitProvider>
+          <AppContent />
+        </UnitProvider>
       </LanguageProvider>
     </AuthProvider>
   );

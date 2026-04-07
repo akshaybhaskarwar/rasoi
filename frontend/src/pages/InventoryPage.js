@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUnits } from '@/contexts/UnitContext';
 import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar, Minus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,38 +17,23 @@ import TranslatedLabel from '@/components/TranslatedLabel';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// Default monthly quantities by category
+// Default monthly quantities by category (display is computed dynamically via UnitContext)
 const DEFAULT_MONTHLY = {
-  'grains': { quantity: 5000, unit: 'g', step: 1000, display: '5 kg' },
-  'pulses': { quantity: 500, unit: 'g', step: 250, display: '500 g' },
-  'spices': { quantity: 100, unit: 'g', step: 50, display: '100 g' },
-  'dairy': { quantity: 5000, unit: 'ml', step: 500, display: '5 L' },
-  'oils': { quantity: 1000, unit: 'ml', step: 250, display: '1 L' },
-  'bakery': { quantity: 2, unit: 'pcs', step: 1, display: '2 pcs' },
-  'snacks': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
-  'beverages': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
-  'vegetables': { quantity: 2000, unit: 'g', step: 500, display: '2 kg' },
-  'fruits': { quantity: 2000, unit: 'g', step: 500, display: '2 kg' },
-  'fasting': { quantity: 500, unit: 'g', step: 100, display: '500 g' },
-  'household': { quantity: 1, unit: 'pcs', step: 1, display: '1 pcs' },
-  'cleaning': { quantity: 1, unit: 'pcs', step: 1, display: '1 pcs' },
-  'medicine': { quantity: 1, unit: 'pcs', step: 1, display: '1 pcs' },
-  'other': { quantity: 1000, unit: 'g', step: 250, display: '1 kg' }
-};
-
-// Format quantity for display
-const formatQuantity = (quantity, unit) => {
-  if (!quantity) return null;
-  if (unit === 'pcs') return `${quantity} pcs`;
-  if (unit === 'ml') {
-    if (quantity >= 1000) return `${(quantity / 1000).toFixed(quantity % 1000 === 0 ? 0 : 1)} L`;
-    return `${quantity} ml`;
-  }
-  if (unit === 'g') {
-    if (quantity >= 1000) return `${(quantity / 1000).toFixed(quantity % 1000 === 0 ? 0 : 1)} kg`;
-    return `${quantity} g`;
-  }
-  return `${quantity} ${unit}`;
+  'grains': { quantity: 5000, unit: 'g', step: 1000 },
+  'pulses': { quantity: 500, unit: 'g', step: 250 },
+  'spices': { quantity: 100, unit: 'g', step: 50 },
+  'dairy': { quantity: 5000, unit: 'ml', step: 500 },
+  'oils': { quantity: 1000, unit: 'ml', step: 250 },
+  'bakery': { quantity: 2, unit: 'pcs', step: 1 },
+  'snacks': { quantity: 500, unit: 'g', step: 100 },
+  'beverages': { quantity: 500, unit: 'g', step: 100 },
+  'vegetables': { quantity: 2000, unit: 'g', step: 500 },
+  'fruits': { quantity: 2000, unit: 'g', step: 500 },
+  'fasting': { quantity: 500, unit: 'g', step: 100 },
+  'household': { quantity: 1, unit: 'pcs', step: 1 },
+  'cleaning': { quantity: 1, unit: 'pcs', step: 1 },
+  'medicine': { quantity: 1, unit: 'pcs', step: 1 },
+  'other': { quantity: 1000, unit: 'g', step: 250 }
 };
 
 // Helper function to check expiry status
@@ -118,6 +104,7 @@ const calculateStockStatus = (currentStock, monthlyNeed) => {
 const InventoryPage = () => {
   const { inventory, loading, addItem, updateItem, deleteItem, fetchInventory } = useInventory();
   const { language, getLabel, isEnglish } = useLanguage();
+  const { formatQuantity } = useUnits();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStockLevel, setSelectedStockLevel] = useState('all'); // New state for stock filtering
