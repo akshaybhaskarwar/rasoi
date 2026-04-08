@@ -235,6 +235,7 @@ const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded 
   // Fetch feed when channel selection changes
   useEffect(() => {
     fetchFeed();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChannel, minMatches]);
 
   // Check planned status for all videos in feed
@@ -242,6 +243,7 @@ const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded 
     if (feed.length > 0) {
       checkPlannedStatus();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feed]);
 
   const fetchChannels = async () => {

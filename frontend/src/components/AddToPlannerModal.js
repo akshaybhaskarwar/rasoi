@@ -65,6 +65,7 @@ const AddToPlannerModal = ({
     if (isOpen && video) {
       fetchPrepData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, video]);
 
   const fetchPrepData = async () => {

@@ -102,6 +102,7 @@ export const useInventory = () => {
 
   useEffect(() => {
     fetchInventory();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { inventory, loading, error, fetchInventory, addItem, updateItem, deleteItem };
@@ -200,6 +201,7 @@ export const useShoppingList = () => {
 
   useEffect(() => {
     fetchShoppingList();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { shoppingList, loading, error, fetchShoppingList, addItem, updateItem, deleteItem, clearList };
@@ -269,6 +271,7 @@ export const useMealPlanner = () => {
   useEffect(() => {
     fetchMealPlans();
     fetchSuggestions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { mealPlans, loading, error, suggestions, fetchMealPlans, fetchSuggestions, addMealPlan, deleteMealPlan };

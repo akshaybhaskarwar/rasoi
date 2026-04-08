@@ -342,6 +342,7 @@ const RecipesPage = () => {
   
   useEffect(() => {
     fetchRecipes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedTag]);
   
   // Add missing to shopping list
