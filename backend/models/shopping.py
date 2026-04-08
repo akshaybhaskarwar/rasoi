@@ -22,6 +22,7 @@ class ShoppingItem(BaseModel):
     shopping_status: str = "pending"  # pending, in_cart, bought
     claimed_by: Optional[str] = None
     claimed_by_name: Optional[str] = None
+    expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
     bought_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -34,6 +35,7 @@ class ShoppingItemCreate(BaseModel):
     quantity: str
     stock_level: Optional[str] = None
     monthly_quantity: Optional[str] = None
+    expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
     store_type: str = "grocery"
 
 
