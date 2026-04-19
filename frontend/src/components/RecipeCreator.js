@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { 
+import {
   ChefHat, Plus, Minus, GripVertical, Camera, X, Check,
   Clock, Users, Sparkles, BookOpen, Upload, Tag, Trash2,
-  AlertCircle, ShoppingCart, Heart, Share2, Search
+  AlertCircle, ShoppingCart, Heart, Share2, Search, Crop
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import axios from 'axios';
+import PhotoCropper from './PhotoCropper';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -216,6 +217,7 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
   });
   
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [cropperSrc, setCropperSrc] = useState(null);
   
   // Fetch tags and units on mount
   useEffect(() => {
@@ -321,19 +323,30 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image must be less than 10MB');
+        e.target.value = '';
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onload = (event) => {
-        const base64 = event.target.result.split(',')[1];
-        setRecipe({ ...recipe, photo_base64: base64 });
-        setPhotoPreview(event.target.result);
+        setCropperSrc(event.target.result);
       };
       reader.readAsDataURL(file);
     }
+    // Reset so the same file can be re-selected after cancel
+    e.target.value = '';
+  };
+
+  const handleCropApply = ({ dataUrl, base64 }) => {
+    setRecipe({ ...recipe, photo_base64: base64 });
+    setPhotoPreview(dataUrl);
+    setCropperSrc(null);
+  };
+
+  const handleCropCancel = () => {
+    setCropperSrc(null);
   };
   
   // Toggle tag
@@ -475,6 +488,14 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
           {photoPreview ? (
             <div className="relative">
               <img src={photoPreview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute top-2 left-2 h-8 px-2"
+                onClick={(e) => { e.stopPropagation(); setCropperSrc(photoPreview); }}
+              >
+                <Crop className="w-4 h-4 mr-1" /> Edit
+              </Button>
               <Button
                 size="sm"
                 variant="destructive"
@@ -692,6 +713,13 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
           )}
         </Button>
       </div>
+
+      <PhotoCropper
+        open={!!cropperSrc}
+        imageSrc={cropperSrc}
+        onCrop={handleCropApply}
+        onCancel={handleCropCancel}
+      />
     </div>
   );
 };
