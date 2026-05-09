@@ -528,13 +528,55 @@ ESSENTIALS_LIST = [
 ]
 
 
+import unicodedata
+
+
+def _normalize_name(s: str) -> str:
+    """Lowercase, strip, NFC-normalize for cross-script comparison."""
+    if not s:
+        return ""
+    return unicodedata.normalize("NFC", s).strip().lower()
+
+
+# Built once on import: maps any en/mr/hi/alias variant -> canonical English name.
+_NAME_TO_EN: dict = {}
+
+
+def _build_name_lookup():
+    for main_data in PANTRY_TEMPLATE.values():
+        for sub_data in main_data["subcategories"].values():
+            for item in sub_data["items"]:
+                en = item["en"]
+                for variant in (en, item.get("mr"), item.get("hi"), *(item.get("aliases") or [])):
+                    key = _normalize_name(variant)
+                    if key:
+                        _NAME_TO_EN.setdefault(key, en)
+
+
+_build_name_lookup()
+
+
+def to_canonical_en(name: str) -> str:
+    """Resolve any en/mr/hi/alias name to its canonical English name.
+
+    Returns the input unchanged if no match is found, so callers can still
+    fall back to substring matching for items not in the catalog.
+    """
+    if not name:
+        return name
+    return _NAME_TO_EN.get(_normalize_name(name), name)
+
+
 def get_item_details(item_name: str) -> dict:
-    """Get full details for an item by name"""
-    for main_cat, main_data in PANTRY_TEMPLATE.items():
-        for sub_key, sub_data in main_data["subcategories"].items():
+    """Get full details for an item by name (en/mr/hi/alias all accepted)."""
+    canonical = _NAME_TO_EN.get(_normalize_name(item_name))
+    if not canonical:
+        return None
+    for main_data in PANTRY_TEMPLATE.values():
+        for sub_data in main_data["subcategories"].values():
             category = sub_data["category"]
             for item in sub_data["items"]:
-                if item["en"].lower() == item_name.lower():
+                if item["en"] == canonical:
                     unit = item.get("unit_override", CATEGORY_UNITS.get(category, "kg"))
                     return {
                         "name_en": item["en"],
