@@ -27,7 +27,7 @@ const PlannerPage = () => {
   const { searchLocalRecipes } = useRecipes();
   const { inventory } = useInventory();
   const { favoriteChannels, addFavoriteChannel, removeFavoriteChannel } = useFavoriteChannels();
-  const { getLabel } = useLanguage();
+  const { getLabel, getTranslatedName } = useLanguage();
   
   // Refs for auto-scroll
   const todayCardRef = useRef(null);
@@ -119,10 +119,22 @@ const PlannerPage = () => {
     console.log('Search triggered:', { searchMode, textSearch, selectedIngredients });
     setSearching(true);
     try {
+      // Send each selected ingredient as a "|"-joined bundle of locale variants
+      // (en|mr|hi) so the backend can match against any language.
+      const ingredientPayload = searchMode === 'ingredients'
+        ? selectedIngredients.map(en => {
+            const item = inventory.find(i => i.name_en === en);
+            const variants = item
+              ? [item.name_en, item.name_mr, item.name_hi]
+              : [en];
+            return variants.filter(Boolean).join('|');
+          })
+        : [];
+
       const response = await searchLocalRecipes(
-        searchMode === 'ingredients' ? selectedIngredients : [], 
-        videosOnly, 
-        favoriteChannels, 
+        ingredientPayload,
+        videosOnly,
+        favoriteChannels,
         20,
         searchMode === 'text' ? textSearch.trim() : ''
       );
@@ -970,7 +982,7 @@ const PlannerPage = () => {
                           }`}
                           data-testid={`ingredient-${item.id}`}
                         >
-                          {item.name_en}
+                          {getTranslatedName(item)}
                         </button>
                       );
                     })}
@@ -983,17 +995,21 @@ const PlannerPage = () => {
                       Selected: {selectedIngredients.length} ingredients
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {selectedIngredients.map((ing, idx) => (
-                        <Badge key={idx} className="bg-[#FF9933] text-white">
-                          {ing}
-                          <button
-                            onClick={() => toggleIngredient(ing)}
-                            className="ml-1 hover:text-gray-200"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
+                      {selectedIngredients.map((ing, idx) => {
+                        const item = inventory.find(i => i.name_en === ing);
+                        const label = item ? getTranslatedName(item) : ing;
+                        return (
+                          <Badge key={idx} className="bg-[#FF9933] text-white">
+                            {label}
+                            <button
+                              onClick={() => toggleIngredient(ing)}
+                              className="ml-1 hover:text-gray-200"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

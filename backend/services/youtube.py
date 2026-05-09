@@ -10,6 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from data.recipes import RECIPE_DATABASE
+from data.pantry_items import to_canonical_en
 
 logger = logging.getLogger(__name__)
 
@@ -19,34 +20,50 @@ def normalize_string(s: str) -> str:
     return re.sub(r'[^a-z0-9]', '', s.lower())
 
 
+def _canonical_lower(name: str) -> str:
+    """Map en/mr/hi/alias to canonical English, then lowercase for substring match."""
+    return to_canonical_en(name).lower() if name else ""
+
+
 def search_local_recipes(
     ingredients: List[str],
     videos_only: bool = False,
     favorite_channels: List[str] = [],
     text_query: str = ""
 ) -> List[Dict[str, Any]]:
-    """Search local recipe database by matching ingredients or text query"""
+    """Search local recipe database by matching ingredients or text query.
+
+    Each entry in `ingredients` may be a single name or a `|`-separated bundle
+    of locale variants (e.g. "Onion|कांदा|प्याज"). All variants are resolved to
+    a canonical English name before substring matching, so users can search
+    in English, Hindi, or Marathi.
+    """
     results = []
-    ingredients_lower = [ing.lower() for ing in ingredients]
+    # Each user ingredient becomes a list of canonical-lowercased forms.
+    user_ingredient_variants = [
+        [_canonical_lower(v) for v in ing.split('|') if v.strip()]
+        for ing in ingredients
+    ]
+    user_ingredient_variants = [v for v in user_ingredient_variants if v]
     text_query_lower = text_query.lower().strip() if text_query else ""
-    
+
     favorite_channels_normalized = [normalize_string(ch) for ch in favorite_channels]
-    
+
     for recipe in RECIPE_DATABASE:
         if videos_only and recipe.get('type') != 'video':
             continue
-        
+
         source_normalized = normalize_string(recipe.get('source', ''))
-        
+
         is_from_favorite = bool(favorite_channels_normalized and any(
-            fav in source_normalized or source_normalized in fav 
+            fav in source_normalized or source_normalized in fav
             for fav in favorite_channels_normalized
         ))
-        
+
         # Text query search
         if text_query_lower:
             title_lower = recipe.get('title', '').lower()
-            
+
             if text_query_lower in title_lower:
                 base_score = 1.0 if text_query_lower == title_lower else 0.9
                 results.append({
@@ -63,17 +80,24 @@ def search_local_recipes(
                     'is_favorite': is_from_favorite
                 })
             continue
-        
+
         # Ingredient-based search
-        if ingredients_lower:
+        if user_ingredient_variants:
             if favorite_channels and not is_from_favorite:
                 continue
-                
-            recipe_ingredients_lower = [ing.lower() for ing in recipe.get('ingredients', [])]
-            matches = sum(1 for ing in ingredients_lower if any(ing in r_ing or r_ing in ing for r_ing in recipe_ingredients_lower))
-            
+
+            recipe_ingredients_canonical = [_canonical_lower(ing) for ing in recipe.get('ingredients', [])]
+            matches = sum(
+                1 for variants in user_ingredient_variants
+                if any(
+                    v and r and (v in r or r in v)
+                    for v in variants
+                    for r in recipe_ingredients_canonical
+                )
+            )
+
             if matches > 0:
-                match_score = matches / len(ingredients_lower) if ingredients_lower else 0
+                match_score = matches / len(user_ingredient_variants)
                 results.append({
                     **recipe,
                     'match_count': matches,
@@ -119,13 +143,16 @@ def calculate_inventory_match(recipe_ingredients: List[str], user_inventory: Lis
     if not recipe_ingredients:
         return {"matched": 0, "total": 0, "percentage": 0, "matched_items": [], "missing_items": []}
     
-    user_inv_lower = [i.lower() for i in user_inventory]
+    user_inv_canonical = [_canonical_lower(i) for i in user_inventory]
     matched = []
     missing = []
-    
+
     for ing in recipe_ingredients:
-        ing_lower = ing.lower()
-        found = any(inv in ing_lower or ing_lower in inv for inv in user_inv_lower)
+        ing_canonical = _canonical_lower(ing)
+        found = any(
+            inv and ing_canonical and (inv in ing_canonical or ing_canonical in inv)
+            for inv in user_inv_canonical
+        )
         if found:
             matched.append(ing)
         else:
@@ -142,14 +169,17 @@ def calculate_inventory_match(recipe_ingredients: List[str], user_inventory: Lis
 
 
 def match_ingredients_in_text(text: str, inventory_items: List[str], min_matches: int = 2) -> Dict[str, Any]:
-    """Case-insensitive regex match of inventory items against text"""
+    """Match inventory items against text, accepting their en/mr/hi/alias variants."""
     text_lower = text.lower()
     matched_items = []
-    
+
     for item in inventory_items:
-        item_lower = item.lower()
-        pattern = r'\b' + re.escape(item_lower) + r'\b'
-        if re.search(pattern, text_lower) or item_lower in text_lower:
+        candidates = {item.lower(), _canonical_lower(item)}
+        candidates.discard("")
+        if any(
+            re.search(r'\b' + re.escape(c) + r'\b', text_lower) or c in text_lower
+            for c in candidates
+        ):
             matched_items.append(item)
     
     match_count = len(matched_items)
