@@ -16,7 +16,8 @@ class InventoryItem(BaseModel):
     name_mr: Optional[str] = None
     category: str
     stock_level: str = "empty"  # empty, low, half, full
-    current_stock: int = 0  # Actual current stock quantity (in base units: g or ml)
+    current_stock: int = 0  # Actual current stock quantity in this item's `unit`
+                            # (g/ml for food, pcs for household & countable items).
     freshness: Optional[int] = None  # 0-100 for perishables
     is_secret_stash: bool = False
     unit: str = "kg"

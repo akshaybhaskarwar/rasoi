@@ -575,6 +575,55 @@ def to_canonical_en(name: str) -> str:
     return _NAME_TO_EN.get(_normalize_name(name), name)
 
 
+# Cached list of normalized lookup keys for fuzzy matching. Built lazily on
+# first call because rapidfuzz is only needed by receipt-OCR ingestion.
+_FUZZY_KEYS = None  # type: list[str] | None
+
+
+def to_canonical_en_fuzzy(name: str, min_score: int = 80) -> "tuple[str | None, int]":
+    """Exact match first; fall back to fuzzy matching against all en/mr/hi/aliases.
+
+    Designed for OCR pipelines where 1-2 character drift is common
+    (e.g. `भुग डाळ` → `मूग डाळ` → `Moong Dal`).
+
+    Returns:
+        (canonical_en, score) where score is 100 for an exact match or the
+        rapidfuzz WRatio score (0-100) for a fuzzy match. Returns
+        (None, 0) if nothing scores above `min_score`.
+
+    `rapidfuzz` is an optional dependency — if it's not installed, this
+    function degrades to exact-match only and returns (None, 0) when the
+    exact lookup fails.
+    """
+    global _FUZZY_KEYS
+    if not name:
+        return None, 0
+    needle = _normalize_name(name)
+    if not needle:
+        return None, 0
+
+    # Fast path: exact match.
+    exact = _NAME_TO_EN.get(needle)
+    if exact:
+        return exact, 100
+
+    # Slow path: fuzzy.
+    try:
+        from rapidfuzz import process, fuzz  # type: ignore
+    except ImportError:
+        return None, 0
+
+    if _FUZZY_KEYS is None:
+        _FUZZY_KEYS = list(_NAME_TO_EN.keys())
+
+    result = process.extractOne(needle, _FUZZY_KEYS,
+                                scorer=fuzz.WRatio, score_cutoff=min_score)
+    if result is None:
+        return None, 0
+    matched_key, score, _idx = result
+    return _NAME_TO_EN[matched_key], int(score)
+
+
 def get_item_details(item_name: str) -> dict:
     """Get full details for an item by name (en/mr/hi/alias all accepted)."""
     canonical = _NAME_TO_EN.get(_normalize_name(item_name))
