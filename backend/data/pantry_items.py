@@ -83,7 +83,8 @@ PANTRY_TEMPLATE = {
                     {"en": "Moong Dal", "mr": "मूग डाळ", "hi": "मूंग दाल", "aliases": ["Mung Dal"], "monthly_qty": 2000},
                     {"en": "Moong Dal (Split)", "mr": "मूग डाळ सोललेली", "hi": "मूंग दाल छिलकी", "aliases": ["Moong Dal Sola"], "monthly_qty": 1000},
                     {"en": "Masoor Dal", "mr": "मसूर डाळ", "hi": "मसूर दाल", "aliases": ["Mohri Dal", "Red Lentils"], "monthly_qty": 500},
-                    {"en": "Chana Dal", "mr": "चणा डाळ", "hi": "चना दाल", "aliases": ["Harbhara Dal", "Chana Daal"], "monthly_qty": 500},
+                    {"en": "Chana Dal", "mr": "चणा डाळ", "hi": "चना दाल", "aliases": ["Harbhara Dal", "Chana Daal", "हरभरा डाळ", "हरभरा दाल"], "monthly_qty": 500},
+                    {"en": "Roasted Chana Dal", "mr": "फुटाणा डाळ", "hi": "फुटाना दाल", "aliases": ["Futana", "Futana Dal", "Phutana", "Roasted Chana"]},
                     {"en": "Urad Dal", "mr": "उडीद डाळ", "hi": "उड़द दाल", "aliases": ["Udid Dal"]},
                     {"en": "Whole Green Gram", "mr": "हिरवा मूग", "hi": "हरा मूंग", "aliases": ["Hirva Mung"]},
                     {"en": "Whole Black Gram", "mr": "काळा उडीद", "hi": "काला उड़द", "aliases": ["Kala Udid"]},
@@ -125,6 +126,7 @@ PANTRY_TEMPLATE = {
                     {"en": "Sabudana", "mr": "साबुदाणा", "hi": "साबूदाना", "aliases": ["Sago", "Tapioca Pearls"], "monthly_qty": 2000},
                     {"en": "Sabudana Flour", "mr": "साबुदाणा पीठ", "hi": "साबूदाना आटा", "aliases": ["Sago Flour"]},
                     {"en": "Singhada Flour", "mr": "शिंगाड्याचे पीठ", "hi": "सिंघाड़े का आटा", "aliases": ["Water Chestnut Flour"]},
+                    {"en": "Upvas Bhajni", "mr": "उपवास भाजणी", "hi": "उपवास भाजनी", "aliases": ["Upvas Bhajani", "Fasting Flour Mix"]},
                     {"en": "Groundnuts", "mr": "शेंगदाणे", "hi": "मूंगफली", "aliases": ["Peanuts", "Shengdane", "Moongfali"], "monthly_qty": 1000},
                     {"en": "Rock Salt", "mr": "सैंधव मीठ", "hi": "सेंधा नमक", "aliases": ["Sendha Namak", "Saindhav Meeth"]}
                 ]
@@ -268,7 +270,10 @@ PANTRY_TEMPLATE = {
                 "category": "snacks",
                 "items": [
                     {"en": "Boondi", "mr": "बुंदी", "hi": "बूंदी", "aliases": ["Bundi"], "monthly_qty": 500},
-                    {"en": "Bhujiya Sev", "mr": "भुजिया शेव", "hi": "भुजिया सेव", "aliases": ["Bhujiya Sheva", "Sev"], "monthly_qty": 100}
+                    {"en": "Bhujiya Sev", "mr": "भुजिया शेव", "hi": "भुजिया सेव", "aliases": ["Bhujiya Sheva", "Sev"], "monthly_qty": 100},
+                    {"en": "Farsan", "mr": "फरसाण", "hi": "फरसाण", "aliases": ["Farsaan", "Mixture", "Namkeen"]},
+                    {"en": "Chivda", "mr": "चिवडा", "hi": "चिवड़ा", "aliases": ["Chiwda", "Pohe Chivda"]},
+                    {"en": "Biscuits", "mr": "बिस्किट", "hi": "बिस्किट", "aliases": ["Biscuit", "Marie", "Parle G", "Marie NutriChoice"]}
                 ]
             }
         }
@@ -424,6 +429,7 @@ PANTRY_TEMPLATE = {
                     {"en": "Detergent Powder", "mr": "डिटर्जंट पावडर", "hi": "डिटर्जेंट पाउडर"},
                     {"en": "Detergent (Rin)", "mr": "रिन", "hi": "रिन"},
                     {"en": "Detergent (Surf Excel)", "mr": "सर्फ एक्सेल", "hi": "सर्फ एक्सेल"},
+                    {"en": "Detergent (Tide)", "mr": "टाईड", "hi": "टाइड", "aliases": ["Tide Powder"]},
                     {"en": "Fabric Softener", "mr": "फॅब्रिक सॉफ्टनर", "hi": "फैब्रिक सॉफ्टनर"},
                     {"en": "Fabric Whitener (Ujala)", "mr": "उजाला", "hi": "उजाला"},
                     {"en": "Odopic", "mr": "ओडोपिक", "hi": "ओडोपिक"}
@@ -473,7 +479,9 @@ PANTRY_TEMPLATE = {
                     {"en": "Air Freshener", "mr": "एअर फ्रेशनर", "hi": "एयर फ्रेशनर"},
                     {"en": "Insect Killer Spray", "mr": "कीटकनाशक स्प्रे", "hi": "कीटनाशक स्प्रे"},
                     {"en": "Mosquito Repellent", "mr": "मच्छर अगरबत्ती", "hi": "मच्छर भगाने वाला"},
-                    {"en": "Naphthalene Balls", "mr": "नॅप्थलीन गोळ्या", "hi": "नेफ्थलीन गोलियां"},
+                    {"en": "Naphthalene Balls", "mr": "नॅप्थलीन गोळ्या", "hi": "नेफ्थलीन गोलियां", "aliases": ["Dambar Goli", "डांबर गोळी", "Mothballs"]},
+                    {"en": "Drain Cleaner", "mr": "ड्रेन क्लीनर", "hi": "ड्रेन क्लीनर", "aliases": ["Drainex", "DrainIt", "Drano"]},
+                    {"en": "Multi-purpose Liquid Cleaner", "mr": "बहुउद्देशीय लिक्विड क्लीनर", "hi": "बहु-उद्देशीय लिक्विड क्लीनर", "aliases": ["Sasa Liquid", "Liquid Cleaner"]},
                     {"en": "Camphor (Kapoor)", "mr": "कापूर", "hi": "कपूर"},
                     {"en": "Matchsticks", "mr": "काडेपेटी", "hi": "माचिस"},
                     {"en": "Candles", "mr": "मेणबत्ती", "hi": "मोमबत्ती"},
