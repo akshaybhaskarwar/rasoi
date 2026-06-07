@@ -27,6 +27,7 @@ from recipes import create_recipe_routes
 # Import services
 from services.translation import TranslationService
 from services.youtube import YouTubeService
+from services.receipts import ReceiptIngestionService
 
 # Import routes
 from routes.inventory import create_inventory_routes, inventory_router
@@ -83,6 +84,10 @@ async def root_health():
 # Initialize services
 translate_service = TranslationService(db, GOOGLE_TRANSLATE_API_KEY, log_api_usage)
 youtube_service = YouTubeService(YOUTUBE_API_KEY, db, log_api_usage)
+# Receipt ingestion (Phase 1 PRD-01). Lazily wires Google Vision + Anthropic
+# on first use; service can be constructed even if credentials are not yet
+# configured — calls will fail with a clear error in that case.
+receipt_service = ReceiptIngestionService()
 
 
 # ============ FESTIVAL INTELLIGENCE ============
@@ -150,7 +155,8 @@ create_admin_routes(db, decode_token)
 recipe_router = create_recipe_routes(db, decode_token, translate_service.google_translate_api, notify_household)
 
 # Initialize modular routes with dependencies
-create_inventory_routes(db, decode_token, translate_service, notify_inventory_change)
+create_inventory_routes(db, decode_token, translate_service, notify_inventory_change,
+                        receipt_service=receipt_service)
 create_shopping_routes(db, decode_token, translate_service, notify_shopping_change, notify_inventory_change)
 create_meal_plan_routes(db, decode_token, youtube_service)
 create_translation_routes(db, translate_service)
@@ -241,5 +247,10 @@ async def startup_event():
     # Festivals
     await db.festivals.create_index("date")
     await db.festivals.create_index("id", unique=True)
-    
+
+    # Receipt audit log (Phase 1 PRD-01): 30-day auto-delete via TTL index
+    await db.receipts.create_index("id", unique=True)
+    await db.receipts.create_index("household_id")
+    await db.receipts.create_index("created_at", expireAfterSeconds=30 * 24 * 60 * 60)
+
     logger.info("Rasoi-Sync backend started successfully!")
