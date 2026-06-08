@@ -218,8 +218,17 @@ const ReceiptScanButton = ({ onSuccess }) => {
         data-testid="receipt-file-input"
       />
 
-      <Dialog open={stage === 'confirming'} onOpenChange={(o) => { if (!o) handleClose(); }}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar p-0">
+      <Dialog
+        open={stage === 'confirming'}
+        onOpenChange={(o) => { if (!o) handleClose(); }}
+      >
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar p-0 relative"
+          // Prevent the parent dialog from closing if the user taps inside the
+          // inline catalog overlay (which is rendered within this content area).
+          onInteractOutside={(e) => { if (catalogOpen !== null) e.preventDefault(); }}
+          onEscapeKeyDown={(e) => { if (catalogOpen !== null) { e.preventDefault(); setCatalogOpen(null); } }}
+        >
           <DialogHeader className="p-6 pb-3 border-b sticky top-0 bg-white z-10">
             <DialogTitle className="flex items-center gap-2">
               <Receipt className="w-6 h-6 text-[#FF9933]" />
@@ -318,8 +327,9 @@ const ReceiptScanButton = ({ onSuccess }) => {
             })}
           </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t bg-white sticky bottom-0 flex flex-col-reverse md:flex-row gap-2 md:justify-end">
+          {/* Footer — extra bottom padding on mobile clears the app's bottom
+              nav bar (~64-80px tall) that otherwise hides the buttons. */}
+          <div className="p-4 pb-24 md:pb-4 border-t bg-white sticky bottom-0 flex flex-col-reverse md:flex-row gap-2 md:justify-end">
             <Button variant="outline" onClick={handleClose} disabled={saving}>
               Cancel
             </Button>
@@ -333,27 +343,35 @@ const ReceiptScanButton = ({ onSuccess }) => {
               Add {stats.add} item{stats.add !== 1 ? 's' : ''} to inventory
             </Button>
           </div>
+
+          {/* Inline catalog-pick overlay — rendered INSIDE the parent dialog
+              (not as a nested Radix Dialog) so closing it never bubbles up to
+              close the confirm dialog. */}
+          {catalogOpen !== null && (
+            <CatalogPickOverlay
+              onClose={() => setCatalogOpen(null)}
+              onPick={(canonicalEn) => updateRowCanonical(catalogOpen, canonicalEn)}
+              currentValue={rows.find(r => r._row_id === catalogOpen)?.name_canonical_en}
+              devanagariHint={rows.find(r => r._row_id === catalogOpen)?.name_devanagari}
+            />
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Catalog-pick sheet for unmatched/edit rows */}
-      {catalogOpen !== null && (
-        <CatalogPickSheet
-          onClose={() => setCatalogOpen(null)}
-          onPick={(canonicalEn) => updateRowCanonical(catalogOpen, canonicalEn)}
-          currentValue={rows.find(r => r._row_id === catalogOpen)?.name_canonical_en}
-          devanagariHint={rows.find(r => r._row_id === catalogOpen)?.name_devanagari}
-        />
-      )}
     </>
   );
 };
 
 // =============================================================================
-// Catalog-pick sheet — flattens PANTRY_TEMPLATE and lets the user filter by
-// English / Marathi / Hindi name.
+// Catalog-pick OVERLAY — renders absolute-positioned INSIDE the parent dialog
+// (not as a separate Radix Dialog) so closing it never bubbles up to close
+// the confirm dialog. Earlier nested-Dialog implementation was navigating the
+// user out of the receipt flow on close.
+//
+// The API returns the pantry template as:
+//   { template: { "<main display>": { "<sub display>": { items: [...] } } } }
+// — note there's NO `.subcategories` wrapper between main and sub.
 // =============================================================================
-const CatalogPickSheet = ({ onClose, onPick, currentValue, devanagariHint }) => {
+const CatalogPickOverlay = ({ onClose, onPick, currentValue, devanagariHint }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -366,9 +384,10 @@ const CatalogPickSheet = ({ onClose, onPick, currentValue, devanagariHint }) => 
         const data = await res.json();
         if (cancelled) return;
         const flat = [];
+        // API shape: template -> {mainDisplay: {subDisplay: {items: [...]}}}
         Object.values(data.template || {}).forEach((mainCat) => {
-          Object.values(mainCat.subcategories || {}).forEach((sub) => {
-            (sub.items || []).forEach((item) => {
+          Object.values(mainCat || {}).forEach((sub) => {
+            (sub?.items || []).forEach((item) => {
               flat.push({
                 en: item.en,
                 mr: item.mr || '',
@@ -390,72 +409,85 @@ const CatalogPickSheet = ({ onClose, onPick, currentValue, devanagariHint }) => 
   }, []);
 
   const q = query.trim().toLowerCase();
+  const trimmed = query.trim();
   const filtered = q
     ? items.filter(it =>
         it.en.toLowerCase().includes(q) ||
-        it.mr.includes(query.trim()) ||
-        it.hi.includes(query.trim()) ||
+        (it.mr && it.mr.includes(trimmed)) ||
+        (it.hi && it.hi.includes(trimmed)) ||
         it.aliases.toLowerCase().includes(q))
     : items.slice(0, 50);
 
   return (
-    <Dialog open={true} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col p-0">
-        <DialogHeader className="p-5 pb-3 border-b">
-          <DialogTitle className="flex items-center gap-2">
+    // Absolute overlay covering only the parent DialogContent — NOT a separate
+    // Radix Dialog. Closing this just unmounts the overlay.
+    <div
+      className="absolute inset-0 bg-white z-20 flex flex-col"
+      data-testid="catalog-pick-overlay"
+    >
+      <div className="p-5 pb-3 border-b flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 font-semibold text-lg">
             <Search className="w-5 h-5" />
             Pick the catalog match
-          </DialogTitle>
+          </div>
           {devanagariHint && (
             <p className="text-xs text-gray-600 mt-1">
               On the receipt: <strong className="text-gray-800">{devanagariHint}</strong>
             </p>
           )}
-        </DialogHeader>
-
-        <div className="p-4 border-b">
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search English, मराठी, हिन्दी…"
-            autoFocus
-            className="w-full"
-          />
         </div>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-900 p-1 -m-1"
+          aria-label="Close catalog picker"
+          data-testid="catalog-pick-close"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {loading && (
-            <div className="p-6 text-center text-gray-500">
-              <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading catalog…
+      <div className="p-4 border-b">
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search English, मराठी, हिन्दी…"
+          autoFocus
+          className="w-full"
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-24 md:pb-4">
+        {loading && (
+          <div className="p-6 text-center text-gray-500">
+            <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading catalog…
+          </div>
+        )}
+        {!loading && items.length === 0 && (
+          <div className="p-6 text-center text-gray-500">
+            Could not load the catalog. Tap Close and try again.
+          </div>
+        )}
+        {!loading && items.length > 0 && filtered.length === 0 && (
+          <div className="p-6 text-center text-gray-500">No catalog entries match "{query}".</div>
+        )}
+        {!loading && filtered.map((it) => (
+          <button
+            key={it.en}
+            onClick={() => onPick(it.en)}
+            className={`block w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 ${
+              it.en === currentValue ? 'bg-blue-50' : ''
+            }`}
+          >
+            <div className="font-medium text-gray-900">{it.en}</div>
+            <div className="text-xs text-gray-600 mt-0.5">
+              {it.mr && <span className="mr-2">मराठी: {it.mr}</span>}
+              {it.hi && <span>हिन्दी: {it.hi}</span>}
             </div>
-          )}
-          {!loading && filtered.length === 0 && (
-            <div className="p-6 text-center text-gray-500">No catalog entries match.</div>
-          )}
-          {!loading && filtered.map((it) => (
-            <button
-              key={it.en}
-              onClick={() => onPick(it.en)}
-              className={`block w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 ${
-                it.en === currentValue ? 'bg-blue-50' : ''
-              }`}
-            >
-              <div className="font-medium text-gray-900">{it.en}</div>
-              <div className="text-xs text-gray-600 mt-0.5">
-                {it.mr && <span className="mr-2">मराठी: {it.mr}</span>}
-                {it.hi && <span>हिन्दी: {it.hi}</span>}
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <div className="p-3 border-t flex justify-end">
-          <Button variant="outline" onClick={onClose}>
-            <X className="w-4 h-4 mr-1" /> Close
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 
