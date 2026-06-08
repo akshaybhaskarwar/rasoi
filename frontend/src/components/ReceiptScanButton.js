@@ -223,7 +223,12 @@ const ReceiptScanButton = ({ onSuccess }) => {
         onOpenChange={(o) => { if (!o) handleClose(); }}
       >
         <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar p-0 relative"
+          // NOTE: Do NOT add `relative` here — it would override Radix's
+          // `position: fixed` and break the centered modal layout. The inline
+          // catalog overlay below uses `absolute inset-0` and is correctly
+          // contained by the fixed-positioned DialogContent (position:fixed
+          // creates a containing block for absolute descendants).
+          className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar p-0"
           // Prevent the parent dialog from closing if the user taps inside the
           // inline catalog overlay (which is rendered within this content area).
           onInteractOutside={(e) => { if (catalogOpen !== null) e.preventDefault(); }}
