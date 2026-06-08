@@ -103,3 +103,5 @@ frontend/node_modules/.cache/default-development/46.pack
 # Environment files
 *.env
 *.env.*
+backend/.env
+backend/gcp-vision-key.json
