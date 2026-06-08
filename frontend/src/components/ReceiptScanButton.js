@@ -33,17 +33,44 @@ const CONFIDENCE_STYLES = {
   unmatched: { color: 'bg-red-50 border-red-200',       icon: XCircle,      iconClass: 'text-red-600',    label: 'Pick' },
 };
 
-const fileToBase64 = (file) =>
+// Resize an image file to a max dimension and re-encode as JPEG. Modern phone
+// cameras produce 4-8 MB images; we drop to ~500 KB while keeping enough
+// resolution that the OCR is unaffected. Critical for mobile networks and
+// to stay well under any reverse-proxy upload caps.
+const MAX_DIM = 1800;       // pixels — receipt text remains crisp at this width
+const JPEG_QUALITY = 0.85;  // ~5x smaller than full-quality, no OCR loss
+
+const fileToResizedBase64 = (file) =>
   new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      // strip the "data:image/jpeg;base64," prefix
-      const result = reader.result || '';
-      const comma = String(result).indexOf(',');
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    const fileReader = new FileReader();
+    fileReader.onerror = () => reject(fileReader.error);
+    fileReader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const longest = Math.max(img.width, img.height);
+        const scale = longest > MAX_DIM ? MAX_DIM / longest : 1;
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas not supported on this device'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // toDataURL gives base64; strip the "data:image/jpeg;base64," prefix
+        const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+        const comma = dataUrl.indexOf(',');
+        resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+      };
+      img.onerror = () => reject(new Error('Could not load image — file may be corrupt'));
+      img.src = fileReader.result;
     };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
+    fileReader.readAsDataURL(file);
   });
 
 const formatINR = (n) =>
@@ -68,14 +95,16 @@ const ReceiptScanButton = ({ onSuccess }) => {
     e.target.value = ''; // allow re-selecting the same file later
     if (!file) return;
 
-    // 10 MB guard — matches backend limit
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image too large', { description: 'Please pick an image under 10 MB.' });
+    // 25 MB guard. We resize to ~500 KB before upload, so the backend's 10 MB
+    // limit is irrelevant — but reading a giant file into FileReader can OOM a
+    // low-end phone before we get the chance.
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error('Image too large', { description: 'Please pick an image under 25 MB.' });
       return;
     }
 
     try {
-      const b64 = await fileToBase64(file);
+      const b64 = await fileToResizedBase64(file);
       const data = await parseReceipt(b64);
       setReceipt(data);
       // Initialize editable rows with default action ('add' unless unmatched)
