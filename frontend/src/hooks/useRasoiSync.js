@@ -108,6 +108,70 @@ export const useInventory = () => {
   return { inventory, loading, error, fetchInventory, addItem, updateItem, deleteItem };
 };
 
+// Receipt-to-inventory pipeline (PRD-01).
+// Two-step flow:
+//   1. parseReceipt(imageBase64) -> { receipt_id, items[], total_extracted, vendor }
+//   2. user reviews on confirm screen and edits rows
+//   3. saveConfirmedItems(receipt_id, items) writes to inventory
+export const useReceiptIngestion = () => {
+  const [parsing, setParsing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('rasoi_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  /**
+   * Run a base64-encoded JPEG/PNG image through Google OCR + Claude catalog.
+   * Returns the parsed receipt with structured items ready for confirmation.
+   */
+  const parseReceipt = async (imageBase64) => {
+    setParsing(true);
+    setError(null);
+    try {
+      const response = await axios.post(
+        `${API}/inventory/from-receipt`,
+        { image_base64: imageBase64 },
+        { headers: getAuthHeaders(), timeout: 60_000 }
+      );
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Receipt processing failed';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  /**
+   * Apply the user-confirmed rows to inventory. Each item carries an `action`
+   * of "add" or "skip". Server-side this is bulk; returns {added_count,...}.
+   */
+  const saveConfirmedItems = async (receiptId, items) => {
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await axios.post(
+        `${API}/inventory/bulk-update`,
+        { receipt_id: receiptId, items },
+        { headers: getAuthHeaders(), timeout: 30_000 }
+      );
+      return response.data;
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Inventory update failed';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return { parseReceipt, saveConfirmedItems, parsing, saving, error };
+};
+
 export const useShoppingList = () => {
   const [shoppingList, setShoppingList] = useState([]);
   const [loading, setLoading] = useState(false);

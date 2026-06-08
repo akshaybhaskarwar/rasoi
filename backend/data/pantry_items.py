@@ -83,7 +83,8 @@ PANTRY_TEMPLATE = {
                     {"en": "Moong Dal", "mr": "मूग डाळ", "hi": "मूंग दाल", "aliases": ["Mung Dal"], "monthly_qty": 2000},
                     {"en": "Moong Dal (Split)", "mr": "मूग डाळ सोललेली", "hi": "मूंग दाल छिलकी", "aliases": ["Moong Dal Sola"], "monthly_qty": 1000},
                     {"en": "Masoor Dal", "mr": "मसूर डाळ", "hi": "मसूर दाल", "aliases": ["Mohri Dal", "Red Lentils"], "monthly_qty": 500},
-                    {"en": "Chana Dal", "mr": "चणा डाळ", "hi": "चना दाल", "aliases": ["Harbhara Dal", "Chana Daal"], "monthly_qty": 500},
+                    {"en": "Chana Dal", "mr": "चणा डाळ", "hi": "चना दाल", "aliases": ["Harbhara Dal", "Chana Daal", "हरभरा डाळ", "हरभरा दाल"], "monthly_qty": 500},
+                    {"en": "Roasted Chana Dal", "mr": "फुटाणा डाळ", "hi": "फुटाना दाल", "aliases": ["Futana", "Futana Dal", "Phutana", "Roasted Chana"]},
                     {"en": "Urad Dal", "mr": "उडीद डाळ", "hi": "उड़द दाल", "aliases": ["Udid Dal"]},
                     {"en": "Whole Green Gram", "mr": "हिरवा मूग", "hi": "हरा मूंग", "aliases": ["Hirva Mung"]},
                     {"en": "Whole Black Gram", "mr": "काळा उडीद", "hi": "काला उड़द", "aliases": ["Kala Udid"]},
@@ -125,6 +126,7 @@ PANTRY_TEMPLATE = {
                     {"en": "Sabudana", "mr": "साबुदाणा", "hi": "साबूदाना", "aliases": ["Sago", "Tapioca Pearls"], "monthly_qty": 2000},
                     {"en": "Sabudana Flour", "mr": "साबुदाणा पीठ", "hi": "साबूदाना आटा", "aliases": ["Sago Flour"]},
                     {"en": "Singhada Flour", "mr": "शिंगाड्याचे पीठ", "hi": "सिंघाड़े का आटा", "aliases": ["Water Chestnut Flour"]},
+                    {"en": "Upvas Bhajni", "mr": "उपवास भाजणी", "hi": "उपवास भाजनी", "aliases": ["Upvas Bhajani", "Fasting Flour Mix"]},
                     {"en": "Groundnuts", "mr": "शेंगदाणे", "hi": "मूंगफली", "aliases": ["Peanuts", "Shengdane", "Moongfali"], "monthly_qty": 1000},
                     {"en": "Rock Salt", "mr": "सैंधव मीठ", "hi": "सेंधा नमक", "aliases": ["Sendha Namak", "Saindhav Meeth"]}
                 ]
@@ -268,7 +270,10 @@ PANTRY_TEMPLATE = {
                 "category": "snacks",
                 "items": [
                     {"en": "Boondi", "mr": "बुंदी", "hi": "बूंदी", "aliases": ["Bundi"], "monthly_qty": 500},
-                    {"en": "Bhujiya Sev", "mr": "भुजिया शेव", "hi": "भुजिया सेव", "aliases": ["Bhujiya Sheva", "Sev"], "monthly_qty": 100}
+                    {"en": "Bhujiya Sev", "mr": "भुजिया शेव", "hi": "भुजिया सेव", "aliases": ["Bhujiya Sheva", "Sev"], "monthly_qty": 100},
+                    {"en": "Farsan", "mr": "फरसाण", "hi": "फरसाण", "aliases": ["Farsaan", "Mixture", "Namkeen"]},
+                    {"en": "Chivda", "mr": "चिवडा", "hi": "चिवड़ा", "aliases": ["Chiwda", "Pohe Chivda"]},
+                    {"en": "Biscuits", "mr": "बिस्किट", "hi": "बिस्किट", "aliases": ["Biscuit", "Marie", "Parle G", "Marie NutriChoice"]}
                 ]
             }
         }
@@ -424,6 +429,7 @@ PANTRY_TEMPLATE = {
                     {"en": "Detergent Powder", "mr": "डिटर्जंट पावडर", "hi": "डिटर्जेंट पाउडर"},
                     {"en": "Detergent (Rin)", "mr": "रिन", "hi": "रिन"},
                     {"en": "Detergent (Surf Excel)", "mr": "सर्फ एक्सेल", "hi": "सर्फ एक्सेल"},
+                    {"en": "Detergent (Tide)", "mr": "टाईड", "hi": "टाइड", "aliases": ["Tide Powder"]},
                     {"en": "Fabric Softener", "mr": "फॅब्रिक सॉफ्टनर", "hi": "फैब्रिक सॉफ्टनर"},
                     {"en": "Fabric Whitener (Ujala)", "mr": "उजाला", "hi": "उजाला"},
                     {"en": "Odopic", "mr": "ओडोपिक", "hi": "ओडोपिक"}
@@ -473,7 +479,9 @@ PANTRY_TEMPLATE = {
                     {"en": "Air Freshener", "mr": "एअर फ्रेशनर", "hi": "एयर फ्रेशनर"},
                     {"en": "Insect Killer Spray", "mr": "कीटकनाशक स्प्रे", "hi": "कीटनाशक स्प्रे"},
                     {"en": "Mosquito Repellent", "mr": "मच्छर अगरबत्ती", "hi": "मच्छर भगाने वाला"},
-                    {"en": "Naphthalene Balls", "mr": "नॅप्थलीन गोळ्या", "hi": "नेफ्थलीन गोलियां"},
+                    {"en": "Naphthalene Balls", "mr": "नॅप्थलीन गोळ्या", "hi": "नेफ्थलीन गोलियां", "aliases": ["Dambar Goli", "डांबर गोळी", "Mothballs"]},
+                    {"en": "Drain Cleaner", "mr": "ड्रेन क्लीनर", "hi": "ड्रेन क्लीनर", "aliases": ["Drainex", "DrainIt", "Drano"]},
+                    {"en": "Multi-purpose Liquid Cleaner", "mr": "बहुउद्देशीय लिक्विड क्लीनर", "hi": "बहु-उद्देशीय लिक्विड क्लीनर", "aliases": ["Sasa Liquid", "Liquid Cleaner"]},
                     {"en": "Camphor (Kapoor)", "mr": "कापूर", "hi": "कपूर"},
                     {"en": "Matchsticks", "mr": "काडेपेटी", "hi": "माचिस"},
                     {"en": "Candles", "mr": "मेणबत्ती", "hi": "मोमबत्ती"},
@@ -565,6 +573,55 @@ def to_canonical_en(name: str) -> str:
     if not name:
         return name
     return _NAME_TO_EN.get(_normalize_name(name), name)
+
+
+# Cached list of normalized lookup keys for fuzzy matching. Built lazily on
+# first call because rapidfuzz is only needed by receipt-OCR ingestion.
+_FUZZY_KEYS = None  # type: list[str] | None
+
+
+def to_canonical_en_fuzzy(name: str, min_score: int = 80) -> "tuple[str | None, int]":
+    """Exact match first; fall back to fuzzy matching against all en/mr/hi/aliases.
+
+    Designed for OCR pipelines where 1-2 character drift is common
+    (e.g. `भुग डाळ` → `मूग डाळ` → `Moong Dal`).
+
+    Returns:
+        (canonical_en, score) where score is 100 for an exact match or the
+        rapidfuzz WRatio score (0-100) for a fuzzy match. Returns
+        (None, 0) if nothing scores above `min_score`.
+
+    `rapidfuzz` is an optional dependency — if it's not installed, this
+    function degrades to exact-match only and returns (None, 0) when the
+    exact lookup fails.
+    """
+    global _FUZZY_KEYS
+    if not name:
+        return None, 0
+    needle = _normalize_name(name)
+    if not needle:
+        return None, 0
+
+    # Fast path: exact match.
+    exact = _NAME_TO_EN.get(needle)
+    if exact:
+        return exact, 100
+
+    # Slow path: fuzzy.
+    try:
+        from rapidfuzz import process, fuzz  # type: ignore
+    except ImportError:
+        return None, 0
+
+    if _FUZZY_KEYS is None:
+        _FUZZY_KEYS = list(_NAME_TO_EN.keys())
+
+    result = process.extractOne(needle, _FUZZY_KEYS,
+                                scorer=fuzz.WRatio, score_cutoff=min_score)
+    if result is None:
+        return None, 0
+    matched_key, score, _idx = result
+    return _NAME_TO_EN[matched_key], int(score)
 
 
 def get_item_details(item_name: str) -> dict:

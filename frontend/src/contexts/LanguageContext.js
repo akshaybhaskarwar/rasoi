@@ -70,6 +70,7 @@ export const UI_LABELS = {
     browseTemplate: 'Browse Template',
     indianPantryTemplate: 'Indian Pantry Template',
     scanProduct: 'Scan Product',
+    scanReceipt: 'Scan Receipt',
     secretStash: "Mummy's Secret Stash",
     monthlyNeed: 'Monthly Need',
     
@@ -296,6 +297,7 @@ export const UI_LABELS = {
     browseTemplate: 'टेम्पलेट देखें',
     indianPantryTemplate: 'भारतीय रसोई टेम्पलेट',
     scanProduct: 'उत्पाद स्कैन करें',
+    scanReceipt: 'बिल स्कैन करें',
     secretStash: 'मम्मी का गुप्त भंडार',
     monthlyNeed: 'मासिक जरूरत',
     
@@ -522,6 +524,7 @@ export const UI_LABELS = {
     browseTemplate: 'टेम्पलेट पहा',
     indianPantryTemplate: 'भारतीय स्वयंपाकघर टेम्पलेट',
     scanProduct: 'उत्पादन स्कॅन करा',
+    scanReceipt: 'बिल स्कॅन करा',
     secretStash: 'आईचा गुप्त साठा',
     monthlyNeed: 'मासिक गरज',
     
