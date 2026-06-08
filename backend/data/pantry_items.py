@@ -680,6 +680,7 @@ def get_pantry_template_for_frontend() -> dict:
                     "en": item["en"],
                     "mr": item.get("mr", ""),
                     "hi": item.get("hi", ""),
+                    "aliases": item.get("aliases", []),
                     "category": category,
                     "unit": unit
                 })
