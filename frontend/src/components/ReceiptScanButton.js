@@ -1,0 +1,433 @@
+/**
+ * ReceiptScanButton — Phase 1 of PRD-01 (receipt -> inventory).
+ *
+ * Flow:
+ *   1. User taps the button -> hidden file input opens (camera on mobile).
+ *   2. Image is base64-encoded and POSTed to /api/inventory/from-receipt.
+ *   3. Confirm dialog renders the extracted items with confidence colors.
+ *   4. User edits/skips/confirms, taps "Add N items".
+ *   5. POST /api/inventory/bulk-update writes to inventory; onSuccess fires.
+ *
+ * The component owns the file input, dialog, and catalog-pick sheet so the
+ * parent only needs to render <ReceiptScanButton onSuccess={fetchInventory}/>.
+ */
+import { useEffect, useRef, useState } from 'react';
+import {
+  Receipt, Camera, Loader2, CheckCircle2, AlertCircle, XCircle, Search, X,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { useReceiptIngestion } from '@/hooks/useRasoiSync';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// Confidence -> visual treatment + default action
+const CONFIDENCE_STYLES = {
+  high:      { color: 'bg-green-50 border-green-200',   icon: CheckCircle2, iconClass: 'text-green-600',  label: 'High' },
+  medium:    { color: 'bg-yellow-50 border-yellow-200', icon: AlertCircle,  iconClass: 'text-yellow-600', label: 'Check' },
+  low:       { color: 'bg-orange-50 border-orange-200', icon: AlertCircle,  iconClass: 'text-orange-600', label: 'Low' },
+  unmatched: { color: 'bg-red-50 border-red-200',       icon: XCircle,      iconClass: 'text-red-600',    label: 'Pick' },
+};
+
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // strip the "data:image/jpeg;base64," prefix
+      const result = reader.result || '';
+      const comma = String(result).indexOf(',');
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+const formatINR = (n) =>
+  typeof n === 'number' ? `₹${n.toFixed(2)}` : '';
+
+const ReceiptScanButton = ({ onSuccess }) => {
+  const { parseReceipt, saveConfirmedItems, parsing, saving } = useReceiptIngestion();
+  const { getLabel } = useLanguage();
+  const fileInputRef = useRef(null);
+
+  const [stage, setStage] = useState('idle'); // idle | confirming
+  const [receipt, setReceipt] = useState(null); // server response
+  const [rows, setRows] = useState([]);         // editable copy of items
+  const [catalogOpen, setCatalogOpen] = useState(null); // index of row being edited
+
+  const handlePickFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+
+    // 10 MB guard — matches backend limit
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image too large', { description: 'Please pick an image under 10 MB.' });
+      return;
+    }
+
+    try {
+      const b64 = await fileToBase64(file);
+      const data = await parseReceipt(b64);
+      setReceipt(data);
+      // Initialize editable rows with default action ('add' unless unmatched)
+      setRows(
+        (data.items || []).map((it, idx) => ({
+          ...it,
+          _row_id: idx,
+          action: it.match_confidence === 'unmatched' ? 'skip' : 'add',
+        }))
+      );
+      setStage('confirming');
+    } catch (err) {
+      toast.error('Could not read receipt', {
+        description: err.message || 'Try a clearer photo.',
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setStage('idle');
+    setReceipt(null);
+    setRows([]);
+    setCatalogOpen(null);
+  };
+
+  const handleSave = async () => {
+    const payload = rows.map(r => ({
+      name_canonical_en: r.name_canonical_en,
+      qty: r.qty ?? 1,
+      unit: r.unit || 'UT',
+      action: r.action,
+    }));
+    try {
+      const result = await saveConfirmedItems(receipt.receipt_id, payload);
+      toast.success(`Added ${result.added_count} items to inventory`, {
+        description: result.skipped_count > 0
+          ? `${result.skipped_count} skipped`
+          : 'Your kitchen is up to date.',
+        duration: 4000,
+      });
+      handleClose();
+      onSuccess?.();
+    } catch (err) {
+      toast.error('Failed to save', { description: err.message });
+    }
+  };
+
+  // Toggle a row between "add" and "skip"
+  const toggleRowAction = (rowId) => {
+    setRows(rs => rs.map(r =>
+      r._row_id === rowId
+        ? { ...r, action: r.action === 'add' ? 'skip' : 'add' }
+        : r
+    ));
+  };
+
+  // User edited the qty inline
+  const updateRowQty = (rowId, newQty) => {
+    setRows(rs => rs.map(r =>
+      r._row_id === rowId
+        ? { ...r, qty: Number(newQty) || 0 }
+        : r
+    ));
+  };
+
+  // User picked a different catalog item from the search sheet
+  const updateRowCanonical = (rowId, canonicalEn) => {
+    setRows(rs => rs.map(r =>
+      r._row_id === rowId
+        ? { ...r, name_canonical_en: canonicalEn, match_confidence: 'high', action: 'add' }
+        : r
+    ));
+    setCatalogOpen(null);
+  };
+
+  // Stats for the header
+  const stats = rows.reduce(
+    (acc, r) => {
+      if (r.action === 'add') acc.add++;
+      else acc.skip++;
+      return acc;
+    },
+    { add: 0, skip: 0 }
+  );
+
+  return (
+    <>
+      <Button
+        onClick={handlePickFile}
+        disabled={parsing}
+        className="bg-[#FF9933] hover:bg-[#FF8800] text-white rounded-full shadow-md"
+        data-testid="scan-receipt-btn"
+      >
+        {parsing ? (
+          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+        ) : (
+          <Receipt className="w-5 h-5 mr-2" />
+        )}
+        <span>{getLabel('scanReceipt')}</span>
+      </Button>
+
+      {/* Hidden input — opens device camera on mobile, file picker on desktop */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileChange}
+        className="hidden"
+        data-testid="receipt-file-input"
+      />
+
+      <Dialog open={stage === 'confirming'} onOpenChange={(o) => { if (!o) handleClose(); }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar p-0">
+          <DialogHeader className="p-6 pb-3 border-b sticky top-0 bg-white z-10">
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="w-6 h-6 text-[#FF9933]" />
+              Confirm Receipt Items
+            </DialogTitle>
+            <div className="text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1 mt-2">
+              <span>
+                Total on receipt:&nbsp;
+                <strong className="text-gray-900">{formatINR(receipt?.total_extracted)}</strong>
+              </span>
+              <span>
+                {stats.add} to add &middot; {stats.skip} skipped
+              </span>
+              {receipt?.vendor && (
+                <span>From: <strong>{receipt.vendor}</strong></span>
+              )}
+            </div>
+          </DialogHeader>
+
+          {/* Rows */}
+          <div className="p-4 space-y-2">
+            {rows.length === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                No items detected. The image may be too blurry — try again with better lighting.
+              </div>
+            )}
+            {rows.map((row) => {
+              const style = CONFIDENCE_STYLES[row.match_confidence] || CONFIDENCE_STYLES.unmatched;
+              const IconComp = style.icon;
+              const isAdded = row.action === 'add';
+              return (
+                <div
+                  key={row._row_id}
+                  className={`border-2 rounded-lg p-3 transition-all ${
+                    isAdded ? style.color : 'bg-gray-50 border-gray-200 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <IconComp className={`w-5 h-5 mt-1 flex-shrink-0 ${style.iconClass}`} />
+                    <div className="flex-1 min-w-0">
+                      {/* Canonical English name (the inventory write target) */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="font-semibold text-gray-900">
+                          {row.name_canonical_en || (
+                            <button
+                              onClick={() => setCatalogOpen(row._row_id)}
+                              className="text-blue-600 underline text-sm"
+                              data-testid={`pick-catalog-${row._row_id}`}
+                            >
+                              Pick from catalog…
+                            </button>
+                          )}
+                          {row.name_canonical_en && (
+                            <button
+                              onClick={() => setCatalogOpen(row._row_id)}
+                              className="ml-2 text-xs text-blue-600 underline"
+                            >
+                              change
+                            </button>
+                          )}
+                        </div>
+                        <span className="font-semibold text-gray-900">{formatINR(row.amount)}</span>
+                      </div>
+
+                      {/* Devanagari (as printed) + qty/unit editable */}
+                      <div className="text-xs text-gray-600 mt-1 flex items-center gap-2 flex-wrap">
+                        <span className="break-all">{row.name_devanagari}</span>
+                        <span className="text-gray-400">·</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={row.qty ?? 0}
+                          onChange={(e) => updateRowQty(row._row_id, e.target.value)}
+                          disabled={!isAdded}
+                          className="h-7 w-20 text-xs"
+                        />
+                        <span className="text-gray-500">{row.unit}</span>
+                        <Badge variant="outline" className="text-[10px] py-0">
+                          {style.label}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant={isAdded ? 'outline' : 'default'}
+                      size="sm"
+                      className={isAdded ? 'text-red-600 hover:text-red-700' : 'bg-[#77DD77] hover:bg-[#66CC66]'}
+                      onClick={() => toggleRowAction(row._row_id)}
+                      data-testid={`toggle-${row._row_id}`}
+                    >
+                      {isAdded ? 'Skip' : 'Add'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t bg-white sticky bottom-0 flex flex-col-reverse md:flex-row gap-2 md:justify-end">
+            <Button variant="outline" onClick={handleClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving || stats.add === 0}
+              className="bg-[#138808] hover:bg-[#0d6606] text-white"
+              data-testid="save-receipt-btn"
+            >
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Add {stats.add} item{stats.add !== 1 ? 's' : ''} to inventory
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Catalog-pick sheet for unmatched/edit rows */}
+      {catalogOpen !== null && (
+        <CatalogPickSheet
+          onClose={() => setCatalogOpen(null)}
+          onPick={(canonicalEn) => updateRowCanonical(catalogOpen, canonicalEn)}
+          currentValue={rows.find(r => r._row_id === catalogOpen)?.name_canonical_en}
+          devanagariHint={rows.find(r => r._row_id === catalogOpen)?.name_devanagari}
+        />
+      )}
+    </>
+  );
+};
+
+// =============================================================================
+// Catalog-pick sheet — flattens PANTRY_TEMPLATE and lets the user filter by
+// English / Marathi / Hindi name.
+// =============================================================================
+const CatalogPickSheet = ({ onClose, onPick, currentValue, devanagariHint }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API}/pantry-items/template`);
+        const data = await res.json();
+        if (cancelled) return;
+        const flat = [];
+        Object.values(data.template || {}).forEach((mainCat) => {
+          Object.values(mainCat.subcategories || {}).forEach((sub) => {
+            (sub.items || []).forEach((item) => {
+              flat.push({
+                en: item.en,
+                mr: item.mr || '',
+                hi: item.hi || '',
+                aliases: (item.aliases || []).join(' '),
+                category: sub.category,
+              });
+            });
+          });
+        });
+        setItems(flat);
+      } catch (e) {
+        // keep silent — user can still cancel
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? items.filter(it =>
+        it.en.toLowerCase().includes(q) ||
+        it.mr.includes(query.trim()) ||
+        it.hi.includes(query.trim()) ||
+        it.aliases.toLowerCase().includes(q))
+    : items.slice(0, 50);
+
+  return (
+    <Dialog open={true} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col p-0">
+        <DialogHeader className="p-5 pb-3 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <Search className="w-5 h-5" />
+            Pick the catalog match
+          </DialogTitle>
+          {devanagariHint && (
+            <p className="text-xs text-gray-600 mt-1">
+              On the receipt: <strong className="text-gray-800">{devanagariHint}</strong>
+            </p>
+          )}
+        </DialogHeader>
+
+        <div className="p-4 border-b">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search English, मराठी, हिन्दी…"
+            autoFocus
+            className="w-full"
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {loading && (
+            <div className="p-6 text-center text-gray-500">
+              <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading catalog…
+            </div>
+          )}
+          {!loading && filtered.length === 0 && (
+            <div className="p-6 text-center text-gray-500">No catalog entries match.</div>
+          )}
+          {!loading && filtered.map((it) => (
+            <button
+              key={it.en}
+              onClick={() => onPick(it.en)}
+              className={`block w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 ${
+                it.en === currentValue ? 'bg-blue-50' : ''
+              }`}
+            >
+              <div className="font-medium text-gray-900">{it.en}</div>
+              <div className="text-xs text-gray-600 mt-0.5">
+                {it.mr && <span className="mr-2">मराठी: {it.mr}</span>}
+                {it.hi && <span>हिन्दी: {it.hi}</span>}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="p-3 border-t flex justify-end">
+          <Button variant="outline" onClick={onClose}>
+            <X className="w-4 h-4 mr-1" /> Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ReceiptScanButton;
