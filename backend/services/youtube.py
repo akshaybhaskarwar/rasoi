@@ -9,8 +9,10 @@ from datetime import datetime, timezone, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+import unicodedata
+
 from data.recipes import RECIPE_DATABASE
-from data.pantry_items import to_canonical_en
+from data.pantry_items import to_canonical_en, get_variants_for
 
 logger = logging.getLogger(__name__)
 
@@ -168,26 +170,82 @@ def calculate_inventory_match(recipe_ingredients: List[str], user_inventory: Lis
     }
 
 
-def match_ingredients_in_text(text: str, inventory_items: List[str], min_matches: int = 2) -> Dict[str, Any]:
-    """Match inventory items against text, accepting their en/mr/hi/alias variants."""
-    text_lower = text.lower()
-    matched_items = []
+def match_ingredients_in_text(text: str, inventory_items, min_matches: int = 2) -> Dict[str, Any]:
+    """Match inventory items against text, expanding each item to all known
+    locale variants (en/mr/hi/aliases) before searching.
 
+    This is what makes ingredient-matching work against YouTube titles and
+    descriptions that are typically in Devanagari — looking only for English
+    names in Marathi/Hindi text is what the old version did, and it silently
+    missed almost everything from Marathi cooking channels.
+
+    Accepts inventory_items as either:
+      - List[dict] — preferred: {"name_en", "name_mr"?, "name_hi"?}
+      - List[str]  — legacy: bare canonical English names (still expanded
+                    via get_variants_for so existing callers keep working)
+    """
+    if not text:
+        return {
+            "matched_count": 0,
+            "matched_items": [],
+            "meets_threshold": False,
+            "match_percentage": 0,
+        }
+
+    # Normalize the target text once. NFC for Devanagari character composition
+    # safety; lowercase for Latin character class.
+    text_nfc = unicodedata.normalize("NFC", text)
+    text_lower = text_nfc.lower()
+
+    matched_items = []
     for item in inventory_items:
-        candidates = {item.lower(), _canonical_lower(item)}
-        candidates.discard("")
-        if any(
-            re.search(r'\b' + re.escape(c) + r'\b', text_lower) or c in text_lower
-            for c in candidates
-        ):
-            matched_items.append(item)
-    
+        # Build the variant set for this inventory entry. Use whatever's
+        # provided on the item dict PLUS what the catalog knows (aliases,
+        # missing translations).
+        if isinstance(item, dict):
+            display = item.get("name_en", "")
+            seed_variants = [
+                item.get("name_en", ""),
+                item.get("name_mr", ""),
+                item.get("name_hi", ""),
+            ]
+        else:
+            display = item
+            seed_variants = [item]
+
+        # Combine seeds + catalog-known variants, dedupe.
+        catalog_variants = get_variants_for(display)
+        all_variants = []
+        seen = set()
+        for v in [*seed_variants, *catalog_variants]:
+            if not v:
+                continue
+            key = unicodedata.normalize("NFC", v).strip().lower()
+            if key and key not in seen:
+                seen.add(key)
+                all_variants.append(unicodedata.normalize("NFC", v).strip())
+
+        # Match: word-boundary for Latin variants (avoid "salt" matching "salty"
+        # — but Devanagari has no word-boundary semantics in Python regex, so
+        # for those we use plain substring search).
+        for variant in all_variants:
+            v_lower = variant.lower()
+            v_is_latin = variant.isascii()
+            if v_is_latin:
+                hit = bool(re.search(r"\b" + re.escape(v_lower) + r"\b", text_lower))
+            else:
+                hit = variant in text_nfc
+            if hit:
+                matched_items.append(display)
+                break  # one variant hit is enough; don't double-count this item
+
     match_count = len(matched_items)
+    total = len(inventory_items)
     return {
         "matched_count": match_count,
         "matched_items": matched_items,
         "meets_threshold": match_count >= min_matches,
-        "match_percentage": round((match_count / len(inventory_items)) * 100) if inventory_items else 0
+        "match_percentage": round((match_count / total) * 100) if total else 0,
     }
 
 
