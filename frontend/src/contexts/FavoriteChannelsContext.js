@@ -30,22 +30,37 @@ export const FavoriteChannelsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // `/stream/channels` reads preferences AND enriches with YouTube
-      // metadata (thumbnail, channel_id, uploads_playlist_id) needed by
-      // the avatar UI. A 7-day server-side cache keeps it cheap.
-      const response = await axios.get(`${API}/stream/channels`);
-      setFavoriteChannels(response.data.channels || []);
-    } catch (err) {
-      // Fallback to the bare preferences endpoint so the chip-row UI still
-      // works even when the enrichment endpoint fails (e.g., YouTube quota).
+      // SOURCE OF TRUTH: /preferences/favorite-channels.
+      // This is the same endpoint the POST writes to, so reading from here
+      // guarantees we see what we just added — no household-scoping mismatch.
+      const prefsResp = await axios.get(`${API}/preferences/favorite-channels`);
+      const baseList = prefsResp.data.favorite_channels || [];
+
+      // ENRICHMENT: /stream/channels adds YouTube metadata (thumbnail,
+      // channel_id, uploads_playlist_id) needed by PersonalizedRecipeStream's
+      // avatar UI. Best-effort — if it fails (YouTube quota, etc.) we still
+      // render the basic list so the chip row works.
+      let enrichedById = {};
       try {
-        const fallback = await axios.get(`${API}/preferences/favorite-channels`);
-        setFavoriteChannels(fallback.data.favorite_channels || []);
-      } catch (fbErr) {
-        console.error('Fetch favorite channels failed (both endpoints):', err, fbErr);
-        setError(err.message);
-        setFavoriteChannels([]);
+        const enrichResp = await axios.get(`${API}/stream/channels`);
+        for (const ch of enrichResp.data.channels || []) {
+          if (ch && ch.id) enrichedById[ch.id] = ch;
+        }
+      } catch (enrichErr) {
+        console.warn('Channel enrichment unavailable; using bare list', enrichErr);
       }
+
+      // Merge: the bare list is authoritative for membership + display name.
+      // Enrichment is folded in as optional extra metadata.
+      const merged = baseList.map(ch => ({
+        ...(enrichedById[ch.id] || {}),
+        ...ch,   // bare list's id + name win on conflict
+      }));
+      setFavoriteChannels(merged);
+    } catch (err) {
+      console.error('Fetch favorite channels failed:', err);
+      setError(err.message);
+      setFavoriteChannels([]);
     } finally {
       setLoading(false);
     }
