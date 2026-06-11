@@ -575,6 +575,51 @@ def to_canonical_en(name: str) -> str:
     return _NAME_TO_EN.get(_normalize_name(name), name)
 
 
+# Inverse lookup: canonical English name -> list of all known variants
+# (en, mr, hi, aliases). Used by matchers that need to find an item's
+# Devanagari forms in user-generated text (YouTube titles, descriptions, etc.)
+# rather than only searching for the English form.
+_EN_TO_VARIANTS: dict = {}
+
+
+def _build_variants_lookup():
+    for main_data in PANTRY_TEMPLATE.values():
+        for sub_data in main_data["subcategories"].values():
+            for item in sub_data["items"]:
+                en = item["en"]
+                variants = [en]
+                if item.get("mr"):
+                    variants.append(item["mr"])
+                if item.get("hi"):
+                    variants.append(item["hi"])
+                for alias in item.get("aliases") or []:
+                    if alias:
+                        variants.append(alias)
+                # De-dupe while preserving order
+                seen = set()
+                deduped = []
+                for v in variants:
+                    if v not in seen:
+                        seen.add(v)
+                        deduped.append(v)
+                _EN_TO_VARIANTS[en] = deduped
+
+
+_build_variants_lookup()
+
+
+def get_variants_for(name: str) -> list:
+    """Return all known variants (en, mr, hi, aliases) for an ingredient.
+
+    Accepts any en/mr/hi/alias as input — first resolves to canonical English,
+    then returns the full variant list. Falls back to [name] if not in catalog.
+    """
+    if not name:
+        return []
+    canonical = to_canonical_en(name)
+    return _EN_TO_VARIANTS.get(canonical, [name])
+
+
 # Cached list of normalized lookup keys for fuzzy matching. Built lazily on
 # first call because rapidfuzz is only needed by receipt-OCR ingestion.
 _FUZZY_KEYS = None  # type: list[str] | None

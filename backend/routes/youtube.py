@@ -342,8 +342,14 @@ def create_youtube_routes(db, decode_token, youtube_service, log_api_usage):
         if household_id:
             query["household_id"] = household_id
         
-        inventory_items = await db.inventory.find(query, {"name_en": 1, "_id": 0}).to_list(100)
-        user_inventory = [item["name_en"] for item in inventory_items if item.get("name_en")]
+        inventory_items = await db.inventory.find(
+            query,
+            {"name_en": 1, "name_mr": 1, "name_hi": 1, "_id": 0}
+        ).to_list(100)
+        # Keep the full {name_en, name_mr, name_hi} dict so the matcher can
+        # expand each item to all language/alias variants before searching
+        # YouTube titles & descriptions (which are usually Devanagari).
+        user_inventory = [item for item in inventory_items if item.get("name_en")]
         
         if not user_inventory:
             return {
