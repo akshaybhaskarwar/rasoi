@@ -8,6 +8,7 @@ import { GapAnalysisSidebar } from "@/components/GapAnalysisSidebar";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { UnitProvider } from "@/contexts/UnitContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { FavoriteChannelsProvider } from "@/contexts/FavoriteChannelsContext";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HomePage from "@/pages/HomePage";
 import InventoryPage from "@/pages/InventoryPage";
@@ -88,9 +89,13 @@ function AppContent() {
           {/* Protected routes */}
           <Route path="/*" element={
             <ProtectedRoute>
-              <>
+              {/* FavoriteChannelsProvider holds the shared list used by both
+                  the PlannerPage favorites card and the PersonalizedRecipeStream
+                  avatar bar. Mounting it here (inside ProtectedRoute) ensures
+                  only authenticated users trigger the initial fetch. */}
+              <FavoriteChannelsProvider>
                 <DualContextHeader onLanguageChange={changeLanguage} />
-                
+
                 <div className="flex w-full max-w-full">
                   {/* Main Content - with bottom padding for mobile nav */}
                   <main className="flex-1 pb-20 md:pb-0 min-w-0">
@@ -113,7 +118,7 @@ function AppContent() {
                 </div>
 
                 <BottomNavigation />
-              </>
+              </FavoriteChannelsProvider>
             </ProtectedRoute>
           } />
         </Routes>

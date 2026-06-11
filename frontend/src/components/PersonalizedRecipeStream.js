@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useMealPlanner } from '@/hooks/useRasoiSync';
+import { useMealPlanner, useFavoriteChannels } from '@/hooks/useRasoiSync';
 import AddToPlannerModal from './AddToPlannerModal';
 import axios from 'axios';
 
@@ -206,31 +206,33 @@ const VideoCard = ({ video, onOpenModal, plannedInfo, labels }) => {
 };
 
 const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded }) => {
-  const [channels, setChannels] = useState([]);
+  // Channels come from FavoriteChannelsContext — the single source of truth
+  // shared with PlannerPage. When the user adds/removes a channel anywhere,
+  // both this avatar bar and the planner card update automatically.
+  const {
+    favoriteChannels: channels,
+    loading: isLoadingChannels,
+    refresh: refreshChannels,
+  } = useFavoriteChannels();
+
   const [feed, setFeed] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
-  const [isLoadingChannels, setIsLoadingChannels] = useState(true);
   const [isLoadingFeed, setIsLoadingFeed] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [feedStats, setFeedStats] = useState({ total: 0, quotaCost: 0 });
   const [minMatches, setMinMatches] = useState(1);
   const { getLabel } = useLanguage();
-  
+
   // Use parent's addMealPlan if provided, otherwise fallback to own hook
   const { addMealPlan: hookAddMealPlan } = useMealPlanner();
   const addMealPlan = parentAddMealPlan || hookAddMealPlan;
-  
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
-  
+
   // Track planned videos {video_id: {is_planned, display_text, ...}}
   const [plannedVideos, setPlannedVideos] = useState({});
-
-  // Fetch channels on mount
-  useEffect(() => {
-    fetchChannels();
-  }, []);
 
   // Fetch feed when channel selection changes
   useEffect(() => {
@@ -245,21 +247,6 @@ const PersonalizedRecipeStream = ({ addMealPlan: parentAddMealPlan, onMealAdded 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feed]);
-
-  const fetchChannels = async () => {
-    setIsLoadingChannels(true);
-    try {
-      const token = localStorage.getItem('auth_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const response = await axios.get(`${API}/stream/channels`, { headers });
-      setChannels(response.data.channels || []);
-    } catch (error) {
-      console.error('Failed to fetch channels:', error);
-    } finally {
-      setIsLoadingChannels(false);
-    }
-  };
 
   const fetchFeed = async () => {
     setIsLoadingFeed(true);
