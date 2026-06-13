@@ -13,7 +13,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import {
-  Receipt, Camera, Loader2, CheckCircle2, AlertCircle, XCircle, Search, X,
+  Receipt, Camera, Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Plus, Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useReceiptIngestion } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ManualItemEntryForm } from '@/components/ManualItemEntryForm';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -84,7 +85,10 @@ const ReceiptScanButton = ({ onSuccess }) => {
   const [stage, setStage] = useState('idle'); // idle | confirming
   const [receipt, setReceipt] = useState(null); // server response
   const [rows, setRows] = useState([]);         // editable copy of items
-  const [catalogOpen, setCatalogOpen] = useState(null); // index of row being edited
+  const [catalogOpen, setCatalogOpen] = useState(null); // row_id of row being matched
+  // customAddOpen: when set, the inline "Add as new item" form overlays the
+  // confirm dialog (for items that aren't in PANTRY_TEMPLATE). null = closed.
+  const [customAddOpen, setCustomAddOpen] = useState(null);
 
   const handlePickFile = () => {
     fileInputRef.current?.click();
@@ -129,14 +133,19 @@ const ReceiptScanButton = ({ onSuccess }) => {
     setReceipt(null);
     setRows([]);
     setCatalogOpen(null);
+    setCustomAddOpen(null);
   };
 
   const handleSave = async () => {
     const payload = rows.map(r => ({
-      name_canonical_en: r.name_canonical_en,
+      name_canonical_en: r.is_custom ? null : r.name_canonical_en,
       qty: r.qty ?? 1,
       unit: r.unit || 'UT',
       action: r.action,
+      is_custom: !!r.is_custom,
+      custom_name: r.is_custom ? r.custom_name : null,
+      custom_category: r.is_custom ? r.custom_category : null,
+      devanagari_hint: r.name_devanagari || null,
     }));
     try {
       const result = await saveConfirmedItems(receipt.receipt_id, payload);
@@ -175,10 +184,45 @@ const ReceiptScanButton = ({ onSuccess }) => {
   const updateRowCanonical = (rowId, canonicalEn) => {
     setRows(rs => rs.map(r =>
       r._row_id === rowId
-        ? { ...r, name_canonical_en: canonicalEn, match_confidence: 'high', action: 'add' }
+        ? { ...r, name_canonical_en: canonicalEn, match_confidence: 'high', action: 'add', is_custom: false, custom_name: null, custom_category: null }
         : r
     ));
     setCatalogOpen(null);
+  };
+
+  // User confirmed adding a row as a brand-new (non-catalog) inventory item
+  const applyCustomItem = (rowId, { name_en, category }) => {
+    setRows(rs => rs.map(r =>
+      r._row_id === rowId
+        ? {
+            ...r,
+            is_custom: true,
+            custom_name: name_en,
+            custom_category: category || 'other',
+            name_canonical_en: name_en,       // for display only — clearer than "null"
+            match_confidence: 'high',
+            action: 'add',
+          }
+        : r
+    ));
+    setCustomAddOpen(null);
+    setCatalogOpen(null);
+  };
+
+  // Open the "Add as new item" form for a row, pre-filled with that row's
+  // Devanagari text (default name) + qty/unit (default quantity). Closes the
+  // catalog picker if it was open.
+  const openCustomAddForRow = (rowId, { prefillName } = {}) => {
+    const row = rows.find(r => r._row_id === rowId);
+    if (!row) return;
+    setCatalogOpen(null);
+    setCustomAddOpen({
+      rowId,
+      prefillName: prefillName || row.name_canonical_en || row.name_devanagari || '',
+      devanagariHint: row.name_devanagari || '',
+      qty: row.qty,
+      unit: row.unit,
+    });
   };
 
   // Stats for the header
@@ -231,8 +275,13 @@ const ReceiptScanButton = ({ onSuccess }) => {
           className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar p-0"
           // Prevent the parent dialog from closing if the user taps inside the
           // inline catalog overlay (which is rendered within this content area).
-          onInteractOutside={(e) => { if (catalogOpen !== null) e.preventDefault(); }}
-          onEscapeKeyDown={(e) => { if (catalogOpen !== null) { e.preventDefault(); setCatalogOpen(null); } }}
+          onInteractOutside={(e) => {
+            if (catalogOpen !== null || customAddOpen !== null) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            if (customAddOpen !== null) { e.preventDefault(); setCustomAddOpen(null); return; }
+            if (catalogOpen !== null) { e.preventDefault(); setCatalogOpen(null); }
+          }}
         >
           <DialogHeader className="p-6 pb-3 border-b sticky top-0 bg-white z-10">
             <DialogTitle className="flex items-center gap-2">
@@ -276,23 +325,39 @@ const ReceiptScanButton = ({ onSuccess }) => {
                     <div className="flex-1 min-w-0">
                       {/* Canonical English name (the inventory write target) */}
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="font-semibold text-gray-900">
-                          {row.name_canonical_en || (
-                            <button
-                              onClick={() => setCatalogOpen(row._row_id)}
-                              className="text-blue-600 underline text-sm"
-                              data-testid={`pick-catalog-${row._row_id}`}
-                            >
-                              Pick from catalog…
-                            </button>
-                          )}
-                          {row.name_canonical_en && (
-                            <button
-                              onClick={() => setCatalogOpen(row._row_id)}
-                              className="ml-2 text-xs text-blue-600 underline"
-                            >
-                              change
-                            </button>
+                        <div className="font-semibold text-gray-900 flex items-center flex-wrap gap-x-2 gap-y-1">
+                          {row.name_canonical_en ? (
+                            <>
+                              <span>{row.name_canonical_en}</span>
+                              {row.is_custom && (
+                                <Badge variant="outline" className="text-[10px] py-0 border-purple-300 text-purple-700 bg-purple-50">
+                                  custom
+                                </Badge>
+                              )}
+                              <button
+                                onClick={() => setCatalogOpen(row._row_id)}
+                                className="text-xs text-blue-600 underline"
+                              >
+                                change
+                              </button>
+                            </>
+                          ) : (
+                            <span className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => setCatalogOpen(row._row_id)}
+                                className="text-blue-600 underline text-sm"
+                                data-testid={`pick-catalog-${row._row_id}`}
+                              >
+                                Pick from catalog…
+                              </button>
+                              <button
+                                onClick={() => openCustomAddForRow(row._row_id)}
+                                className="text-purple-700 underline text-sm flex items-center gap-1"
+                                data-testid={`add-as-new-${row._row_id}`}
+                              >
+                                <Plus className="w-3 h-3" /> Add as new
+                              </button>
+                            </span>
                           )}
                         </div>
                         <span className="font-semibold text-gray-900">{formatINR(row.amount)}</span>
@@ -356,8 +421,20 @@ const ReceiptScanButton = ({ onSuccess }) => {
             <CatalogPickOverlay
               onClose={() => setCatalogOpen(null)}
               onPick={(canonicalEn) => updateRowCanonical(catalogOpen, canonicalEn)}
+              onAddAsNew={(prefillName) => openCustomAddForRow(catalogOpen, { prefillName })}
               currentValue={rows.find(r => r._row_id === catalogOpen)?.name_canonical_en}
               devanagariHint={rows.find(r => r._row_id === catalogOpen)?.name_devanagari}
+            />
+          )}
+
+          {/* Inline "Add as new item" overlay — same rendering technique as the
+              catalog picker. Closing it just unmounts the div; parent dialog
+              state is untouched. */}
+          {customAddOpen !== null && (
+            <CustomAddOverlay
+              ctx={customAddOpen}
+              onClose={() => setCustomAddOpen(null)}
+              onSubmit={(data) => applyCustomItem(customAddOpen.rowId, data)}
             />
           )}
         </DialogContent>
@@ -376,7 +453,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
 //   { template: { "<main display>": { "<sub display>": { items: [...] } } } }
 // — note there's NO `.subcategories` wrapper between main and sub.
 // =============================================================================
-const CatalogPickOverlay = ({ onClose, onPick, currentValue, devanagariHint }) => {
+const CatalogPickOverlay = ({ onClose, onPick, onAddAsNew, currentValue, devanagariHint }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -474,7 +551,21 @@ const CatalogPickOverlay = ({ onClose, onPick, currentValue, devanagariHint }) =
           </div>
         )}
         {!loading && items.length > 0 && filtered.length === 0 && (
-          <div className="p-6 text-center text-gray-500">No catalog entries match "{query}".</div>
+          <div className="p-6 text-center space-y-4">
+            <p className="text-sm text-gray-500">
+              No catalog entries match "{query}".
+            </p>
+            {onAddAsNew && (
+              <button
+                onClick={() => onAddAsNew(query.trim() || devanagariHint || '')}
+                className="inline-flex items-center gap-2 px-4 py-3 rounded-lg bg-purple-50 border-2 border-purple-200 text-purple-700 font-medium hover:bg-purple-100 transition-colors"
+                data-testid="catalog-pick-add-as-new"
+              >
+                <Sparkles className="w-4 h-4" />
+                Add "{query.trim() || devanagariHint || 'this item'}" as a new item
+              </button>
+            )}
+          </div>
         )}
         {!loading && filtered.map((it) => (
           <button
@@ -491,9 +582,76 @@ const CatalogPickOverlay = ({ onClose, onPick, currentValue, devanagariHint }) =
             </div>
           </button>
         ))}
+
+        {/* Always-available footer CTA for users who searched but couldn't
+            find the right entry — covers the case where they DID get some
+            results but none are the actual item they bought. */}
+        {!loading && onAddAsNew && items.length > 0 && filtered.length > 0 && (
+          <button
+            onClick={() => onAddAsNew(query.trim() || devanagariHint || '')}
+            className="flex items-center gap-2 w-full px-4 py-3 text-purple-700 text-sm font-medium hover:bg-purple-50 border-t-2 border-purple-100"
+            data-testid="catalog-pick-add-as-new-footer"
+          >
+            <Plus className="w-4 h-4" />
+            None of these — add "{query.trim() || devanagariHint || 'this item'}" as a new item
+          </button>
+        )}
       </div>
     </div>
   );
 };
+
+
+// =============================================================================
+// CustomAddOverlay — wraps ManualItemEntryForm in the same inline-absolute
+// pattern as CatalogPickOverlay so it overlays the confirm dialog without
+// nesting Radix Dialogs.
+// =============================================================================
+const CustomAddOverlay = ({ ctx, onClose, onSubmit }) => (
+  <div
+    className="absolute inset-0 bg-white z-20 flex flex-col overflow-y-auto"
+    data-testid="custom-add-overlay"
+  >
+    <div className="p-5 pb-3 border-b flex items-start justify-between">
+      <div>
+        <div className="flex items-center gap-2 font-semibold text-lg">
+          <Plus className="w-5 h-5 text-purple-600" />
+          Add as a new item
+        </div>
+        {ctx.devanagariHint && (
+          <p className="text-xs text-gray-600 mt-1">
+            On the receipt: <strong className="text-gray-800">{ctx.devanagariHint}</strong>
+          </p>
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          We will add this to your inventory now and remember it for next time.
+        </p>
+      </div>
+      <button
+        onClick={onClose}
+        className="text-gray-500 hover:text-gray-900 p-1 -m-1"
+        aria-label="Close add-as-new form"
+        data-testid="custom-add-close"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
+
+    <div className="p-4 pb-24 md:pb-4">
+      <ManualItemEntryForm
+        initialName={ctx.prefillName}
+        initialCategory="other"
+        initialQuantity={ctx.qty != null ? `${ctx.qty} ${ctx.unit || 'pcs'}` : ''}
+        showExpiry={false}
+        submitLabel="Add to inventory"
+        submitIcon={<Plus className="w-5 h-5 mr-2" />}
+        submitClassName="bg-purple-600 hover:bg-purple-700 text-white"
+        onSubmit={({ name_en, category }) => onSubmit({ name_en, category })}
+        onCancel={onClose}
+        cancelLabel="Back"
+      />
+    </div>
+  </div>
+);
 
 export default ReceiptScanButton;
