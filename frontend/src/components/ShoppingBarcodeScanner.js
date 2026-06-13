@@ -1,28 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Scan, Sparkles, ShoppingBag, PenLine } from 'lucide-react';
+import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Sparkles, ShoppingBag, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUnits } from '@/contexts/UnitContext';
+import { ManualItemEntryForm } from '@/components/ManualItemEntryForm';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household', 'medicine', 'other'];
-
 export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const { getShoppingOptions, getDefaultQuantity: getDefaultQty } = useUnits();
-  const getQuantityOptions = (category) => getShoppingOptions(category).options;
+  // Local wrapper kept for the AI-scan flow's category-driven quantity pre-fill.
   const getDefaultQuantity = (category) => getDefaultQty(category);
 
-  // Scan modes: 'choose' | 'barcode' | 'photo_name' | 'photo_expiry' | 'confirm'
+  // Scan modes: 'choose' | 'photo_name' | 'photo_expiry' | 'confirm'
+  // (Barcode mode removed — AI text scan + manual entry is sufficient.)
   const [scanMode, setScanMode] = useState('choose');
   const [scanning, setScanning] = useState(false);
   const [productData, setProductData] = useState({
     name_en: '',
     category: 'other',
-    barcode: '',
     monthly_quantity: '500 g'
   });
   const [expiryDate, setExpiryDate] = useState('');
@@ -30,16 +26,12 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const [ocrProgress, setOcrProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
-  
+
   const videoRef = useRef(null);
-  const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
   const processedRef = useRef(false);
 
   const stopCamera = useCallback(() => {
-    if (codeReaderRef.current) {
-      codeReaderRef.current = null;
-    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -48,7 +40,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
 
   const resetState = useCallback(() => {
     setScanMode('choose');
-    setProductData({ name_en: '', category: 'other', barcode: '', monthly_quantity: '500 g' });
+    setProductData({ name_en: '', category: 'other', monthly_quantity: '500 g' });
     setExpiryDate('');
     setError(null);
     setOcrProgress(0);
@@ -219,120 +211,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     }
   };
 
-  // Barcode scanning mode - lazy load @zxing/browser
-  const startBarcodeScanner = async () => {
-    setScanning(true);
-    setError(null);
-    setIsProcessing(false);
-    processedRef.current = false;
-    
-    try {
-      // Dynamic import - only loads when user clicks "Scan Barcode"
-      const { BrowserMultiFormatReader } = await import('@zxing/browser');
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
-      
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      
-      codeReader.decodeFromVideoDevice(undefined, videoRef.current, async (result, err) => {
-        if (processedRef.current || isProcessing) return;
-        
-        if (result) {
-          const barcode = result.getText();
-          console.log('Barcode detected:', barcode);
-          
-          processedRef.current = true;
-          setIsProcessing(true);
-          stopCamera();
-          setScanning(false);
-          
-          await lookupProduct(barcode);
-        }
-      });
-      
-    } catch (err) {
-      console.error('Camera error:', err);
-      setError('Could not access camera. Please ensure camera permissions are granted.');
-      setScanning(false);
-    }
-  };
-
-  const lookupProduct = async (barcode) => {
-    try {
-      setError(null);
-      const response = await fetch(`${API}/api/barcode/${barcode}`);
-      const data = await response.json();
-      
-      if (data.found) {
-        const cat = mapCategory(data.category);
-        setProductData({
-          barcode: barcode,
-          name_en: data.name || `Product ${barcode}`,
-          category: cat,
-          monthly_quantity: getDefaultQuantity(cat)
-        });
-        setScanMode('photo_expiry');
-      } else {
-        setProductData({
-          barcode: barcode,
-          name_en: '',
-          category: 'other',
-          monthly_quantity: getDefaultQuantity('other')
-        });
-        setScanMode('photo_expiry');
-        setError('Product not found in database. Please enter name manually.');
-      }
-    } catch (err) {
-      console.error('Lookup error:', err);
-      setProductData({
-        barcode: barcode,
-        name_en: '',
-        category: 'other',
-        monthly_quantity: getDefaultQuantity('other')
-      });
-      setScanMode('photo_expiry');
-      setError('Could not lookup product. Please enter details manually.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const mapCategory = (categoryStr) => {
-    const categoryLower = (categoryStr || '').toLowerCase();
-    if (categoryLower.includes('grain') || categoryLower.includes('rice') || categoryLower.includes('flour')) return 'grains';
-    if (categoryLower.includes('pulse') || categoryLower.includes('dal') || categoryLower.includes('lentil')) return 'pulses';
-    if (categoryLower.includes('spice') || categoryLower.includes('masala')) return 'spices';
-    if (categoryLower.includes('vegetable')) return 'vegetables';
-    if (categoryLower.includes('fruit')) return 'fruits';
-    if (categoryLower.includes('dairy') || categoryLower.includes('milk')) return 'dairy';
-    if (categoryLower.includes('oil')) return 'oils';
-    if (categoryLower.includes('bakery') || categoryLower.includes('bread')) return 'bakery';
-    if (categoryLower.includes('snack')) return 'snacks';
-    if (categoryLower.includes('medicine')) return 'medicine';
-    if (categoryLower.includes('beverage') || categoryLower.includes('tea') || categoryLower.includes('coffee')) return 'beverages';
-    return 'other';
-  };
-
-  const handleConfirm = () => {
-    if (!productData.name_en) return;
-    
-    onItemScanned({
-      name_en: productData.name_en,
-      category: productData.category,
-      barcode: productData.barcode || null,
-      expiry_date: expiryDate || null,
-      monthly_quantity: productData.monthly_quantity || getDefaultQuantity(productData.category)
-    });
-    
-    onClose();
-  };
+  // handleConfirm was inlined into ManualItemEntryForm's onSubmit prop.
 
   const skipToConfirm = () => {
     stopCamera();
@@ -351,7 +230,6 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
           <DialogTitle className="flex items-center gap-2 text-lg">
             <ShoppingBag className="w-5 h-5 text-orange-500" />
             {scanMode === 'choose' && 'Scan Item for Shopping List'}
-            {scanMode === 'barcode' && 'Scan Barcode'}
             {scanMode === 'photo_name' && 'Step 1: Product Name'}
             {scanMode === 'photo_expiry' && 'Step 2: Expiry Date (Optional)'}
             {scanMode === 'confirm' && 'Confirm Details'}
@@ -396,27 +274,6 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                   </div>
                 </Button>
                 
-                {/* Barcode Method - Secondary */}
-                <Button
-                  onClick={() => {
-                    setScanMode('barcode');
-                    startBarcodeScanner();
-                  }}
-                  variant="outline"
-                  className="h-auto py-4"
-                  data-testid="choose-barcode-method"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                      <Scan className="w-6 h-6 text-gray-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-bold text-gray-800">Scan Barcode</p>
-                      <p className="text-xs text-gray-500">Lookup product by barcode</p>
-                    </div>
-                  </div>
-                </Button>
-                
                 {/* Manual Entry */}
                 <Button
                   onClick={() => setScanMode('confirm')}
@@ -435,62 +292,6 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
                     </div>
                 </Button>
               </div>
-            </div>
-          )}
-
-          {/* Barcode Scanning */}
-          {scanMode === 'barcode' && (
-            <div className="space-y-4">
-              {isProcessing ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-16 h-16 text-orange-500 mx-auto mb-4 animate-spin" />
-                  <p className="text-gray-600">Looking up product...</p>
-                </div>
-              ) : scanning ? (
-                <div className="relative">
-                  <div className="relative rounded-xl overflow-hidden bg-black" style={{ height: '40vh', minHeight: '250px', maxHeight: '350px' }}>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-72 h-36 border-2 border-orange-500 rounded-xl relative bg-black/10">
-                        <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-orange-500 rounded-tl-lg" />
-                        <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-orange-500 rounded-tr-lg" />
-                        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-orange-500 rounded-bl-lg" />
-                        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-orange-500 rounded-br-lg" />
-                        <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-red-500 animate-pulse" />
-                      </div>
-                    </div>
-                    <div className="absolute top-3 left-0 right-0 text-center">
-                      <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">
-                        Position barcode within frame
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    onClick={() => {
-                      stopCamera();
-                      setScanMode('choose');
-                    }}
-                    variant="outline"
-                    className="w-full h-12 text-base mt-4"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Scan className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <Button onClick={startBarcodeScanner} className="bg-orange-500 hover:bg-orange-600 text-white h-12 px-8">
-                    Start Scanning
-                  </Button>
-                </div>
-              )}
             </div>
           )}
 
@@ -697,101 +498,31 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
             </div>
           )}
 
-          {/* Confirmation */}
+          {/* Confirmation — uses the shared ManualItemEntryForm so the
+              receipt-scan "Add as new item" flow reuses the same UX. */}
           {scanMode === 'confirm' && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <Label>Product Name *</Label>
-                  <Input
-                    value={productData.name_en}
-                    onChange={(e) => setProductData({ ...productData, name_en: e.target.value })}
-                    placeholder="Enter product name"
-                    data-testid="product-name-input"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Category</Label>
-                  <Select 
-                    value={productData.category} 
-                    onValueChange={(val) => setProductData({ 
-                      ...productData, 
-                      category: val,
-                      monthly_quantity: getDefaultQuantity(val)
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[250px] overflow-y-auto">
-                      {CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Quantity Options - Category-wise */}
-                <div>
-                  <Label>Quantity</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {getQuantityOptions(productData.category).map(qty => (
-                      <Button
-                        key={qty}
-                        type="button"
-                        variant={productData.monthly_quantity === qty ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setProductData({ ...productData, monthly_quantity: qty })}
-                        className="text-xs"
-                      >
-                        {qty}
-                      </Button>
-                    ))}
-                  </div>
-                  <Input
-                    value={productData.monthly_quantity}
-                    onChange={(e) => setProductData({ ...productData, monthly_quantity: e.target.value })}
-                    placeholder="Or type custom quantity"
-                    className="mt-2"
-                    data-testid="quantity-input"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Expiry Date (Optional)</Label>
-                  <Input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    data-testid="expiry-date-input"
-                  />
-                </div>
-                
-                {productData.barcode && (
-                  <div>
-                    <Label>Barcode</Label>
-                    <Input value={productData.barcode} disabled className="bg-gray-100" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={resetState} className="flex-1">
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Start Over
-                </Button>
-                <Button
-                  onClick={handleConfirm}
-                  disabled={!productData.name_en.trim()}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                  data-testid="confirm-add-item"
-                >
-                  <ShoppingBag className="w-5 h-5 mr-2" />
-                  Add to Shopping List
-                </Button>
-              </div>
-            </div>
+            <ManualItemEntryForm
+              initialName={productData.name_en}
+              initialCategory={productData.category}
+              initialQuantity={productData.monthly_quantity}
+              initialExpiryDate={expiryDate}
+              getQuantityOptions={(cat) => getShoppingOptions(cat).options}
+              getDefaultQuantity={(cat) => getDefaultQty(cat)}
+              showExpiry
+              submitLabel="Add to Shopping List"
+              submitIcon={<ShoppingBag className="w-5 h-5 mr-2" />}
+              submitClassName="bg-orange-500 hover:bg-orange-600 text-white"
+              onSubmit={({ name_en, category, monthly_quantity, expiry_date }) => {
+                onItemScanned({
+                  name_en,
+                  category,
+                  monthly_quantity: monthly_quantity || getDefaultQty(category),
+                  expiry_date,
+                });
+                onClose();
+              }}
+              onCancel={resetState}
+            />
           )}
         </div>
       </DialogContent>
