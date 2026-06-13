@@ -2,18 +2,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Sparkles, ShoppingBag, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUnits } from '@/contexts/UnitContext';
+import { ManualItemEntryForm } from '@/components/ManualItemEntryForm';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household', 'medicine', 'other'];
-
 export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   const { getShoppingOptions, getDefaultQuantity: getDefaultQty } = useUnits();
-  const getQuantityOptions = (category) => getShoppingOptions(category).options;
+  // Local wrapper kept for the AI-scan flow's category-driven quantity pre-fill.
   const getDefaultQuantity = (category) => getDefaultQty(category);
 
   // Scan modes: 'choose' | 'photo_name' | 'photo_expiry' | 'confirm'
@@ -215,18 +211,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     }
   };
 
-  const handleConfirm = () => {
-    if (!productData.name_en) return;
-
-    onItemScanned({
-      name_en: productData.name_en,
-      category: productData.category,
-      expiry_date: expiryDate || null,
-      monthly_quantity: productData.monthly_quantity || getDefaultQuantity(productData.category)
-    });
-
-    onClose();
-  };
+  // handleConfirm was inlined into ManualItemEntryForm's onSubmit prop.
 
   const skipToConfirm = () => {
     stopCamera();
@@ -513,95 +498,31 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
             </div>
           )}
 
-          {/* Confirmation */}
+          {/* Confirmation — uses the shared ManualItemEntryForm so the
+              receipt-scan "Add as new item" flow reuses the same UX. */}
           {scanMode === 'confirm' && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <Label>Product Name *</Label>
-                  <Input
-                    value={productData.name_en}
-                    onChange={(e) => setProductData({ ...productData, name_en: e.target.value })}
-                    placeholder="Enter product name"
-                    data-testid="product-name-input"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Category</Label>
-                  <Select 
-                    value={productData.category} 
-                    onValueChange={(val) => setProductData({ 
-                      ...productData, 
-                      category: val,
-                      monthly_quantity: getDefaultQuantity(val)
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[250px] overflow-y-auto">
-                      {CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Quantity Options - Category-wise */}
-                <div>
-                  <Label>Quantity</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {getQuantityOptions(productData.category).map(qty => (
-                      <Button
-                        key={qty}
-                        type="button"
-                        variant={productData.monthly_quantity === qty ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setProductData({ ...productData, monthly_quantity: qty })}
-                        className="text-xs"
-                      >
-                        {qty}
-                      </Button>
-                    ))}
-                  </div>
-                  <Input
-                    value={productData.monthly_quantity}
-                    onChange={(e) => setProductData({ ...productData, monthly_quantity: e.target.value })}
-                    placeholder="Or type custom quantity"
-                    className="mt-2"
-                    data-testid="quantity-input"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Expiry Date (Optional)</Label>
-                  <Input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    data-testid="expiry-date-input"
-                  />
-                </div>
-                
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={resetState} className="flex-1">
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Start Over
-                </Button>
-                <Button
-                  onClick={handleConfirm}
-                  disabled={!productData.name_en.trim()}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                  data-testid="confirm-add-item"
-                >
-                  <ShoppingBag className="w-5 h-5 mr-2" />
-                  Add to Shopping List
-                </Button>
-              </div>
-            </div>
+            <ManualItemEntryForm
+              initialName={productData.name_en}
+              initialCategory={productData.category}
+              initialQuantity={productData.monthly_quantity}
+              initialExpiryDate={expiryDate}
+              getQuantityOptions={(cat) => getShoppingOptions(cat).options}
+              getDefaultQuantity={(cat) => getDefaultQty(cat)}
+              showExpiry
+              submitLabel="Add to Shopping List"
+              submitIcon={<ShoppingBag className="w-5 h-5 mr-2" />}
+              submitClassName="bg-orange-500 hover:bg-orange-600 text-white"
+              onSubmit={({ name_en, category, monthly_quantity, expiry_date }) => {
+                onItemScanned({
+                  name_en,
+                  category,
+                  monthly_quantity: monthly_quantity || getDefaultQty(category),
+                  expiry_date,
+                });
+                onClose();
+              }}
+              onCancel={resetState}
+            />
           )}
         </div>
       </DialogContent>

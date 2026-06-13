@@ -2,13 +2,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Loader2, CheckCircle, AlertCircle, Calendar, Package, RotateCcw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ManualItemEntryForm } from '@/components/ManualItemEntryForm';
 
 const API = process.env.REACT_APP_BACKEND_URL;
-
-const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses', 'oils', 'snacks', 'bakery', 'beverages', 'household','medicine', 'other'];
 
 export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
   // Scan modes: 'choose' | 'photo_name' | 'photo_expiry' | 'confirm'
@@ -216,19 +212,7 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
 
  
 
-  const handleConfirm = () => {
-    if (!productData.name_en) return;
-
-    onItemScanned({
-      name_en: productData.name_en,
-      category: productData.category,
-      stock_level: 'full',
-      unit: 'pcs',
-      expiry_date: expiryDate || null,
-    });
-
-    onClose();
-  };
+  // handleConfirm was inlined into ManualItemEntryForm's onSubmit prop.
 
   const skipToConfirm = () => {
     stopCamera();
@@ -515,65 +499,28 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
             </div>
           )}
 
-          {/* Confirmation */}
+          {/* Confirmation — uses the shared ManualItemEntryForm */}
           {scanMode === 'confirm' && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <Label>Product Name *</Label>
-                  <Input
-                    value={productData.name_en}
-                    onChange={(e) => setProductData({ ...productData, name_en: e.target.value })}
-                    placeholder="Enter product name"
-                    data-testid="product-name-input"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Category</Label>
-                  <Select 
-                    value={productData.category} 
-                    onValueChange={(val) => setProductData({ ...productData, category: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label>Expiry Date</Label>
-                  <Input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    data-testid="expiry-date-input"
-                  />
-                </div>
-                
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={resetState} className="flex-1">
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Start Over
-                </Button>
-                <Button
-                  onClick={handleConfirm}
-                  disabled={!productData.name_en.trim()}
-                  className="flex-1 bg-[#77DD77] hover:bg-[#66CC66] text-gray-900"
-                  data-testid="confirm-add-item"
-                >
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Add to Inventory
-                </Button>
-              </div>
-            </div>
+            <ManualItemEntryForm
+              initialName={productData.name_en}
+              initialCategory={productData.category}
+              initialExpiryDate={expiryDate}
+              showExpiry
+              submitLabel="Add to Inventory"
+              submitIcon={<CheckCircle className="w-5 h-5 mr-2" />}
+              submitClassName="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900"
+              onSubmit={({ name_en, category, expiry_date }) => {
+                onItemScanned({
+                  name_en,
+                  category,
+                  stock_level: 'full',
+                  unit: 'pcs',
+                  expiry_date,
+                });
+                onClose();
+              }}
+              onCancel={resetState}
+            />
           )}
         </div>
       </DialogContent>
