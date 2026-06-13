@@ -528,10 +528,21 @@ const InventoryPage = () => {
                                 />
                               </h3>
                               
-                              {/* Category Badge */}
-                              <Badge variant="outline" className="text-[10px] md:text-xs border-gray-400">
-                                {categoryInfo.label}
-                              </Badge>
+                              {/* Category + Custom-source Badges */}
+                              <div className="flex flex-wrap items-center gap-1">
+                                <Badge variant="outline" className="text-[10px] md:text-xs border-gray-400">
+                                  {categoryInfo.label}
+                                </Badge>
+                                {item.is_custom && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] md:text-xs border-purple-300 text-purple-700 bg-purple-50"
+                                    title="Added from a receipt — not yet in the catalog"
+                                  >
+                                    custom
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             
                             {item.is_secret_stash && (
