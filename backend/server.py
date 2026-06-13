@@ -253,4 +253,11 @@ async def startup_event():
     await db.receipts.create_index("household_id")
     await db.receipts.create_index("created_at", expireAfterSeconds=30 * 24 * 60 * 60)
 
+    # Catalog suggestions (Phase 1.1): when a user adds a custom item from a
+    # receipt, we silently upsert into this collection keyed by the receipt's
+    # Devanagari text. Admin can later see which custom items repeat across
+    # households and promote them into PANTRY_TEMPLATE.
+    await db.catalog_suggestions.create_index("devanagari_key", unique=True)
+    await db.catalog_suggestions.create_index("vote_count")
+
     logger.info("Rasoi-Sync backend started successfully!")

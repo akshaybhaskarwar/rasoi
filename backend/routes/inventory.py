@@ -32,11 +32,21 @@ class BulkUpdateItem(BaseModel):
 
     The user may have edited `name_canonical_en` (picked a different catalog
     entry) or `qty` since the receipt was first parsed.
+
+    When is_custom=True, the row represents an item the user is adding that
+    is NOT in PANTRY_TEMPLATE. The catalog lookup is skipped and the
+    inventory entry is created directly from the row's name/category/unit
+    fields. The row is also logged to `catalog_suggestions` so an admin
+    can promote popular custom items into the canonical catalog later.
     """
     name_canonical_en: Optional[str] = None
     qty: float = 1.0
     unit: str = "UT"
     action: str = "add"  # "add" or "skip"
+    is_custom: bool = False
+    custom_name: Optional[str] = None      # required when is_custom=True
+    custom_category: Optional[str] = None  # falls back to "other"
+    devanagari_hint: Optional[str] = None  # receipt's printed name, for catalog_suggestions
 
 
 class BulkUpdateRequest(BaseModel):
@@ -272,11 +282,107 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         skipped: List[str] = []
         errors: List[Dict[str, Any]] = []
 
+        import unicodedata  # local — only used here, avoids hot-path cost
+
         for row in request.items:
             if row.action == "skip":
                 skipped.append(row.name_canonical_en or "(unmatched)")
                 continue
 
+            # ---- Custom item path (NOT in PANTRY_TEMPLATE) ----------------
+            if row.is_custom:
+                name = (row.custom_name or "").strip()
+                if not name:
+                    errors.append({"row": row.model_dump(),
+                                   "error": "custom item missing name"})
+                    continue
+
+                category = (row.custom_category or "other").strip().lower()
+                # Pick a sensible inventory unit from the receipt's unit code
+                inv_unit = "pcs"
+                u = (row.unit or "").strip().lower()
+                if u in ("k", "kg"):
+                    inv_unit = "kg"
+                elif u in ("g", "gram", "grams"):
+                    inv_unit = "g"
+                elif u in ("l", "lt", "litre", "liter", "litres", "liters"):
+                    inv_unit = "L"
+                elif u in ("ml", "milliliter", "milliliters"):
+                    inv_unit = "ml"
+
+                # Find or create — match on name_en within the household
+                inv_doc = await db.inventory.find_one({
+                    "household_id": household_id,
+                    "name_en": name,
+                })
+                if inv_doc is None:
+                    new_item = InventoryItem(
+                        household_id=household_id,
+                        name_en=name,
+                        name_mr=row.devanagari_hint or None,
+                        name_hi=None,
+                        category=category,
+                        stock_level="empty",
+                        current_stock=0,
+                        unit=inv_unit,
+                        is_custom=True,
+                    )
+                    inv_doc = new_item.model_dump()
+                    inv_doc["created_at"] = inv_doc["created_at"].isoformat()
+                    await db.inventory.insert_one(inv_doc)
+
+                delta = _qty_to_base_units(row.qty, row.unit)
+                new_current = (inv_doc.get("current_stock") or 0) + delta
+                await db.inventory.update_one(
+                    {"id": inv_doc["id"]},
+                    {"$set": {
+                        "stock_level": "full",
+                        "current_stock": new_current,
+                        "last_updated_by": user.get("id"),
+                    }},
+                )
+                added.append({
+                    "id": inv_doc["id"],
+                    "name_en": name,
+                    "qty": row.qty,
+                    "unit": row.unit,
+                    "delta_base_units": delta,
+                    "new_current_stock": new_current,
+                    "is_custom": True,
+                })
+
+                # Silently log to catalog_suggestions so admins can promote
+                # repeatedly-suggested items into PANTRY_TEMPLATE later.
+                # Keyed by NFC-normalized Devanagari text so cross-household
+                # variants collapse onto the same suggestion document.
+                try:
+                    dev = row.devanagari_hint or name
+                    dev_key = unicodedata.normalize("NFC", dev).strip().lower()
+                    if dev_key:
+                        await db.catalog_suggestions.update_one(
+                            {"devanagari_key": dev_key},
+                            {
+                                "$setOnInsert": {
+                                    "devanagari_key": dev_key,
+                                    "devanagari_text": dev,
+                                    "first_suggested_at": datetime.now(timezone.utc),
+                                },
+                                "$set": {
+                                    "last_suggested_at": datetime.now(timezone.utc),
+                                    "last_user_provided_name": name,
+                                    "last_category_hint": category,
+                                },
+                                "$inc": {"vote_count": 1},
+                                "$addToSet": {"household_ids": household_id},
+                            },
+                            upsert=True,
+                        )
+                except Exception:
+                    logger.exception("Failed to log catalog_suggestion")
+
+                continue
+
+            # ---- Canonical (in-catalog) item path -------------------------
             canonical = row.name_canonical_en
             if not canonical:
                 errors.append({"row": row.model_dump(), "error": "no canonical name"})

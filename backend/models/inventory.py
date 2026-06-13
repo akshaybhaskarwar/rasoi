@@ -28,6 +28,11 @@ class InventoryItem(BaseModel):
     aliases: List[str] = []  # English transliterations of regional names (e.g., ["Besan"] for Gram Flour)
     reserved_for: List[Dict[str, Any]] = []
     last_updated_by: Optional[str] = None
+    # is_custom=True marks items the user added from a receipt that didn't
+    # match the canonical PANTRY_TEMPLATE catalog. Used by the inventory UI
+    # to show a "custom" badge and (separately) drives the catalog_suggestions
+    # admin pipeline for promoting popular custom items into the catalog.
+    is_custom: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
