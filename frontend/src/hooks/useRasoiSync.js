@@ -489,3 +489,54 @@ export const useTranslation = () => {
 // stays in sync after add/remove. Re-exported here so existing imports of
 // useFavoriteChannels from this file keep working without any call-site edits.
 export { useFavoriteChannels } from '@/contexts/FavoriteChannelsContext';
+
+
+// Browse Menu (Phase 1) — fetches the EVERYDAY_MENU catalog merged with
+// this household's custom dishes, and exposes add / edit / delete for the
+// custom layer.
+export const useMenu = () => {
+  const [catalog, setCatalog] = useState({});
+  const [custom, setCustom] = useState({});
+  const [composed, setComposed] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const refresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get(`${API}/menu`, { headers: getAuthHeaders() });
+      setCatalog(res.data.catalog || {});
+      setCustom(res.data.custom || {});
+      setComposed(res.data.composed || {});
+    } catch (err) {
+      console.error('Menu fetch error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addCustom = async ({ category, name_en, name_mr, vegetable_tag }) => {
+    const res = await axios.post(`${API}/menu/custom`, {
+      category, name_en, name_mr, vegetable_tag,
+    }, { headers: getAuthHeaders() });
+    await refresh();
+    return res.data;
+  };
+
+  const editCustom = async (id, patch) => {
+    const res = await axios.put(`${API}/menu/custom/${id}`, patch, { headers: getAuthHeaders() });
+    await refresh();
+    return res.data;
+  };
+
+  const deleteCustom = async (id) => {
+    await axios.delete(`${API}/menu/custom/${id}`, { headers: getAuthHeaders() });
+    await refresh();
+  };
+
+  useEffect(() => { refresh(); }, []);
+
+  return { catalog, custom, composed, loading, error, refresh, addCustom, editCustom, deleteCustom };
+};

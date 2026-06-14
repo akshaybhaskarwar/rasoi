@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { GapAnalysisSidebar } from '@/components/GapAnalysisSidebar';
 import YouTubeRecipeDiscovery from '@/components/YouTubeRecipeDiscovery';
 import PersonalizedRecipeStream from '@/components/PersonalizedRecipeStream';
+import { BrowseMenuPanel } from '@/components/BrowseMenuPanel';
 import { toast } from 'sonner';
 import { format, isToday, addDays, startOfDay } from 'date-fns';
 
@@ -247,6 +248,37 @@ const PlannerPage = () => {
     } catch (error) {
       console.error('Error adding custom recipe:', error);
       toast.error('Failed to add recipe');
+    }
+  };
+
+  // Add a meal picked from the Browse Menu panel (catalog dish, custom dish,
+  // or a composed thali). Same shape as handleQuickAddRecipe — just sourced
+  // from the menu picker instead of free-text input.
+  const handleAddFromMenu = async ({ name_en, name_mr }) => {
+    if (!selectedDate || !selectedMealType) {
+      toast.error('Select a date + meal slot first');
+      return;
+    }
+    const meal_name = name_en || name_mr || '';
+    if (!meal_name) return;
+    try {
+      await addMealPlan({
+        date: selectedDate,
+        meal_type: selectedMealType,
+        meal_name,
+        ingredients_needed: [],
+        reserved_ingredients: [],
+      });
+      toast.success('Added from menu', {
+        description: `${meal_name} → ${MEAL_TYPES.find(m => m.value === selectedMealType)?.label}`,
+        duration: 3000,
+      });
+      setIsRecipeDialogOpen(false);
+      setSelectedDate('');
+      setSelectedMealType('');
+    } catch (error) {
+      console.error('Error adding menu item:', error);
+      toast.error('Failed to add');
     }
   };
 
@@ -879,6 +911,24 @@ const PlannerPage = () => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-1.5">Type your recipe name and press Enter or click Add</p>
+            </div>
+
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="flex-shrink mx-4 text-xs text-gray-400 font-medium">OR browse the menu</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            {/* Browse Menu — Phase 1 of PRD: the Everyday Food catalog +
+                this household's own custom dishes, with per-category
+                "Add your own" affordance. Tap a dish → addMealPlan. */}
+            <div className="p-3 bg-gradient-to-br from-amber-50/40 to-orange-50/40 border-2 border-orange-200 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <ChefHat className="w-4 h-4 text-[#FF9933]" />
+                <span className="text-sm font-bold text-gray-700">Browse from the Menu</span>
+                <span className="text-xs text-gray-500">— pick a chapati, dal, sabji, rice, side</span>
+              </div>
+              <BrowseMenuPanel onPick={handleAddFromMenu} />
             </div>
 
             <div className="relative flex items-center">

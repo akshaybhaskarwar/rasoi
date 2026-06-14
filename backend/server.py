@@ -38,6 +38,7 @@ from routes.youtube import create_youtube_routes, youtube_router
 from routes.preferences import create_preferences_routes, preferences_router
 from routes.barcode import create_barcode_routes, barcode_router
 from routes.pantry_items import create_pantry_routes, pantry_router
+from routes.menu import create_menu_routes, menu_router
 from routes.dadi import create_dadi_routes, dadi_router
 
 # Import data for festival endpoint
@@ -165,6 +166,7 @@ create_preferences_routes(db)
 create_barcode_routes(db, EMERGENT_LLM_KEY)
 create_pantry_routes(None)  # No dependencies needed
 create_dadi_routes(db, decode_token)  # Digital Dadi routes
+create_menu_routes(db, decode_token)  # Browse Menu (Phase 1)
 
 # ============ INCLUDE ROUTERS ============
 
@@ -185,6 +187,7 @@ app.include_router(preferences_router)
 app.include_router(barcode_router)
 app.include_router(pantry_router)
 app.include_router(dadi_router)
+app.include_router(menu_router)
 
 # ============ CORS MIDDLEWARE ============
 
@@ -259,5 +262,14 @@ async def startup_event():
     # households and promote them into PANTRY_TEMPLATE.
     await db.catalog_suggestions.create_index("devanagari_key", unique=True)
     await db.catalog_suggestions.create_index("vote_count")
+
+    # Browse Menu (Phase 1): household-scoped custom dishes that augment
+    # the static EVERYDAY_MENU catalog. Unique-per-household by lower-cased
+    # name to prevent duplicates within one kitchen.
+    await db.user_menu_items.create_index("household_id")
+    await db.user_menu_items.create_index(
+        [("household_id", 1), ("name_en_lower", 1)],
+        unique=True,
+    )
 
     logger.info("Rasoi-Sync backend started successfully!")
