@@ -18,6 +18,7 @@ from .translation import (
     TranslationEditRequest, TranslationEntry
 )
 from .preferences import UserPreferences
+from .menu import UserMenuItem, UserMenuItemCreate, UserMenuItemUpdate, ALLOWED_MENU_CATEGORIES
 from .common import FestivalAlert
 
 __all__ = [
@@ -35,6 +36,8 @@ __all__ = [
     'TranslationEditRequest', 'TranslationEntry',
     # Preferences
     'UserPreferences',
+    # Menu (browse + custom items)
+    'UserMenuItem', 'UserMenuItemCreate', 'UserMenuItemUpdate', 'ALLOWED_MENU_CATEGORIES',
     # Common
     'FestivalAlert',
 ]
