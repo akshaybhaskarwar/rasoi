@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useUnits } from '@/contexts/UnitContext';
-import { Plus, Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar, Minus } from 'lucide-react';
+// useUnits no longer called directly on InventoryPage (the editor uses it internally).
+import { Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
 import { BarcodeScanner } from '@/components/BarcodeScanner';
 import ReceiptScanButton from '@/components/ReceiptScanButton';
+import { StockQuantityEditor } from '@/components/StockQuantityEditor';
 import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
 
@@ -105,7 +106,7 @@ const calculateStockStatus = (currentStock, monthlyNeed) => {
 const InventoryPage = () => {
   const { inventory, loading, addItem, updateItem, deleteItem, fetchInventory } = useInventory();
   const { language, getLabel, isEnglish } = useLanguage();
-  const { formatQuantity } = useUnits();
+  // formatQuantity/Minus/Plus moved into StockQuantityEditor.
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStockLevel, setSelectedStockLevel] = useState('all'); // New state for stock filtering
@@ -191,6 +192,36 @@ const InventoryPage = () => {
       });
     } catch (error) {
       console.error('Error updating monthly quantity:', error);
+    }
+  };
+
+  // Set current_stock to an exact value. Used by StockQuantityEditor's chips
+  // (additive — pre-computed at the chip click site) and inline numpad (set).
+  const setCurrentStock = async (item, newStock) => {
+    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
+    const monthlyNeed = item.monthly_quantity || defaults.quantity;
+    try {
+      const newStatus = calculateStockStatus(newStock, monthlyNeed);
+      await updateItem(item.id, {
+        current_stock: newStock,
+        stock_level: newStatus.value, // keep stock_level in lockstep
+      });
+    } catch (error) {
+      console.error('Error setting current stock:', error);
+    }
+  };
+
+  // Set monthly_quantity to an exact value. Used by StockQuantityEditor.
+  const setMonthlyQuantity = async (item, newQty) => {
+    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
+    const currentUnit = item.monthly_unit || defaults.unit;
+    try {
+      await updateItem(item.id, {
+        monthly_quantity: newQty,
+        monthly_unit: currentUnit,
+      });
+    } catch (error) {
+      console.error('Error setting monthly quantity:', error);
     }
   };
 
@@ -689,63 +720,55 @@ const InventoryPage = () => {
                             </div>
                           </div>
 
-                          {/* Current Stock Controls - Replaces dot toggles */}
-                          <div className="mb-3 p-2.5 md:p-3 bg-white/70 rounded-xl border border-gray-200">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium text-gray-600">Current Stock</span>
-                              <div className="flex items-center gap-1.5 md:gap-2">
-                                <button
-                                  onClick={() => handleCurrentStockChange(item, 'decrease')}
-                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition-colors"
-                                  data-testid={`stock-minus-${item.id}`}
-                                  disabled={(item.current_stock || 0) <= 0}
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-                                <span className="min-w-[60px] md:min-w-[70px] text-center text-sm font-bold text-gray-800 bg-[#E8F5E9] px-2 md:px-3 py-1.5 rounded-lg border border-[#77DD77]/30">
-                                  {formatQuantity(
-                                    item.current_stock || 0,
-                                    item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'
-                                  )}
-                                </span>
-                                <button
-                                  onClick={() => handleCurrentStockChange(item, 'increase')}
-                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-[#77DD77] hover:bg-[#66CC66] active:bg-[#55BB55] text-white transition-colors"
-                                  data-testid={`stock-plus-${item.id}`}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
+                          {/* Current Stock — stepper + additive chips + inline numpad.
+                              Chips ADD to the current value (semantic: "I just bought
+                              another 1 kg"). Tap the bold quantity or "Set…" to type
+                              an exact value. */}
+                          <div className="mb-3">
+                            <StockQuantityEditor
+                              value={item.current_stock || 0}
+                              baseUnit={item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'}
+                              category={item.category}
+                              step={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
+                              variant="additive"
+                              label="Current Stock"
+                              colors={{
+                                containerBorder: 'border-gray-200',
+                                valueBg: 'bg-[#E8F5E9] text-gray-800',
+                                valueBorder: 'border-[#77DD77]/30',
+                                plusBg: 'bg-[#77DD77] hover:bg-[#66CC66] active:bg-[#55BB55]',
+                                saveBg: 'bg-[#66CC66] hover:bg-[#55BB55]',
+                                editingBorder: 'border-[#77DD77]',
+                                setChipBorder: 'border-green-300 text-green-700',
+                              }}
+                              onChange={(newStock) => setCurrentStock(item, newStock)}
+                              testIdPrefix={`stock-${item.id}`}
+                            />
                           </div>
 
-                          {/* Monthly Quantity Controls - Touch-friendly */}
-                          <div className="mb-3 p-2.5 md:p-3 bg-white/70 rounded-xl border border-gray-200">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium text-gray-600">Monthly Need</span>
-                              <div className="flex items-center gap-1.5 md:gap-2">
-                                <button
-                                  onClick={() => handleMonthlyQuantityChange(item, 'decrease')}
-                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition-colors"
-                                  data-testid={`monthly-minus-${item.id}`}
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-                                <span className="min-w-[60px] md:min-w-[70px] text-center text-sm font-bold text-gray-800 bg-[#FFFBF0] px-2 md:px-3 py-1.5 rounded-lg border border-[#FFCC00]/30">
-                                  {formatQuantity(
-                                    item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500,
-                                    item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'
-                                  )}
-                                </span>
-                                <button
-                                  onClick={() => handleMonthlyQuantityChange(item, 'increase')}
-                                  className="w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-[#FF9933] hover:bg-[#E68A2E] active:bg-[#D07A20] text-white transition-colors"
-                                  data-testid={`monthly-plus-${item.id}`}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
+                          {/* Monthly Need — same controls, but chips SET to value
+                              (semantic: "my monthly target is 5 kg"). */}
+                          <div className="mb-3">
+                            <StockQuantityEditor
+                              value={item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500}
+                              baseUnit={item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'}
+                              category={item.category}
+                              step={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
+                              variant="set"
+                              label="Monthly Need"
+                              minBound={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
+                              colors={{
+                                containerBorder: 'border-gray-200',
+                                valueBg: 'bg-[#FFFBF0] text-gray-800',
+                                valueBorder: 'border-[#FFCC00]/30',
+                                plusBg: 'bg-[#FF9933] hover:bg-[#E68A2E] active:bg-[#D07A20]',
+                                saveBg: 'bg-[#FF9933] hover:bg-[#E68A2E]',
+                                editingBorder: 'border-[#FF9933]',
+                                setChipBorder: 'border-orange-300 text-orange-700',
+                              }}
+                              onChange={(newQty) => setMonthlyQuantity(item, newQty)}
+                              testIdPrefix={`monthly-${item.id}`}
+                            />
                           </div>
 
                           {/* Delete Button */}
