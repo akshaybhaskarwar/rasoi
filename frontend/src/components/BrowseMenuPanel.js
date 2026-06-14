@@ -6,16 +6,21 @@
  * recipe dialog. The user picks a dish → onPick fires with the chosen
  * dish, parent uses it to populate addMealPlan.
  *
- * Each category has a "+ Add your own ..." button (Option B from the PM
- * brief) that opens an inline form pre-filled with the category. The
- * household's own custom items show a small "yours" badge with edit/
- * delete affordances.
- *
- * Sabji additionally shows a horizontal row of vegetable-filter chips
- * so 100+ sabji rows are scannable in one tap.
+ * Mobile-first layout:
+ *   - Big category pill tabs in a horizontal scroller with scroll-hint
+ *     gradients so it's obvious there's more off-screen
+ *   - Whole dish row is one tap target — no separate "+ Add" button
+ *   - Search and "Add your own" stack vertically on narrow screens
+ *   - Custom-item edit/delete tucked behind a 3-dot menu so they don't
+ *     compete with the primary tap action
+ *   - Error state is shown explicitly (not silently empty) so a failed
+ *     /api/menu request surfaces clearly to the user
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X, Search, Sparkles, Edit2, Trash2, Loader2, Utensils } from 'lucide-react';
+import {
+  Plus, X, Search, Sparkles, Edit2, Trash2, Loader2, Utensils,
+  AlertTriangle, Check, ChevronRight, MoreVertical,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,38 +31,42 @@ import { toast } from 'sonner';
 
 // Surface order — single-dish categories first, then composed thalis.
 const CATEGORY_DISPLAY = [
-  { key: 'Chapati',    label: 'Chapati / Roti',   icon: '🫓' },
-  { key: 'Dal',        label: 'Dal',              icon: '🍲' },
-  { key: 'Sabji',      label: 'Sabji',            icon: '🥬' },
-  { key: 'Rice',       label: 'Rice',             icon: '🍚' },
-  { key: 'Koshimbhir', label: 'Koshimbhir',       icon: '🥗' },
-  { key: 'Chatni',     label: 'Chatni',           icon: '🌶️' },
-  { key: 'KadhiSaar',  label: 'Kadhi / Saar',     icon: '🍵' },
-  { key: 'Gole',       label: 'Gole',             icon: '🥟' },
-  { key: 'Gravies',    label: 'Gravies',          icon: '🥘' },
-  { key: 'Custom',     label: 'Other (Custom)',   icon: '✨' },
-  { key: '_Thalis',    label: 'Whole Thalis',     icon: '🍱' }, // composed meals
+  { key: 'Chapati',    label: 'Roti',         icon: '🫓' },
+  { key: 'Dal',        label: 'Dal',          icon: '🍲' },
+  { key: 'Sabji',      label: 'Sabji',        icon: '🥬' },
+  { key: 'Rice',       label: 'Rice',         icon: '🍚' },
+  { key: 'Koshimbhir', label: 'Koshimbhir',   icon: '🥗' },
+  { key: 'Chatni',     label: 'Chatni',       icon: '🌶️' },
+  { key: 'KadhiSaar',  label: 'Kadhi',        icon: '🍵' },
+  { key: 'Gole',       label: 'Gole',         icon: '🥟' },
+  { key: 'Gravies',    label: 'Gravies',      icon: '🥘' },
+  { key: 'Custom',     label: 'Other',        icon: '✨' },
+  { key: '_Thalis',    label: 'Thalis',       icon: '🍱' },
 ];
 
 export const BrowseMenuPanel = ({ onPick }) => {
-  const { catalog, custom, composed, loading, addCustom, editCustom, deleteCustom } = useMenu();
+  const { catalog, custom, composed, loading, error, refresh,
+          addCustom, editCustom, deleteCustom } = useMenu();
   const { language } = useLanguage();
 
   const [activeCategory, setActiveCategory] = useState('Chapati');
-  const [vegFilter, setVegFilter] = useState(null);   // for Sabji tab only
+  const [vegFilter, setVegFilter] = useState(null);     // for Sabji only
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Inline form for adding/editing a custom dish.
-  // null = closed; otherwise { category, mode: 'add'|'edit', initial: {id?,name_en,name_mr,vegetable_tag} }
+  // null = closed; { category, mode: 'add'|'edit', initial: {...} }
   const [addOpen, setAddOpen] = useState(null);
+  // Used to flash a confirmation badge on the tapped row before the parent
+  // dialog closes; gives the user clear feedback that the tap registered.
+  const [justTapped, setJustTapped] = useState(null);
+  // Per-custom-row menu state for Edit/Delete actions (id of open menu)
+  const [openMenuId, setOpenMenuId] = useState(null);
 
-  // Reset filter + search when switching tabs
   useEffect(() => {
     setVegFilter(null);
     setSearchQuery('');
+    setOpenMenuId(null);
   }, [activeCategory]);
 
-  // Merged items for the current category (catalog + this household's custom)
+  // Catalog + household's custom items, merged for the current category
   const currentItems = useMemo(() => {
     if (activeCategory === '_Thalis') return [];
     const cat = catalog[activeCategory] || [];
@@ -65,15 +74,17 @@ export const BrowseMenuPanel = ({ onPick }) => {
     return [...cat, ...own];
   }, [activeCategory, catalog, custom]);
 
-  // Unique vegetable tags for the Sabji chip row
+  // Vegetable tag chips for the Sabji tab
   const sabjiVeggies = useMemo(() => {
     if (activeCategory !== 'Sabji') return [];
     const tags = new Set();
-    currentItems.forEach(it => it.vegetable_tag || it.vegetable ? tags.add(it.vegetable_tag || it.vegetable) : null);
+    currentItems.forEach(it => {
+      const tag = it.vegetable_tag || it.vegetable;
+      if (tag) tags.add(tag);
+    });
     return Array.from(tags).sort();
   }, [activeCategory, currentItems]);
 
-  // Filter pass for the visible card grid
   const visibleItems = useMemo(() => {
     let xs = currentItems;
     if (activeCategory === 'Sabji' && vegFilter) {
@@ -99,70 +110,107 @@ export const BrowseMenuPanel = ({ onPick }) => {
   }, [activeCategory, composed]);
 
   const handlePickDish = (item) => {
-    // Normalize to {name_en, name_mr} regardless of source (catalog uses en/mr,
-    // custom uses name_en/name_mr).
     const name_en = item.en || item.name_en || '';
     const name_mr = item.mr || item.name_mr || '';
-    if (!name_en) return;
+    if (!name_en) {
+      toast.error('This dish is missing its name — please report it.');
+      return;
+    }
+    // Flash a check next to the tapped row so the user gets feedback
+    // even if the parent dialog takes a beat to close.
+    setJustTapped(`${name_en}-${item.id || ''}`);
     onPick({ name_en, name_mr });
   };
 
   const handlePickThali = (thali) => {
     const meal_name = `${thali.title} — ${thali.components.map(c => c.name).join(' + ')}`;
+    setJustTapped(thali.title);
     onPick({ name_en: meal_name });
   };
 
   const handleDeleteCustom = async (id, name) => {
     if (!window.confirm(`Remove "${name}" from your menu?`)) return;
+    setOpenMenuId(null);
     try {
       await deleteCustom(id);
       toast.success('Removed', { description: name });
     } catch (e) {
-      toast.error('Could not remove', { description: e.message });
+      toast.error('Could not remove', { description: e?.response?.data?.detail || e.message });
     }
   };
 
   return (
     <div className="space-y-3" data-testid="browse-menu-panel">
-      {/* Category tab row — horizontally scrollable on mobile */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-        {CATEGORY_DISPLAY.map(cat => {
-          const count =
-            cat.key === '_Thalis'
-              ? (composed.PartyTime?.length || 0) + (composed.Combinations?.length || 0)
-              : (catalog[cat.key]?.length || 0) + (custom[cat.key]?.length || 0);
-          const isActive = activeCategory === cat.key;
-          return (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
-              className={`shrink-0 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                isActive
-                  ? 'bg-[#FF9933] text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              data-testid={`menu-cat-${cat.key}`}
-            >
-              <span className="mr-1">{cat.icon}</span>
-              {cat.label}
-              {count > 0 && (
-                <span className={`ml-1.5 text-[10px] opacity-80`}>({count})</span>
-              )}
-            </button>
-          );
-        })}
+      {/* Category tab row — bigger, with edge-fade scroll hints on mobile */}
+      <div className="relative">
+        <div
+          className="flex gap-1.5 overflow-x-auto pb-1 -mx-2 px-2 scroll-smooth"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {CATEGORY_DISPLAY.map(cat => {
+            const count =
+              cat.key === '_Thalis'
+                ? (composed.PartyTime?.length || 0) + (composed.Combinations?.length || 0)
+                : (catalog[cat.key]?.length || 0) + (custom[cat.key]?.length || 0);
+            const isActive = activeCategory === cat.key;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                className={`shrink-0 px-3 py-2.5 rounded-xl text-sm font-medium transition-all min-w-[64px] ${
+                  isActive
+                    ? 'bg-[#FF9933] text-white shadow-md scale-105'
+                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95'
+                }`}
+                data-testid={`menu-cat-${cat.key}`}
+              >
+                <div className="flex flex-col items-center gap-0.5 leading-none">
+                  <span className="text-lg">{cat.icon}</span>
+                  <span className="text-[11px]">{cat.label}</span>
+                  {count > 0 && (
+                    <span className={`text-[9px] ${isActive ? 'opacity-90' : 'text-gray-500'}`}>
+                      {count}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {/* Edge-fade hints so it's visually clear the row is scrollable */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-white to-transparent" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-1 w-4 bg-gradient-to-r from-white to-transparent" />
       </div>
 
-      {/* Search + Add-your-own row */}
-      {activeCategory !== '_Thalis' && (
-        <div className="flex gap-2 items-center">
+      {/* Error state */}
+      {error && !loading && (
+        <div className="border-2 border-red-200 bg-red-50 rounded-xl p-3 flex items-start gap-2">
+          <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-red-900">Could not load the menu</div>
+            <div className="text-xs text-red-700 mt-0.5 break-words">{error}</div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => refresh()}
+            className="h-8 text-xs flex-shrink-0"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {/* Search + Add-your-own — stacks vertically on narrow screens */}
+      {!error && activeCategory !== '_Thalis' && (
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${CATEGORY_DISPLAY.find(c => c.key === activeCategory)?.label}...`}
-              className="pl-9 h-10"
+              className="pl-9 h-11"
               data-testid="menu-search"
             />
           </div>
@@ -170,7 +218,7 @@ export const BrowseMenuPanel = ({ onPick }) => {
             onClick={() =>
               setAddOpen({ category: activeCategory, mode: 'add', initial: {} })
             }
-            className="h-10 bg-purple-600 hover:bg-purple-700 text-white shrink-0"
+            className="h-11 bg-purple-600 hover:bg-purple-700 text-white"
             data-testid="menu-add-own"
           >
             <Plus className="w-4 h-4 mr-1" />
@@ -180,12 +228,14 @@ export const BrowseMenuPanel = ({ onPick }) => {
       )}
 
       {/* Sabji vegetable filter chips */}
-      {activeCategory === 'Sabji' && sabjiVeggies.length > 0 && (
+      {!error && activeCategory === 'Sabji' && sabjiVeggies.length > 0 && (
         <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
           <button
             onClick={() => setVegFilter(null)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              !vegFilter ? 'bg-green-100 border-2 border-green-400 text-green-800' : 'bg-white border border-gray-300 text-gray-600'
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition active:scale-95 ${
+              !vegFilter
+                ? 'bg-green-100 border-2 border-green-400 text-green-800'
+                : 'bg-white border border-gray-300 text-gray-600'
             }`}
           >
             All
@@ -194,7 +244,7 @@ export const BrowseMenuPanel = ({ onPick }) => {
             <button
               key={v}
               onClick={() => setVegFilter(v)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition active:scale-95 ${
                 vegFilter === v
                   ? 'bg-green-100 border-2 border-green-400 text-green-800'
                   : 'bg-white border border-gray-300 text-gray-600 hover:border-gray-400'
@@ -216,36 +266,56 @@ export const BrowseMenuPanel = ({ onPick }) => {
       )}
 
       {/* Empty state for Custom tab */}
-      {!loading && activeCategory === 'Custom' && visibleItems.length === 0 && (
+      {!loading && !error && activeCategory === 'Custom' && visibleItems.length === 0 && (
         <div className="text-center py-10 text-gray-500">
           <Utensils className="w-10 h-10 text-gray-300 mx-auto mb-2" />
           <p className="text-sm">No "Other" custom dishes yet.</p>
-          <p className="text-xs text-gray-400 mt-1">Tap "Add your own" to add an item that does not fit the other categories.</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Tap "Add your own" to add an item that does not fit the other categories.
+          </p>
         </div>
       )}
 
-      {/* Dish cards — category view */}
-      {!loading && activeCategory !== '_Thalis' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      {/* Dish rows — single-column, full-width tap target */}
+      {!loading && !error && activeCategory !== '_Thalis' && (
+        <div className="space-y-1.5">
           {visibleItems.map((item, idx) => {
             const enName = item.en || item.name_en || '';
             const mrName = item.mr || item.name_mr || '';
-            const isCustom = item.is_custom;
+            const isCustom = !!item.is_custom;
             const showMr = mrName && language !== 'en';
+            const tagKey = `${enName}-${item.id || ''}`;
+            const wasJustTapped = justTapped === tagKey;
+
             return (
               <div
                 key={`${enName}-${idx}-${item.id || ''}`}
-                className={`border rounded-xl p-3 hover:border-[#FF9933] hover:shadow-sm transition-all ${
-                  isCustom ? 'bg-purple-50/30 border-purple-200' : 'bg-white border-gray-200'
-                }`}
+                className={`relative rounded-xl border transition-all active:scale-[0.99] ${
+                  isCustom
+                    ? 'bg-purple-50/40 border-purple-200'
+                    : 'bg-white border-gray-200'
+                } ${wasJustTapped ? 'ring-2 ring-green-400 ring-offset-1' : ''}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <button
-                    onClick={() => handlePickDish(item)}
-                    className="flex-1 text-left min-w-0"
-                    data-testid={`menu-pick-${enName}`}
+                <button
+                  type="button"
+                  onClick={() => handlePickDish(item)}
+                  className="w-full text-left p-3 flex items-center gap-3 active:bg-orange-50/40 rounded-xl"
+                  data-testid={`menu-pick-${enName}`}
+                >
+                  {/* Leading icon — green check if just tapped, else a "+" hint */}
+                  <div
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      wasJustTapped
+                        ? 'bg-green-500 text-white'
+                        : 'bg-[#77DD77]/15 text-[#138808]'
+                    }`}
                   >
-                    <div className="flex items-center gap-2 flex-wrap">
+                    {wasJustTapped ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                  </div>
+
+                  {/* Dish text */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-semibold text-gray-900 text-sm">{enName}</span>
                       {isCustom && (
                         <Badge variant="outline" className="text-[10px] py-0 border-purple-300 text-purple-700 bg-purple-100/50">
@@ -261,12 +331,35 @@ export const BrowseMenuPanel = ({ onPick }) => {
                     {showMr && (
                       <div className="text-xs text-gray-600 mt-0.5 break-words">{mrName}</div>
                     )}
-                  </button>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {isCustom && (
-                      <>
+                  </div>
+
+                  {/* Trailing chevron — only when not just-tapped */}
+                  {!wasJustTapped && (
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  )}
+                </button>
+
+                {/* Custom-item action menu (tucked away — doesn't steal taps) */}
+                {isCustom && (
+                  <div className="absolute top-2 right-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === item.id ? null : item.id);
+                      }}
+                      className="w-7 h-7 rounded-full bg-white/80 border border-purple-200 flex items-center justify-center text-purple-700 active:scale-95"
+                      aria-label="More actions"
+                    >
+                      <MoreVertical className="w-3.5 h-3.5" />
+                    </button>
+                    {openMenuId === item.id && (
+                      <div
+                        className="absolute right-0 top-9 z-10 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
-                          onClick={() =>
+                          onClick={() => {
+                            setOpenMenuId(null);
                             setAddOpen({
                               category: activeCategory,
                               mode: 'edit',
@@ -276,37 +369,27 @@ export const BrowseMenuPanel = ({ onPick }) => {
                                 name_mr: mrName,
                                 vegetable_tag: item.vegetable_tag || '',
                               },
-                            })
-                          }
-                          className="p-1.5 text-gray-500 hover:text-blue-600"
-                          aria-label="Edit"
+                            });
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full"
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
+                          <Edit2 className="w-3.5 h-3.5" /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteCustom(item.id, enName)}
-                          className="p-1.5 text-gray-500 hover:text-red-600"
-                          aria-label="Delete"
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full border-t border-gray-100"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
                         </button>
-                      </>
+                      </div>
                     )}
-                    <Button
-                      size="sm"
-                      onClick={() => handlePickDish(item)}
-                      className="h-7 px-2 bg-[#77DD77] hover:bg-[#66CC66] text-white text-[11px]"
-                      data-testid={`menu-add-${enName}`}
-                    >
-                      <Plus className="w-3 h-3 mr-0.5" /> Add
-                    </Button>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
           {!loading && visibleItems.length === 0 && activeCategory !== 'Custom' && (
-            <div className="col-span-full text-center py-8 text-gray-500 text-sm">
+            <div className="text-center py-8 text-gray-500 text-sm">
               No matches{searchQuery ? ` for "${searchQuery}"` : ''}. Try a different search or
               tap <span className="font-medium text-purple-700">Add your own</span>.
             </div>
@@ -314,36 +397,38 @@ export const BrowseMenuPanel = ({ onPick }) => {
         </div>
       )}
 
-      {/* Composed thali cards */}
-      {!loading && activeCategory === '_Thalis' && (
-        <div className="grid grid-cols-1 gap-2">
-          {composedItems.map((thali) => (
-            <div
-              key={`${thali.source}-${thali.title}`}
-              className="border rounded-xl p-3 bg-gradient-to-br from-amber-50 to-orange-50 border-orange-200"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+      {/* Composed thali rows */}
+      {!loading && !error && activeCategory === '_Thalis' && (
+        <div className="space-y-1.5">
+          {composedItems.map((thali) => {
+            const wasJustTapped = justTapped === thali.title;
+            return (
+              <button
+                key={`${thali.source}-${thali.title}`}
+                type="button"
+                onClick={() => handlePickThali(thali)}
+                className={`w-full text-left rounded-xl border-2 p-3 transition-all active:scale-[0.99] ${
+                  wasJustTapped
+                    ? 'ring-2 ring-green-400 ring-offset-1 bg-green-50/60 border-green-300'
+                    : 'bg-gradient-to-br from-amber-50 to-orange-50 border-orange-200 active:bg-orange-100/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  {wasJustTapped ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
                     <Sparkles className="w-4 h-4 text-orange-600" />
-                    <span className="font-semibold text-gray-900 text-sm">{thali.title}</span>
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-1">
-                    {thali.components.map((c, i) => (
-                      <span key={i} className="bg-white/70 px-1.5 py-0.5 rounded">{c.name}</span>
-                    ))}
-                  </div>
+                  )}
+                  <span className="font-semibold text-gray-900 text-sm">{thali.title}</span>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => handlePickThali(thali)}
-                  className="h-8 px-3 bg-[#FF9933] hover:bg-[#E68A2E] text-white text-xs shrink-0"
-                >
-                  <Plus className="w-3 h-3 mr-1" /> Use thali
-                </Button>
-              </div>
-            </div>
-          ))}
+                <div className="text-xs text-gray-600 flex flex-wrap gap-1">
+                  {thali.components.map((c, i) => (
+                    <span key={i} className="bg-white/70 px-1.5 py-0.5 rounded">{c.name}</span>
+                  ))}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -375,7 +460,7 @@ export const BrowseMenuPanel = ({ onPick }) => {
 
 
 // =============================================================================
-// CustomMenuItemForm — small inline form for adding/editing a user dish.
+// CustomMenuItemForm — inline form for adding/editing a user dish.
 // =============================================================================
 const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
   const [nameEn, setNameEn] = useState(ctx.initial.name_en || '');
@@ -412,14 +497,14 @@ const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="space-y-2">
         <div>
           <label className="text-xs font-medium text-gray-700">Name (English) *</label>
           <Input
             value={nameEn}
             onChange={(e) => setNameEn(e.target.value)}
             placeholder="e.g. Aaji's Special Chana Dal"
-            className="h-9 mt-1"
+            className="h-10 mt-1"
             autoFocus
             data-testid="custom-form-name-en"
           />
@@ -430,14 +515,14 @@ const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
             value={nameMr}
             onChange={(e) => setNameMr(e.target.value)}
             placeholder="उदा. आजीची चना डाळ"
-            className="h-9 mt-1"
+            className="h-10 mt-1"
             data-testid="custom-form-name-mr"
           />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-700">Category</label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-9 mt-1">
+            <SelectTrigger className="h-10 mt-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -451,12 +536,12 @@ const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
         </div>
         {isSabji && (
           <div>
-            <label className="text-xs font-medium text-gray-700">Vegetable tag (optional)</label>
+            <label className="text-xs font-medium text-gray-700">Vegetable (optional)</label>
             <Input
               value={vegTag}
               onChange={(e) => setVegTag(e.target.value)}
               placeholder="e.g. Brinjal, Bhindi, Tomato"
-              className="h-9 mt-1"
+              className="h-10 mt-1"
               data-testid="custom-form-veg-tag"
             />
           </div>
@@ -464,13 +549,13 @@ const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
       </div>
 
       <div className="flex gap-2 justify-end pt-1">
-        <Button variant="outline" onClick={onClose} disabled={saving} className="h-9">
+        <Button variant="outline" onClick={onClose} disabled={saving} className="h-10">
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={!nameEn.trim() || saving}
-          className="h-9 bg-purple-600 hover:bg-purple-700 text-white"
+          className="h-10 bg-purple-600 hover:bg-purple-700 text-white"
           data-testid="custom-form-save"
         >
           {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
