@@ -501,6 +501,14 @@ export const useMenu = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Local copy of the auth-header helper — every hook in this file defines
+  // its own (not a shared module-level export). Reads the token from
+  // localStorage, returns either a Bearer header or an empty object.
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const refresh = async () => {
     setLoading(true);
     setError(null);
@@ -511,7 +519,7 @@ export const useMenu = () => {
       setComposed(res.data.composed || {});
     } catch (err) {
       console.error('Menu fetch error:', err);
-      setError(err.message);
+      setError(err?.response?.data?.detail || err.message);
     } finally {
       setLoading(false);
     }
