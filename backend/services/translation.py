@@ -68,7 +68,22 @@ class TranslationService:
                     return data["data"]["translations"][0]["translatedText"]
                 return None
         except Exception as e:
-            logger.error(f"Google Translate API error: {e}")
+            # CRITICAL: do NOT log the raw exception — httpx includes the
+            # full request URL in its error messages, which exposes our
+            # API key (passed as ?key=... query param). Log only the
+            # status code / class so logs are safe to share.
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            kind = type(e).__name__
+            if status == 403:
+                logger.error(
+                    "Google Translate API returned 403 — check key validity, "
+                    "API enablement, and key restrictions. Falling back to no "
+                    "translation."
+                )
+            elif status == 429:
+                logger.warning("Google Translate API rate-limited (429).")
+            else:
+                logger.warning("Google Translate failed (%s, status=%s)", kind, status)
             return None
     
     async def translate_text(
