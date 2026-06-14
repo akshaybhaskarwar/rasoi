@@ -747,7 +747,9 @@ const InventoryPage = () => {
                           </div>
 
                           {/* Monthly Need — same controls, but chips SET to value
-                              (semantic: "my monthly target is 5 kg"). */}
+                              (semantic: "my monthly target is 5 kg"). No
+                              minBound — user is free to set any positive value
+                              (e.g., 250 g monthly need for a niche spice). */}
                           <div className="mb-3">
                             <StockQuantityEditor
                               value={item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500}
@@ -756,7 +758,6 @@ const InventoryPage = () => {
                               step={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
                               variant="set"
                               label="Monthly Need"
-                              minBound={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
                               colors={{
                                 containerBorder: 'border-gray-200',
                                 valueBg: 'bg-[#FFFBF0] text-gray-800',
