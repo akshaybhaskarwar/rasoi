@@ -282,7 +282,63 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         skipped: List[str] = []
         errors: List[Dict[str, Any]] = []
 
+        import re
         import unicodedata  # local — only used here, avoids hot-path cost
+
+        async def find_existing_inventory(
+            *,
+            name_en_canonical: Optional[str] = None,
+            name_mr_canonical: Optional[str] = None,
+            devanagari_hint: Optional[str] = None,
+        ) -> Optional[Dict[str, Any]]:
+            """Best-effort merge: find any existing inventory row in this
+            household that's "the same item" as what the receipt is bringing
+            in. Tries multiple keys in priority order so subtle drift (case,
+            whitespace, Devanagari vs English storage) doesn't create
+            duplicates.
+
+            Order:
+              1. Exact canonical English (existing behavior)
+              2. Case-insensitive English
+              3. Catalog's Marathi (covers items stored with mr-first)
+              4. Receipt's Devanagari hint (covers items previously added
+                 from the same brand-name receipt as is_custom — so a brand
+                 like "जैमिनी शेंगदाणा तेल" merges with itself)
+            """
+            seen_keys = []
+            def push(key):
+                # de-dupe — Mongo doesn't care but the seen check keeps us cheap
+                k = repr(key)
+                if k in seen_keys:
+                    return None
+                seen_keys.append(k)
+                return key
+
+            queries = []
+            if name_en_canonical:
+                q = push({"name_en": name_en_canonical})
+                if q: queries.append(q)
+                pattern = re.compile(f"^{re.escape(name_en_canonical.strip())}$", re.IGNORECASE)
+                q = push({"name_en": pattern})
+                if q: queries.append(q)
+            if name_mr_canonical:
+                q = push({"name_mr": name_mr_canonical})
+                if q: queries.append(q)
+            if devanagari_hint:
+                q = push({"name_mr": devanagari_hint})
+                if q: queries.append(q)
+                # Some users may have items where the brand-name Devanagari
+                # ended up in name_en (e.g., earlier custom-add flows). Try
+                # that too so we update instead of duplicate.
+                q = push({"name_en": devanagari_hint})
+                if q: queries.append(q)
+
+            for q in queries:
+                q["household_id"] = household_id
+                doc = await db.inventory.find_one(q)
+                if doc is not None:
+                    return doc
+            return None
 
         for row in request.items:
             if row.action == "skip":
@@ -310,11 +366,13 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                 elif u in ("ml", "milliliter", "milliliters"):
                     inv_unit = "ml"
 
-                # Find or create — match on name_en within the household
-                inv_doc = await db.inventory.find_one({
-                    "household_id": household_id,
-                    "name_en": name,
-                })
+                # Find or create — try multiple match keys so a re-scan of
+                # the same brand-name receipt finds the previously-added
+                # custom item, even if its stored name differs slightly.
+                inv_doc = await find_existing_inventory(
+                    name_en_canonical=name,
+                    devanagari_hint=row.devanagari_hint,
+                )
                 if inv_doc is None:
                     new_item = InventoryItem(
                         household_id=household_id,
@@ -394,11 +452,18 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                                "error": f"'{canonical}' not in catalog"})
                 continue
 
-            # Find or create inventory item
-            inv_doc = await db.inventory.find_one({
-                "household_id": household_id,
-                "name_en": details["name_en"],
-            })
+            # Find or create — try canonical en first, then case-insensitive,
+            # then catalog mr/hi, then the receipt's Devanagari hint. This
+            # makes the canonical path also find existing custom items that
+            # may have been stored with a brand-name Devanagari name_en
+            # (e.g., जैमिनी रिफाईंड शेंगदाणा तेल) — without this, a brand-name
+            # receipt creates a fresh custom item AND a fresh canonical item
+            # each scan, splitting one real product across multiple rows.
+            inv_doc = await find_existing_inventory(
+                name_en_canonical=details["name_en"],
+                name_mr_canonical=details.get("name_mr"),
+                devanagari_hint=row.devanagari_hint,
+            )
             if inv_doc is None:
                 new_item = InventoryItem(
                     household_id=household_id,
