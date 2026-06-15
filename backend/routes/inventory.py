@@ -47,6 +47,12 @@ class BulkUpdateItem(BaseModel):
     custom_name: Optional[str] = None      # required when is_custom=True
     custom_category: Optional[str] = None  # falls back to "other"
     devanagari_hint: Optional[str] = None  # receipt's printed name, for catalog_suggestions
+    # When the user adds a row "as new" but Claude+catalog had already
+    # resolved it to a canonical English name (e.g., brand-name Devanagari
+    # -> "Groundnut Oil"), the frontend preserves that resolution here and
+    # the backend stores it as an alias on the inventory item so an English
+    # search later finds the Devanagari-named row.
+    original_canonical_en: Optional[str] = None
 
 
 class BulkUpdateRequest(BaseModel):
@@ -373,6 +379,19 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                     name_en_canonical=name,
                     devanagari_hint=row.devanagari_hint,
                 )
+
+                # Aliases that should appear on the row so English-text
+                # search later finds it. Always at least include Claude's
+                # original canonical English when available.
+                desired_aliases = []
+                if row.original_canonical_en:
+                    desired_aliases.append(row.original_canonical_en.strip())
+                # Receipt's Devanagari hint as a second alias when the row's
+                # name_en is English (i.e., user typed an English name but
+                # we still want Marathi search to find it).
+                if row.devanagari_hint and row.devanagari_hint not in desired_aliases:
+                    desired_aliases.append(row.devanagari_hint)
+
                 if inv_doc is None:
                     new_item = InventoryItem(
                         household_id=household_id,
@@ -383,6 +402,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                         stock_level="empty",
                         current_stock=0,
                         unit=inv_unit,
+                        aliases=desired_aliases,
                         is_custom=True,
                     )
                     inv_doc = new_item.model_dump()
@@ -391,12 +411,22 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
 
                 delta = _qty_to_base_units(row.qty, row.unit)
                 new_current = (inv_doc.get("current_stock") or 0) + delta
+                # Backfill aliases on existing rows so previously-saved
+                # Devanagari-named items pick up English-search support
+                # automatically next time the same brand-name receipt is
+                # processed.
+                merged_aliases = list(inv_doc.get("aliases") or [])
+                for a in desired_aliases:
+                    if a and a not in merged_aliases:
+                        merged_aliases.append(a)
+
                 await db.inventory.update_one(
                     {"id": inv_doc["id"]},
                     {"$set": {
                         "stock_level": "full",
                         "current_stock": new_current,
                         "last_updated_by": user.get("id"),
+                        "aliases": merged_aliases,
                     }},
                 )
                 added.append({
@@ -480,6 +510,18 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                 inv_doc["created_at"] = inv_doc["created_at"].isoformat()
                 await db.inventory.insert_one(inv_doc)
 
+            # Backfill aliases on the row so a brand-name Devanagari (which
+            # the merge logic now finds as an existing row) becomes a
+            # searchable alias on the canonical English row. After enough
+            # scans, the inventory item picks up every brand variant of the
+            # same product as an alias automatically.
+            merged_aliases = list(inv_doc.get("aliases") or [])
+            for a in (details.get("aliases") or []):
+                if a and a not in merged_aliases:
+                    merged_aliases.append(a)
+            if row.devanagari_hint and row.devanagari_hint not in merged_aliases:
+                merged_aliases.append(row.devanagari_hint)
+
             # Increment and bump stock_level
             delta = _qty_to_base_units(row.qty, row.unit)
             new_current = (inv_doc.get("current_stock") or 0) + delta
@@ -489,6 +531,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                     "stock_level": "full",
                     "current_stock": new_current,
                     "last_updated_by": user.get("id"),
+                    "aliases": merged_aliases,
                 }},
             )
             added.append({

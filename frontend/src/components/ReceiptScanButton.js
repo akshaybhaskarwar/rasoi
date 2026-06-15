@@ -146,6 +146,10 @@ const ReceiptScanButton = ({ onSuccess }) => {
       custom_name: r.is_custom ? r.custom_name : null,
       custom_category: r.is_custom ? r.custom_category : null,
       devanagari_hint: r.name_devanagari || null,
+      // Claude's original catalog resolution (if any). Backend uses it as
+      // an English alias on the inventory item so future English-text
+      // searches find brand-name-Devanagari custom items.
+      original_canonical_en: r.is_custom ? (r.original_canonical_en || null) : null,
     }));
     try {
       const result = await saveConfirmedItems(receipt.receipt_id, payload);
@@ -199,7 +203,13 @@ const ReceiptScanButton = ({ onSuccess }) => {
             is_custom: true,
             custom_name: name_en,
             custom_category: category || 'other',
-            name_canonical_en: name_en,       // for display only — clearer than "null"
+            // Preserve Claude's original canonical English resolution (if any)
+            // so the backend can save it as an alias on the inventory item.
+            // Without this, the resulting inventory row's name_en is the user's
+            // typed text (often Devanagari brand name) and an English-only
+            // inventory search later won't find it.
+            original_canonical_en: r.original_canonical_en || r.name_canonical_en || null,
+            name_canonical_en: name_en,       // for confirm-screen display only
             match_confidence: 'high',
             action: 'add',
           }
