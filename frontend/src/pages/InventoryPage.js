@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 // useUnits no longer called directly on InventoryPage (the editor uses it internally).
@@ -252,18 +253,37 @@ const InventoryPage = () => {
     }
   };
 
+  // Track which item is currently in the "tap again to confirm" state.
+  // A 5-second window where the Delete button morphs into "Tap to confirm —
+  // X cancel". After 5s without confirmation it resets. Way more reliable
+  // than window.confirm() which iOS PWA mode often blocks silently.
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
   const handleDelete = async (itemId, itemName) => {
-    if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
-      try {
-        await deleteItem(itemId);
-        // Force a small delay to ensure state updates
-        setTimeout(() => {
-          console.log('Item deleted successfully');
-        }, 100);
-      } catch (error) {
-        console.error('Error deleting item:', error);
-        alert('Failed to delete item. Please try again.');
-      }
+    if (pendingDeleteId !== itemId) {
+      // First tap — arm the confirmation.
+      setPendingDeleteId(itemId);
+      // Auto-reset after 5s if user doesn't follow through
+      setTimeout(() => {
+        setPendingDeleteId((current) => (current === itemId ? null : current));
+      }, 5000);
+      toast.warning(`Tap Delete again to remove "${itemName}"`, {
+        description: 'This cannot be undone.',
+        duration: 5000,
+      });
+      return;
+    }
+    // Second tap — actually delete.
+    setPendingDeleteId(null);
+    try {
+      await deleteItem(itemId);
+      toast.success(`Removed ${itemName}`, { duration: 3000 });
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Could not delete', {
+        description: error?.response?.data?.detail || error.message,
+        duration: 4000,
+      });
     }
   };
 
@@ -772,16 +792,24 @@ const InventoryPage = () => {
                             />
                           </div>
 
-                          {/* Delete Button */}
+                          {/* Delete Button — two-tap confirm, no browser dialog.
+                              First tap arms; second tap within 5s removes.
+                              iOS PWA mode silently blocks window.confirm(), so
+                              the older one-tap-with-confirm flow felt broken on
+                              the home-screen-installed app. */}
                           <Button
-                            variant="ghost"
+                            variant={pendingDeleteId === item.id ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => handleDelete(item.id, item.name_en)}
-                            className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                            className={`w-full rounded-lg ${
+                              pendingDeleteId === item.id
+                                ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                                : 'border-red-300 text-red-600 hover:bg-red-50'
+                            }`}
                             data-testid={`delete-${item.id}`}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            {pendingDeleteId === item.id ? 'Tap to confirm Delete' : 'Delete'}
                           </Button>
                         </CardContent>
                       </Card>
