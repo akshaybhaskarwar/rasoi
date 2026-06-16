@@ -59,6 +59,13 @@ class BulkUpdateRequest(BaseModel):
     """Request body for POST /inventory/bulk-update."""
     receipt_id: Optional[str] = None
     items: List[BulkUpdateItem]
+    # Phase A integration: when the receipt-scan confirm screen matched
+    # one or more shopping list items to receipt rows (and the user did
+    # not opt out via the per-row "don't check off" toggle), this is the
+    # list of shopping list item ids to mark as 'bought' alongside the
+    # inventory write. Optional — receipt scans from a user with no
+    # shopping list or no matches just don't send this.
+    shopping_item_ids_to_mark: List[str] = []
 
 
 def _qty_to_base_units(qty: float, unit: str) -> int:
@@ -570,10 +577,39 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         except Exception:
             pass
 
+        # ---- Phase A: cross off matched shopping list items ----------------
+        # The frontend computed the matches and (if the user didn't toggle
+        # off any rows) sent us the shopping list item ids to mark bought.
+        # We re-scope the update to the user's active household so a stale
+        # or maliciously-crafted id can't touch another kitchen's list.
+        shopping_marked = 0
+        if request.shopping_item_ids_to_mark:
+            try:
+                result = await db.shopping_list.update_many(
+                    {
+                        "id": {"$in": request.shopping_item_ids_to_mark},
+                        "household_id": household_id,
+                        # Only mark items currently pending or in-cart — never
+                        # re-mark something the user already finished, and
+                        # never touch an item from another household.
+                        "shopping_status": {"$ne": "bought"},
+                    },
+                    {"$set": {
+                        "shopping_status": "bought",
+                        "bought_at": datetime.now(timezone.utc),
+                        "claimed_by": None,
+                        "claimed_by_name": None,
+                    }},
+                )
+                shopping_marked = result.modified_count
+            except Exception:
+                logger.exception("Failed to mark shopping items as bought")
+
         return {
             "added_count": len(added),
             "skipped_count": len(skipped),
             "error_count": len(errors),
+            "shopping_items_marked": shopping_marked,
             "added": added,
             "skipped": skipped,
             "errors": errors,

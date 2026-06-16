@@ -150,13 +150,19 @@ export const useReceiptIngestion = () => {
    * Apply the user-confirmed rows to inventory. Each item carries an `action`
    * of "add" or "skip". Server-side this is bulk; returns {added_count,...}.
    */
-  const saveConfirmedItems = async (receiptId, items) => {
+  const saveConfirmedItems = async (receiptId, items, shoppingItemIdsToMark = []) => {
     setSaving(true);
     setError(null);
     try {
       const response = await axios.post(
         `${API}/inventory/bulk-update`,
-        { receipt_id: receiptId, items },
+        {
+          receipt_id: receiptId,
+          items,
+          // Phase A: shopping list cross-off — the confirm screen sends
+          // any shopping list item ids the user is OK marking bought.
+          shopping_item_ids_to_mark: shoppingItemIdsToMark,
+        },
         { headers: getAuthHeaders(), timeout: 30_000 }
       );
       return response.data;
