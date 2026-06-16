@@ -3,9 +3,9 @@ import { useShoppingList, useInventory } from '@/hooks/useRasoiSync';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUnits } from '@/contexts/UnitContext';
-import { 
-  Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles, 
-  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar, Edit, AlertTriangle
+import {
+  Plus, Trash2, ShoppingBag, Send, RefreshCw, Sparkles,
+  Search, X, ChevronDown, ChevronUp, Package, Edit2, Check, Calendar, Edit, AlertTriangle, Receipt
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
 import { ShoppingBarcodeScanner } from '@/components/ShoppingBarcodeScanner';
+import ReceiptScanButton from '@/components/ReceiptScanButton';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -445,6 +446,28 @@ const ShoppingPage = () => {
           )}
         </div>
       </div>
+
+      {/* Just-back-from-shopping CTA — dual placement of Scan Receipt.
+          Primary entry point still lives on the Inventory page; this is
+          the contextual entry for users mid-shopping-flow. Same backend,
+          same ReceiptScanButton component, just framed by where the user
+          is in their workflow. */}
+      <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Receipt className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900 text-sm">Just back from shopping?</p>
+              <p className="text-xs text-gray-600">Scan the receipt to update your inventory in seconds.</p>
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <ReceiptScanButton onSuccess={() => { fetchInventory(); fetchShoppingList?.(); }} />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
