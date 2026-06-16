@@ -11,16 +11,17 @@
  * The component owns the file input, dialog, and catalog-pick sheet so the
  * parent only needs to render <ReceiptScanButton onSuccess={fetchInventory}/>.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Receipt, Camera, Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Plus, Sparkles,
+  ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useReceiptIngestion } from '@/hooks/useRasoiSync';
+import { useReceiptIngestion, useShoppingList } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ManualItemEntryForm } from '@/components/ManualItemEntryForm';
 
@@ -77,8 +78,58 @@ const fileToResizedBase64 = (file) =>
 const formatINR = (n) =>
   typeof n === 'number' ? `₹${n.toFixed(2)}` : '';
 
+// Normalize a name for matching: NFC + trim + lowercase. Devanagari survives
+// untouched; Latin gets case-folded.
+const _normalizeForMatch = (s) =>
+  (s || '').normalize('NFC').trim().toLowerCase();
+
+// Try to find one unpurchased shopping-list item that "is" this receipt row.
+// Match priority: canonical-en exact -> Devanagari hint -> Marathi/Hindi
+// names contains -> aliases. Returns the matched item or null.
+const findShoppingMatch = (row, shoppingList) => {
+  const candidates = (shoppingList || []).filter(
+    s => s && s.shopping_status !== 'bought'
+  );
+  if (candidates.length === 0) return null;
+
+  const en = _normalizeForMatch(row.name_canonical_en);
+  const mr = (row.name_devanagari || '').normalize('NFC').trim();
+
+  // Pass 1: exact canonical English (most reliable)
+  if (en) {
+    const hit = candidates.find(s => _normalizeForMatch(s.name_en) === en);
+    if (hit) return hit;
+  }
+  // Pass 2: receipt's Devanagari hint matches the shopping item's Marathi/Hindi
+  if (mr) {
+    const hit = candidates.find(
+      s => (s.name_mr && s.name_mr.normalize('NFC').includes(mr)) ||
+           (s.name_hi && s.name_hi.normalize('NFC').includes(mr)),
+    );
+    if (hit) return hit;
+  }
+  // Pass 3: substring on en (catches "Atta" vs "Wheat Atta" etc.)
+  if (en && en.length >= 3) {
+    const hit = candidates.find(s => {
+      const sName = _normalizeForMatch(s.name_en);
+      return sName && (sName.includes(en) || en.includes(sName));
+    });
+    if (hit) return hit;
+  }
+  // Pass 4: aliases
+  if (en) {
+    const hit = candidates.find(s =>
+      (s.aliases || []).some(a => _normalizeForMatch(a) === en),
+    );
+    if (hit) return hit;
+  }
+  return null;
+};
+
+
 const ReceiptScanButton = ({ onSuccess }) => {
   const { parseReceipt, saveConfirmedItems, parsing, saving } = useReceiptIngestion();
+  const { shoppingList, fetchShoppingList } = useShoppingList();
   const { getLabel } = useLanguage();
   const fileInputRef = useRef(null);
 
@@ -89,6 +140,19 @@ const ReceiptScanButton = ({ onSuccess }) => {
   // customAddOpen: when set, the inline "Add as new item" form overlays the
   // confirm dialog (for items that aren't in PANTRY_TEMPLATE). null = closed.
   const [customAddOpen, setCustomAddOpen] = useState(null);
+  // Set of shopping-list item ids the user has opted OUT of cross-off for
+  // (toggled the per-row "don't check off" affordance). Default is opt-in.
+  const [optedOutShoppingIds, setOptedOutShoppingIds] = useState(new Set());
+
+  // Refresh the shopping list every time the confirm dialog opens so the
+  // matches reflect the latest state (other family members may have edited
+  // the list between scans).
+  useEffect(() => {
+    if (stage === 'confirming') {
+      fetchShoppingList?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
 
   const handlePickFile = () => {
     fileInputRef.current?.click();
@@ -134,6 +198,44 @@ const ReceiptScanButton = ({ onSuccess }) => {
     setRows([]);
     setCatalogOpen(null);
     setCustomAddOpen(null);
+    setOptedOutShoppingIds(new Set());
+  };
+
+  // Pair each row to its shopping-list match (if any). Recomputed when the
+  // rows change (qty edits don't move matches; catalog re-picks do) or the
+  // shopping list refreshes.
+  const matchedPairs = useMemo(() => {
+    const usedIds = new Set();
+    return rows.map(row => {
+      // Skip rows the user explicitly skipped — no point matching them.
+      if (row.action !== 'add') return { row, match: null };
+      const candidate = findShoppingMatch(row, shoppingList);
+      // De-dupe: don't match the same shopping item to two receipt rows.
+      if (candidate && !usedIds.has(candidate.id)) {
+        usedIds.add(candidate.id);
+        return { row, match: candidate };
+      }
+      return { row, match: null };
+    });
+  }, [rows, shoppingList]);
+
+  // Just the matches, for the "X items from your shopping list" summary.
+  const shoppingMatches = useMemo(
+    () => matchedPairs.filter(p => p.match).map(p => ({
+      row: p.row,
+      shoppingItem: p.match,
+      optedOut: optedOutShoppingIds.has(p.match.id),
+    })),
+    [matchedPairs, optedOutShoppingIds],
+  );
+
+  const toggleShoppingMatchOptOut = (shoppingId) => {
+    setOptedOutShoppingIds(prev => {
+      const next = new Set(prev);
+      if (next.has(shoppingId)) next.delete(shoppingId);
+      else next.add(shoppingId);
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -151,14 +253,27 @@ const ReceiptScanButton = ({ onSuccess }) => {
       // searches find brand-name-Devanagari custom items.
       original_canonical_en: r.is_custom ? (r.original_canonical_en || null) : null,
     }));
+
+    // Phase A — collect the shopping list ids the user is OK marking bought
+    // (everything matched, minus anything the user opted out of, minus rows
+    // the user chose to Skip).
+    const shoppingIdsToMark = matchedPairs
+      .filter(p => p.match && p.row.action === 'add' && !optedOutShoppingIds.has(p.match.id))
+      .map(p => p.match.id);
+
     try {
-      const result = await saveConfirmedItems(receipt.receipt_id, payload);
-      toast.success(`Added ${result.added_count} items to inventory`, {
-        description: result.skipped_count > 0
-          ? `${result.skipped_count} skipped`
-          : 'Your kitchen is up to date.',
-        duration: 4000,
-      });
+      const result = await saveConfirmedItems(receipt.receipt_id, payload, shoppingIdsToMark);
+      const crossedOff = result.shopping_items_marked || 0;
+      toast.success(
+        `Added ${result.added_count} items to inventory` +
+        (crossedOff > 0 ? ` · ${crossedOff} checked off shopping list` : ''),
+        {
+          description: result.skipped_count > 0
+            ? `${result.skipped_count} skipped`
+            : 'Your kitchen is up to date.',
+          duration: 4500,
+        },
+      );
       handleClose();
       onSuccess?.();
     } catch (err) {
@@ -311,6 +426,60 @@ const ReceiptScanButton = ({ onSuccess }) => {
               )}
             </div>
           </DialogHeader>
+
+          {/* Phase A — Shopping list cross-off summary. Only shown when the
+              receipt matches one or more unpurchased items on the household's
+              shopping list. Tap "Don't check off" on any row to skip that one. */}
+          {shoppingMatches.length > 0 && (
+            <div className="mx-4 mt-4 p-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/60">
+              <div className="flex items-center gap-2 mb-2">
+                <ShoppingCart className="w-4 h-4 text-emerald-700" />
+                <span className="text-sm font-semibold text-emerald-900">
+                  {shoppingMatches.length} item{shoppingMatches.length !== 1 ? 's' : ''} from your shopping list
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {shoppingMatches.map(({ shoppingItem, optedOut }) => (
+                  <div
+                    key={shoppingItem.id}
+                    className={`flex items-center justify-between gap-2 text-sm rounded-lg px-2 py-1.5 ${
+                      optedOut ? 'bg-white/60' : 'bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {optedOut ? (
+                        <XCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      )}
+                      <span className={`truncate ${optedOut ? 'text-gray-500 line-through' : 'text-gray-900 font-medium'}`}>
+                        {shoppingItem.name_en}
+                      </span>
+                      {shoppingItem.quantity && shoppingItem.quantity !== '-' && (
+                        <span className="text-xs text-gray-500 flex-shrink-0">
+                          ({shoppingItem.quantity})
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => toggleShoppingMatchOptOut(shoppingItem.id)}
+                      className={`text-xs font-medium px-2 py-1 rounded-md flex-shrink-0 ${
+                        optedOut
+                          ? 'text-emerald-700 bg-emerald-100 hover:bg-emerald-200'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                      data-testid={`shopping-toggle-${shoppingItem.id}`}
+                    >
+                      {optedOut ? 'Will check off' : "Don't check off"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-emerald-700/80 mt-2">
+                These will be marked bought on your shopping list when you tap Add.
+              </p>
+            </div>
+          )}
 
           {/* Rows */}
           <div className="p-4 space-y-2">
