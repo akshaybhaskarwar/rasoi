@@ -873,7 +873,7 @@ const PlannerPage = () => {
 
       {/* Recipe Finder Dialog */}
       <Dialog open={isRecipeDialogOpen} onOpenChange={setIsRecipeDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="recipe-finder-dialog">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto overflow-x-hidden" data-testid="recipe-finder-dialog">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ChefHat className="w-6 h-6 text-[#FF9933]" />
