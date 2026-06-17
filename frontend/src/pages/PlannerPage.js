@@ -928,7 +928,7 @@ const PlannerPage = () => {
                 <span className="text-sm font-bold text-gray-700">Browse from the Menu</span>
                 <span className="text-xs text-gray-500">— pick a chapati, dal, sabji, rice, side</span>
               </div>
-              <BrowseMenuPanel onPick={handleAddFromMenu} />
+              <BrowseMenuPanel onPick={handleAddFromMenu} mealType={selectedMealType} />
             </div>
 
             <div className="relative flex items-center">

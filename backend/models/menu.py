@@ -14,11 +14,19 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 # Categories that the UI surfaces in the menu browse tab. Must match the
-# keys in data/everyday_menu.EVERYDAY_MENU plus "Custom" for items the
-# user wants to add but couldn't pin to any of the canonical categories.
+# keys in data/everyday_menu.EVERYDAY_MENU plus data/breakfast_snacks_menu
+# .BREAKFAST_SNACKS_MENU plus "Custom" for items the user wants to add
+# but couldn't pin to any of the canonical categories.
 ALLOWED_MENU_CATEGORIES = {
+    # Lunch / Dinner — EVERYDAY_MENU
     "Chapati", "Dal", "Sabji", "Rice", "Koshimbhir",
-    "Chatni", "KadhiSaar", "Gole", "Gravies", "Custom",
+    "Chatni", "KadhiSaar", "Gole", "Gravies",
+    # Breakfast / Snacks — BREAKFAST_SNACKS_MENU
+    "SouthIndian", "Gujarati", "PavBread", "Upvas", "Chaat",
+    "PohaMurmure", "FriedItems", "Paneer", "Maharashtrian",
+    "FastFood", "Parathe", "Rajasthani",
+    # Catch-all for both contexts
+    "Custom",
 }
 
 

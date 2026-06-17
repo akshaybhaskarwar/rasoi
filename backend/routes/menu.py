@@ -20,6 +20,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from data.everyday_menu import EVERYDAY_MENU, COMPOSED_MEALS
+from data.breakfast_snacks_menu import BREAKFAST_SNACKS_MENU
 from models.menu import (
     ALLOWED_MENU_CATEGORIES,
     UserMenuItem,
@@ -87,8 +88,17 @@ def create_menu_routes(db, decode_token):
                 doc["is_custom"] = True
                 custom_by_category.setdefault(doc["category"], []).append(doc)
 
+        breakfast_catalog = {
+            category: [
+                {**item, "is_custom": False}
+                for item in items
+            ]
+            for category, items in BREAKFAST_SNACKS_MENU.items()
+        }
+
         return {
-            "catalog": catalog,
+            "catalog": catalog,                    # for lunch/dinner planning
+            "breakfast_catalog": breakfast_catalog,  # for breakfast/snacks planning
             "custom": custom_by_category,
             "composed": COMPOSED_MEALS,
         }

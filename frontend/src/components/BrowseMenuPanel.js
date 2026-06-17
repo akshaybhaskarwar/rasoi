@@ -29,8 +29,11 @@ import { useMenu } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 
-// Surface order — single-dish categories first, then composed thalis.
-const CATEGORY_DISPLAY = [
+// Two category surfaces — picked at render time based on the meal slot
+// the user is adding to. Lunch/Dinner shows the thali-component layout
+// (Roti, Dal, Sabji, ...); Breakfast/Snacks shows dish categories by
+// regional cuisine (South Indian, Chaat, Poha/Murmure, ...).
+const LUNCH_DINNER_CATEGORIES = [
   { key: 'Chapati',    label: 'Roti',         icon: '🫓' },
   { key: 'Dal',        label: 'Dal',          icon: '🍲' },
   { key: 'Sabji',      label: 'Sabji',        icon: '🥬' },
@@ -44,12 +47,55 @@ const CATEGORY_DISPLAY = [
   { key: '_Thalis',    label: 'Thalis',       icon: '🍱' },
 ];
 
-export const BrowseMenuPanel = ({ onPick }) => {
-  const { catalog, custom, composed, loading, error, refresh,
+const BREAKFAST_SNACKS_CATEGORIES = [
+  { key: 'PohaMurmure',   label: 'Poha',       icon: '🍚' },
+  { key: 'SouthIndian',   label: 'S. Indian',  icon: '🥞' },
+  { key: 'PavBread',      label: 'Pav',        icon: '🥪' },
+  { key: 'Parathe',       label: 'Parathe',    icon: '🫓' },
+  { key: 'Maharashtrian', label: 'Marathi',    icon: '🍱' },
+  { key: 'Gujarati',      label: 'Gujarati',   icon: '🥘' },
+  { key: 'Chaat',         label: 'Chaat',      icon: '🌶️' },
+  { key: 'Upvas',         label: 'Upvas',      icon: '🔱' },
+  { key: 'FastFood',      label: 'Fast Food',  icon: '🍟' },
+  { key: 'FriedItems',    label: 'Fried',      icon: '🥟' },
+  { key: 'Paneer',        label: 'Paneer',     icon: '🧀' },
+  { key: 'Rajasthani',    label: 'Rajasthani', icon: '🥘' },
+  { key: 'Custom',        label: 'Other',      icon: '✨' },
+];
+
+// Map meal_type ("breakfast" | "lunch" | "snacks" | "dinner") to which
+// catalog + category set to show. Breakfast and snacks share the same
+// breakfast-leaning surface; lunch and dinner share the everyday/thali
+// surface. Defaults to lunch/dinner if mealType is undefined (e.g. when
+// the panel is opened from a context that doesn't know the slot).
+const isBreakfastSnacksMeal = (mealType) =>
+  mealType === 'breakfast' || mealType === 'snacks';
+
+export const BrowseMenuPanel = ({ onPick, mealType }) => {
+  const { catalog, breakfastCatalog, custom, composed, loading, error, refresh,
           addCustom, editCustom, deleteCustom } = useMenu();
   const { language } = useLanguage();
 
-  const [activeCategory, setActiveCategory] = useState('Chapati');
+  // Which surface (categories + catalog) we render is determined by the
+  // meal slot. Memoized so consumers can switch mid-session (e.g. user
+  // opens recipe-finder for breakfast then closes and opens for dinner).
+  const useBreakfastSurface = isBreakfastSnacksMeal(mealType);
+  const CATEGORY_DISPLAY = useBreakfastSurface
+    ? BREAKFAST_SNACKS_CATEGORIES
+    : LUNCH_DINNER_CATEGORIES;
+  const activeCatalog = useBreakfastSurface ? breakfastCatalog : catalog;
+
+  // Default to the first category in whichever surface is active so the
+  // user always sees something on open.
+  const [activeCategory, setActiveCategory] = useState(CATEGORY_DISPLAY[0].key);
+
+  // Reset to first category whenever the meal type (and therefore the
+  // category list) changes — otherwise the saved activeCategory key from
+  // the previous surface may not exist in the new one.
+  useEffect(() => {
+    setActiveCategory(CATEGORY_DISPLAY[0].key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useBreakfastSurface]);
   const [vegFilter, setVegFilter] = useState(null);     // for Sabji only
   const [searchQuery, setSearchQuery] = useState('');
   // null = closed; { category, mode: 'add'|'edit', initial: {...} }
@@ -69,10 +115,10 @@ export const BrowseMenuPanel = ({ onPick }) => {
   // Catalog + household's custom items, merged for the current category
   const currentItems = useMemo(() => {
     if (activeCategory === '_Thalis') return [];
-    const cat = catalog[activeCategory] || [];
+    const cat = activeCatalog[activeCategory] || [];
     const own = custom[activeCategory] || [];
     return [...cat, ...own];
-  }, [activeCategory, catalog, custom]);
+  }, [activeCategory, activeCatalog, custom]);
 
   // Vegetable tag chips for the Sabji tab
   const sabjiVeggies = useMemo(() => {
@@ -141,23 +187,34 @@ export const BrowseMenuPanel = ({ onPick }) => {
 
   return (
     <div className="space-y-3" data-testid="browse-menu-panel">
-      {/* Category tab row — bigger, with edge-fade scroll hints on mobile */}
+      {/* Surface label — tells the user which menu surface they're seeing.
+          Pre-empts the "why am I seeing chapati for breakfast?" confusion. */}
+      <div className="flex items-center gap-2 -mb-1 text-[11px] text-gray-500">
+        <span>Showing:</span>
+        <span className="font-semibold text-gray-700">
+          {useBreakfastSurface ? '🥞 Breakfast & Snacks menu' : '🍱 Lunch & Dinner menu'}
+        </span>
+      </div>
+
+      {/* Category tab row — compact pills with edge-fade scroll hints.
+          On very narrow phones (<360px) padding shrinks to give 4-5 pills
+          worth of visible content before the user has to scroll. */}
       <div className="relative">
         <div
-          className="flex gap-1.5 overflow-x-auto pb-1 -mx-2 px-2 scroll-smooth"
+          className="flex gap-1 sm:gap-1.5 overflow-x-auto pb-1 -mx-2 px-2 scroll-smooth snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none' }}
         >
           {CATEGORY_DISPLAY.map(cat => {
             const count =
               cat.key === '_Thalis'
                 ? (composed.PartyTime?.length || 0) + (composed.Combinations?.length || 0)
-                : (catalog[cat.key]?.length || 0) + (custom[cat.key]?.length || 0);
+                : (activeCatalog[cat.key]?.length || 0) + (custom[cat.key]?.length || 0);
             const isActive = activeCategory === cat.key;
             return (
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
-                className={`shrink-0 px-3 py-2.5 rounded-xl text-sm font-medium transition-all min-w-[64px] ${
+                className={`shrink-0 snap-start px-2 sm:px-3 py-2 rounded-xl text-sm font-medium transition-all min-w-[58px] sm:min-w-[64px] ${
                   isActive
                     ? 'bg-[#FF9933] text-white shadow-md scale-105'
                     : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95'
@@ -165,8 +222,8 @@ export const BrowseMenuPanel = ({ onPick }) => {
                 data-testid={`menu-cat-${cat.key}`}
               >
                 <div className="flex flex-col items-center gap-0.5 leading-none">
-                  <span className="text-lg">{cat.icon}</span>
-                  <span className="text-[11px]">{cat.label}</span>
+                  <span className="text-base sm:text-lg">{cat.icon}</span>
+                  <span className="text-[10px] sm:text-[11px] whitespace-nowrap">{cat.label}</span>
                   {count > 0 && (
                     <span className={`text-[9px] ${isActive ? 'opacity-90' : 'text-gray-500'}`}>
                       {count}
@@ -436,6 +493,7 @@ export const BrowseMenuPanel = ({ onPick }) => {
       {addOpen && (
         <CustomMenuItemForm
           ctx={addOpen}
+          categories={CATEGORY_DISPLAY}
           onClose={() => setAddOpen(null)}
           onSave={async (data) => {
             try {
@@ -462,7 +520,7 @@ export const BrowseMenuPanel = ({ onPick }) => {
 // =============================================================================
 // CustomMenuItemForm — inline form for adding/editing a user dish.
 // =============================================================================
-const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
+const CustomMenuItemForm = ({ ctx, onClose, onSave, categories }) => {
   const [nameEn, setNameEn] = useState(ctx.initial.name_en || '');
   const [nameMr, setNameMr] = useState(ctx.initial.name_mr || '');
   const [vegTag, setVegTag] = useState(ctx.initial.vegetable_tag || '');
@@ -470,6 +528,9 @@ const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
   const [saving, setSaving] = useState(false);
 
   const isSabji = category === 'Sabji';
+  // Default to the lunch/dinner surface for the dropdown when the
+  // caller didn't pass an explicit list (back-compat).
+  const dropdownCategories = categories || LUNCH_DINNER_CATEGORIES;
 
   const handleSubmit = async () => {
     if (!nameEn.trim() || saving) return;
@@ -526,7 +587,7 @@ const CustomMenuItemForm = ({ ctx, onClose, onSave }) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {CATEGORY_DISPLAY.filter(c => c.key !== '_Thalis').map(c => (
+              {dropdownCategories.filter(c => c.key !== '_Thalis').map(c => (
                 <SelectItem key={c.key} value={c.key}>
                   {c.icon} {c.label}
                 </SelectItem>
