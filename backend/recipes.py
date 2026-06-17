@@ -346,9 +346,12 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
         }
         
         # Handle photo upload (base64)
+        # Earlier versions stored a TRUNCATED data URL ("data:image/jpeg;
+        # base64,<first 100 chars>...") in photo_url — a broken string that
+        # rendered as a missing image on the list view. Leave photo_url None
+        # (the LIST endpoint now returns photo_base64 itself, so the front-
+        # end card has a real source to render).
         if recipe.photo_base64:
-            # Store base64 directly for now (in production, upload to cloud storage)
-            recipe_doc["photo_url"] = f"data:image/jpeg;base64,{recipe.photo_base64[:100]}..."
             recipe_doc["photo_base64"] = recipe.photo_base64
         
         await db.user_recipes.insert_one(recipe_doc)
@@ -522,13 +525,26 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
                 {"ingredients.ingredient_name": {"$regex": search, "$options": "i"}}
             ]
         
-        recipes = await db.user_recipes.find(query, {"_id": 0, "photo_base64": 0}).sort("created_at", -1).to_list(100)
-        
-        # Add stock status to each recipe
+        # Include photo_base64 — the frontend RecipeCard renders this as a
+        # data URL so the user sees thumbnails on the list. Previous version
+        # stripped it; the only signal of "has a photo" was a broken
+        # truncated photo_url placeholder. Bandwidth cost is acceptable for
+        # the typical household's recipe count (<100); revisit with a
+        # generated thumbnail field if it ever bloats.
+        recipes = await db.user_recipes.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+
+        # Sanitize the legacy truncated photo_url ("data:image/jpeg;base64,
+        # <prefix>...") that earlier creates left behind. Anything that
+        # contains "..." in the data: URL is broken — null it out so the
+        # frontend's photo_base64 branch wins.
         for recipe in recipes:
+            url = recipe.get("photo_url")
+            if isinstance(url, str) and url.startswith("data:image/") and "..." in url:
+                recipe["photo_url"] = None
+
             stock_status = await calculate_stock_status(recipe["id"], household_id)
             recipe["stock_status"] = stock_status.dict()
-        
+
         return {"recipes": recipes}
     
     @recipe_router.get("/community")
@@ -554,17 +570,21 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
                 {"chef_name": {"$regex": search, "$options": "i"}}
             ]
         
+        # Include photo_base64 same as the household-recipes endpoint so
+        # community recipe cards also render thumbnails on first paint.
         recipes = await db.user_recipes.find(
-            query, 
-            {"_id": 0, "photo_base64": 0}
+            query,
+            {"_id": 0}
         ).sort("likes", -1).limit(limit).to_list(limit)
-        
-        # Add stock status for current user's household
-        if household_id:
-            for recipe in recipes:
+
+        for recipe in recipes:
+            url = recipe.get("photo_url")
+            if isinstance(url, str) and url.startswith("data:image/") and "..." in url:
+                recipe["photo_url"] = None
+            if household_id:
                 stock_status = await calculate_stock_status(recipe["id"], household_id)
                 recipe["stock_status"] = stock_status.dict()
-        
+
         return {"recipes": recipes}
     
     @recipe_router.get("/{recipe_id}")

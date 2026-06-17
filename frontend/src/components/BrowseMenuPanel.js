@@ -186,10 +186,10 @@ export const BrowseMenuPanel = ({ onPick, mealType }) => {
   };
 
   return (
-    <div className="space-y-3" data-testid="browse-menu-panel">
+    <div className="space-y-3 max-w-full overflow-hidden" data-testid="browse-menu-panel">
       {/* Surface label — tells the user which menu surface they're seeing.
           Pre-empts the "why am I seeing chapati for breakfast?" confusion. */}
-      <div className="flex items-center gap-2 -mb-1 text-[11px] text-gray-500">
+      <div className="flex items-center gap-2 -mb-1 text-[11px] text-gray-500 flex-wrap">
         <span>Showing:</span>
         <span className="font-semibold text-gray-700">
           {useBreakfastSurface ? '🥞 Breakfast & Snacks menu' : '🍱 Lunch & Dinner menu'}
@@ -197,11 +197,12 @@ export const BrowseMenuPanel = ({ onPick, mealType }) => {
       </div>
 
       {/* Category tab row — compact pills with edge-fade scroll hints.
-          On very narrow phones (<360px) padding shrinks to give 4-5 pills
-          worth of visible content before the user has to scroll. */}
+          Scrolls horizontally INSIDE the panel; the panel itself is
+          width-bounded by max-w-full + overflow-hidden, so the row can
+          never push the parent dialog wider than the viewport. */}
       <div className="relative">
         <div
-          className="flex gap-1 sm:gap-1.5 overflow-x-auto pb-1 -mx-2 px-2 scroll-smooth snap-x snap-mandatory"
+          className="flex gap-1 sm:gap-1.5 overflow-x-auto pb-1 scroll-smooth snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none' }}
         >
           {CATEGORY_DISPLAY.map(cat => {
@@ -286,7 +287,7 @@ export const BrowseMenuPanel = ({ onPick, mealType }) => {
 
       {/* Sabji vegetable filter chips */}
       {!error && activeCategory === 'Sabji' && sabjiVeggies.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
           <button
             onClick={() => setVegFilter(null)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition active:scale-95 ${
