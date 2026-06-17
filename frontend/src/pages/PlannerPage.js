@@ -921,12 +921,13 @@ const PlannerPage = () => {
 
             {/* Browse Menu — Phase 1 of PRD: the Everyday Food catalog +
                 this household's own custom dishes, with per-category
-                "Add your own" affordance. Tap a dish → addMealPlan. */}
-            <div className="p-3 bg-gradient-to-br from-amber-50/40 to-orange-50/40 border-2 border-orange-200 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <ChefHat className="w-4 h-4 text-[#FF9933]" />
+                "Add your own" affordance. Tap a dish → addMealPlan.
+                Wrapper uses overflow-hidden to contain any inner overflow
+                so the parent dialog never gets a horizontal scrollbar. */}
+            <div className="p-3 bg-gradient-to-br from-amber-50/40 to-orange-50/40 border-2 border-orange-200 rounded-xl overflow-hidden">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <ChefHat className="w-4 h-4 text-[#FF9933] flex-shrink-0" />
                 <span className="text-sm font-bold text-gray-700">Browse from the Menu</span>
-                <span className="text-xs text-gray-500">— pick a chapati, dal, sabji, rice, side</span>
               </div>
               <BrowseMenuPanel onPick={handleAddFromMenu} mealType={selectedMealType} />
             </div>
