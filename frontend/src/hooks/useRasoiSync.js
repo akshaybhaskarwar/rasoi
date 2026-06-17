@@ -502,6 +502,7 @@ export { useFavoriteChannels } from '@/contexts/FavoriteChannelsContext';
 // custom layer.
 export const useMenu = () => {
   const [catalog, setCatalog] = useState({});
+  const [breakfastCatalog, setBreakfastCatalog] = useState({});
   const [custom, setCustom] = useState({});
   const [composed, setComposed] = useState({});
   const [loading, setLoading] = useState(false);
@@ -521,6 +522,7 @@ export const useMenu = () => {
     try {
       const res = await axios.get(`${API}/menu`, { headers: getAuthHeaders() });
       setCatalog(res.data.catalog || {});
+      setBreakfastCatalog(res.data.breakfast_catalog || {});
       setCustom(res.data.custom || {});
       setComposed(res.data.composed || {});
     } catch (err) {
@@ -552,5 +554,16 @@ export const useMenu = () => {
 
   useEffect(() => { refresh(); }, []);
 
-  return { catalog, custom, composed, loading, error, refresh, addCustom, editCustom, deleteCustom };
+  return {
+    catalog,
+    breakfastCatalog,
+    custom,
+    composed,
+    loading,
+    error,
+    refresh,
+    addCustom,
+    editCustom,
+    deleteCustom,
+  };
 };
