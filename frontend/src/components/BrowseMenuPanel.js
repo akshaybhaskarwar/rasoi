@@ -196,48 +196,43 @@ export const BrowseMenuPanel = ({ onPick, mealType }) => {
         </span>
       </div>
 
-      {/* Category tab row — compact pills with edge-fade scroll hints.
-          Scrolls horizontally INSIDE the panel; the panel itself is
-          width-bounded by max-w-full + overflow-hidden, so the row can
-          never push the parent dialog wider than the viewport. */}
-      <div className="relative">
-        <div
-          className="flex gap-1 sm:gap-1.5 overflow-x-auto pb-1 scroll-smooth snap-x snap-mandatory"
-          style={{ scrollbarWidth: 'none' }}
-        >
-          {CATEGORY_DISPLAY.map(cat => {
-            const count =
-              cat.key === '_Thalis'
-                ? (composed.PartyTime?.length || 0) + (composed.Combinations?.length || 0)
-                : (activeCatalog[cat.key]?.length || 0) + (custom[cat.key]?.length || 0);
-            const isActive = activeCategory === cat.key;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => setActiveCategory(cat.key)}
-                className={`shrink-0 snap-start px-2 sm:px-3 py-2 rounded-xl text-sm font-medium transition-all min-w-[58px] sm:min-w-[64px] ${
-                  isActive
-                    ? 'bg-[#FF9933] text-white shadow-md scale-105'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95'
-                }`}
-                data-testid={`menu-cat-${cat.key}`}
-              >
-                <div className="flex flex-col items-center gap-0.5 leading-none">
-                  <span className="text-base sm:text-lg">{cat.icon}</span>
-                  <span className="text-[10px] sm:text-[11px] whitespace-nowrap">{cat.label}</span>
-                  {count > 0 && (
-                    <span className={`text-[9px] ${isActive ? 'opacity-90' : 'text-gray-500'}`}>
-                      {count}
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        {/* Edge-fade hints so it's visually clear the row is scrollable */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-white to-transparent" />
-        <div className="pointer-events-none absolute left-0 top-0 bottom-1 w-4 bg-gradient-to-r from-white to-transparent" />
+      {/* Category tab grid — wraps onto multiple rows so every category is
+          visible at once. Previously horizontal-scroll; users were
+          missing tabs that were off-screen and the row itself was
+          pushing the dialog past the mobile viewport in some embeds.
+          Grid sizing: 4 columns on phones, 6 on small tablets, 8 on
+          desktop. With 13 breakfast categories that's 4 rows / 3 rows /
+          2 rows — every chip is visible without scrolling. */}
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1 sm:gap-1.5">
+        {CATEGORY_DISPLAY.map(cat => {
+          const count =
+            cat.key === '_Thalis'
+              ? (composed.PartyTime?.length || 0) + (composed.Combinations?.length || 0)
+              : (activeCatalog[cat.key]?.length || 0) + (custom[cat.key]?.length || 0);
+          const isActive = activeCategory === cat.key;
+          return (
+            <button
+              key={cat.key}
+              onClick={() => setActiveCategory(cat.key)}
+              className={`min-w-0 px-1 py-2 rounded-xl text-sm font-medium transition-all ${
+                isActive
+                  ? 'bg-[#FF9933] text-white shadow-md scale-[1.03]'
+                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95'
+              }`}
+              data-testid={`menu-cat-${cat.key}`}
+            >
+              <div className="flex flex-col items-center gap-0.5 leading-none">
+                <span className="text-base sm:text-lg">{cat.icon}</span>
+                <span className="text-[10px] sm:text-[11px] truncate max-w-full px-0.5">{cat.label}</span>
+                {count > 0 && (
+                  <span className={`text-[9px] ${isActive ? 'opacity-90' : 'text-gray-500'}`}>
+                    {count}
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Error state */}
@@ -285,9 +280,10 @@ export const BrowseMenuPanel = ({ onPick, mealType }) => {
         </div>
       )}
 
-      {/* Sabji vegetable filter chips */}
+      {/* Sabji vegetable filter chips — wrap onto multiple rows instead
+          of horizontal-scrolling so users see every option at once. */}
       {!error && activeCategory === 'Sabji' && sabjiVeggies.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-1.5 pb-1">
           <button
             onClick={() => setVegFilter(null)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition active:scale-95 ${
