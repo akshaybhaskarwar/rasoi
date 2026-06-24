@@ -283,7 +283,12 @@ const ShoppingPage = () => {
     const snapshot = { ...item };
     try {
       await deleteItem(item.id);
+      // 7-second window matches the receipt-scan flow and gives the
+      // user enough time to actually see + tap the undo. The
+      // description below the title makes the toast visually larger
+      // so it's much harder to miss than the previous one-liner.
       toast.success(`Removed ${item.name_en}`, {
+        description: 'Tap Undo to put it back on the list.',
         action: {
           label: 'Undo',
           onClick: async () => {
@@ -295,7 +300,7 @@ const ShoppingPage = () => {
             }
           },
         },
-        duration: 5000,
+        duration: 7000,
       });
     } catch (error) {
       toast.error('Failed to remove item');
