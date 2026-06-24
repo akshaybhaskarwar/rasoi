@@ -269,12 +269,64 @@ export const useShoppingList = () => {
     }
   };
 
+  // Delete intents — used by the ShoppingDeleteSheet bottom sheet for
+  // auto-suggested rows. Both endpoints atomically remove the shopping
+  // row server-side; we mirror that by dropping the row from local
+  // state on success and refetching to stay consistent with SSE
+  // broadcasts to other devices in the household.
+  const alreadyHaveItem = async (itemId) => {
+    const { data } = await axios.post(
+      `${API}/shopping/${itemId}/already-have-it`,
+      {},
+      { headers: getAuthHeaders() },
+    );
+    setShoppingList(prev => prev.filter(item => item.id !== itemId));
+    fetchShoppingList();
+    return data; // { message, inventory_action, name_en }
+  };
+
+  const snoozeItem = async (itemId, days = 7) => {
+    const { data } = await axios.put(
+      `${API}/shopping/${itemId}/snooze`,
+      { days },
+      { headers: getAuthHeaders() },
+    );
+    setShoppingList(prev => prev.filter(item => item.id !== itemId));
+    fetchShoppingList();
+    return data; // { message, snoozed_until, name_en }
+  };
+
+  // Re-add a row the user just deleted via the undo toast. The original
+  // row has been gone server-side, so we recreate it through the normal
+  // create path — that means it comes back as source:'manual' even if
+  // the original was auto/recipe. That's the right trade-off: an undo
+  // is the user's explicit intent to bring it back, so the next
+  // delete shouldn't immediately re-prompt the intent sheet.
+  const reAddItem = async (item) => {
+    const payload = {
+      name_en: item.name_en,
+      name_mr: item.name_mr || null,
+      name_hi: item.name_hi || null,
+      category: item.category || 'other',
+      quantity: item.quantity || '1',
+      stock_level: item.stock_level || null,
+      monthly_quantity: item.monthly_quantity || null,
+      expiry_date: item.expiry_date || null,
+      store_type: item.store_type || 'grocery',
+    };
+    return addItem(payload);
+  };
+
   useEffect(() => {
     fetchShoppingList();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { shoppingList, loading, error, fetchShoppingList, addItem, updateItem, deleteItem, clearList };
+  return {
+    shoppingList, loading, error,
+    fetchShoppingList, addItem, updateItem, deleteItem, clearList,
+    alreadyHaveItem, snoozeItem, reAddItem,
+  };
 };
 
 export const useMealPlanner = () => {

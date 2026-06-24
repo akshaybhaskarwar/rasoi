@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
 import { ShoppingBarcodeScanner } from '@/components/ShoppingBarcodeScanner';
 import ReceiptScanButton from '@/components/ReceiptScanButton';
+import { ShoppingDeleteSheet } from '@/components/ShoppingDeleteSheet';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -48,7 +49,10 @@ const CATEGORIES = ['grains', 'spices', 'vegetables', 'fruits', 'dairy', 'pulses
 // CATEGORY_UNITS, getQuantityOptions, and getDefaultQuantity are now provided by UnitContext
 
 const ShoppingPage = () => {
-  const { shoppingList, addItem, deleteItem, updateItem, fetchShoppingList } = useShoppingList();
+  const {
+    shoppingList, addItem, deleteItem, updateItem, fetchShoppingList,
+    alreadyHaveItem, snoozeItem, reAddItem,
+  } = useShoppingList();
   const { inventory, addItem: addInventoryItem, updateItem: updateInventoryItem, fetchInventory } = useInventory();
   const { language, getLabel } = useLanguage();
   const { getShoppingOptions, getDefaultQuantity: getDefaultQty, parseDisplayToMetric } = useUnits();
@@ -66,6 +70,12 @@ const ShoppingPage = () => {
   const [newExpiryDate, setNewExpiryDate] = useState(''); // Same as inventory
   const [processingPurchase, setProcessingPurchase] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  // Delete-intent sheet state. `deleteSheetItem` holds the item being
+  // deleted via the bottom sheet (auto/recipe rows only); manual rows
+  // bypass the sheet and hard-delete with an undo toast.
+  // `deleteSheetBusy` disables the rows while an action is in-flight.
+  const [deleteSheetItem, setDeleteSheetItem] = useState(null);
+  const [deleteSheetBusy, setDeleteSheetBusy] = useState(null);
 
   // Real-time sync - refresh shopping list when other household members make changes
   const handleShoppingChange = useCallback((action, data) => {
@@ -244,13 +254,90 @@ const ShoppingPage = () => {
     }
   };
 
-  // Handle delete
-  const handleDeleteItem = async (itemId, itemName) => {
+  // Trash icon entry point. Branches on item.source:
+  //   - 'manual' (or unset, for legacy rows) → hard-delete with undo
+  //     toast. No ambiguity to resolve — the user typed it, the user
+  //     can remove it instantly. Undo re-creates it via the standard
+  //     create path (which also tags it as 'manual', so the next
+  //     delete won't suddenly ask the sheet either).
+  //   - 'auto' / 'recipe' → open the intent sheet so the user can pick
+  //     between "already have it" (flip inventory to full) and "skip
+  //     this trip" (snooze the auto-suggest for 7 days). Without this
+  //     sheet, auto-suggested items would silently reappear on the
+  //     next add-missing or festival pass.
+  const handleDeleteItem = (item) => {
+    if (!item) return;
+    const source = item.source || 'manual';
+    if (source === 'manual') {
+      hardDeleteWithUndo(item);
+    } else {
+      setDeleteSheetItem(item);
+    }
+  };
+
+  const hardDeleteWithUndo = async (item) => {
+    // Snapshot the row before deletion so the undo toast can recreate
+    // it. We don't try to restore the original id — the create
+    // endpoint mints a new uuid — but every visible attribute makes
+    // it back.
+    const snapshot = { ...item };
     try {
-      await deleteItem(itemId);
-      toast.success(`Removed ${itemName}`);
+      await deleteItem(item.id);
+      toast.success(`Removed ${item.name_en}`, {
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await reAddItem(snapshot);
+              toast.success(`Added ${snapshot.name_en} back`);
+            } catch {
+              toast.error('Could not undo');
+            }
+          },
+        },
+        duration: 5000,
+      });
     } catch (error) {
       toast.error('Failed to remove item');
+    }
+  };
+
+  const handleSheetAlreadyHave = async (item) => {
+    setDeleteSheetBusy('already-have');
+    try {
+      const result = await alreadyHaveItem(item.id);
+      const inventoryAction = result?.inventory_action;
+      toast.success(`Marked ${item.name_en} as stocked`, {
+        description: inventoryAction === 'updated_existing'
+          ? 'Pantry updated, removed from shopping list.'
+          : 'Removed from shopping list.',
+        duration: 4000,
+      });
+      setDeleteSheetItem(null);
+    } catch (error) {
+      toast.error('Could not update', {
+        description: error?.response?.data?.detail || error.message,
+      });
+    } finally {
+      setDeleteSheetBusy(null);
+    }
+  };
+
+  const handleSheetSnooze = async (item, days) => {
+    setDeleteSheetBusy('snooze');
+    try {
+      await snoozeItem(item.id, days);
+      toast.success(`Snoozed ${item.name_en} for ${days} days`, {
+        description: 'Won’t auto-suggest again until then.',
+        duration: 4000,
+      });
+      setDeleteSheetItem(null);
+    } catch (error) {
+      toast.error('Could not snooze', {
+        description: error?.response?.data?.detail || error.message,
+      });
+    } finally {
+      setDeleteSheetBusy(null);
     }
   };
 
@@ -640,7 +727,7 @@ const ShoppingPage = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteItem(item.id, item.name_en)}
+                            onClick={() => handleDeleteItem(item)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
                             data-testid={`delete-shopping-${item.id}`}
                           >
@@ -797,6 +884,17 @@ const ShoppingPage = () => {
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onItemScanned={handleScannedItem}
+      />
+
+      {/* Delete-intent sheet (auto- and recipe-sourced rows only). */}
+      <ShoppingDeleteSheet
+        item={deleteSheetItem}
+        busyAction={deleteSheetBusy}
+        onClose={() => {
+          if (!deleteSheetBusy) setDeleteSheetItem(null);
+        }}
+        onAlreadyHave={handleSheetAlreadyHave}
+        onSnooze={handleSheetSnooze}
       />
     </div>
   );
