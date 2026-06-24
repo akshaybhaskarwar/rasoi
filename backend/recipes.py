@@ -745,26 +745,44 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
         stock_status = await calculate_stock_status(recipe_id, household_id)
         
         added_count = 0
+        today_iso = datetime.now(timezone.utc).date().isoformat()
         for item in stock_status.missing + stock_status.low_stock:
-            # Check if already in shopping list
+            name_en = item["ingredient"]
+            name_lower = name_en.lower()
+
+            # Skip if already in shopping list (case-insensitive).
             existing = await db.shopping_list.find_one({
                 "household_id": household_id,
-                "name_en": {"$regex": f"^{item['ingredient']}$", "$options": "i"}
+                "name_en": {"$regex": f"^{name_en}$", "$options": "i"}
             })
-            
-            if not existing:
-                await db.shopping_list.insert_one({
-                    "id": str(uuid.uuid4()),
-                    "household_id": household_id,
-                    "name_en": item["ingredient"],
-                    "category": "other",
-                    "monthly_quantity": item["required"],
-                    "quantity": "-",
-                    "store_type": "grocery",
-                    "source": f"recipe:{recipe_id}",
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
-                added_count += 1
+            if existing:
+                continue
+
+            # Skip if the user has snoozed auto-suggestions for this item
+            # via the "Skip this trip" delete intent. Honors the user's
+            # explicit "not this trip" signal so add-missing doesn't
+            # bring the item back the moment they tap it on a recipe.
+            suppression = await db.shopping_suppressions.find_one({
+                "household_id": household_id,
+                "name_en_lower": name_lower,
+                "snoozed_until": {"$gt": today_iso},
+            })
+            if suppression:
+                continue
+
+            await db.shopping_list.insert_one({
+                "id": str(uuid.uuid4()),
+                "household_id": household_id,
+                "name_en": name_en,
+                "category": "other",
+                "monthly_quantity": item["required"],
+                "quantity": "-",
+                "store_type": "grocery",
+                "source": "recipe",
+                "source_ref": recipe_id,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            added_count += 1
         
         return {
             "message": f"Added {added_count} items to shopping list",

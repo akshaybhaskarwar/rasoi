@@ -241,6 +241,15 @@ async def startup_event():
     await db.inventory.create_index("household_id")
     await db.shopping_list.create_index("household_id")
     await db.meal_plans.create_index("household_id")
+
+    # Shopping suppressions — per-household "skip this trip" snooze
+    # records. Looked up by (household_id, name_en_lower) on every
+    # auto-add / recipe-missing flow, so the compound index pays
+    # itself off immediately.
+    await db.shopping_suppressions.create_index(
+        [("household_id", 1), ("name_en_lower", 1)],
+        unique=True,
+    )
     
     # API usage tracking
     await db.api_usage.create_index("timestamp")

@@ -524,12 +524,13 @@ def create_dadi_routes(db, decode_token):
         
         # Find missing ingredients
         added_items = []
+        today_iso = datetime.now(timezone.utc).date().isoformat()
         for ingredient in festival.get("key_ingredients", []):
             ing_base = ingredient.split('(')[0].strip().lower()
-            
+
             # Check if already in stock
             is_in_stock = any(ing_base in inv_name or inv_name in ing_base for inv_name in inventory_names)
-            
+
             if not is_in_stock:
                 # Check if already in shopping list (escape regex special chars)
                 escaped_ingredient = re.escape(ingredient)
@@ -538,29 +539,44 @@ def create_dadi_routes(db, decode_token):
                     "name_en": {"$regex": f"^{escaped_ingredient}$", "$options": "i"},
                     "shopping_status": {"$ne": "bought"}
                 })
-                
-                if not existing:
-                    # Create shopping item matching the ShoppingItem model schema
-                    shopping_item = {
-                        "id": str(uuid.uuid4()),
-                        "household_id": household_id,
-                        "name_en": ingredient,
-                        "name_mr": None,
-                        "name_hi": None,
-                        "category": "festival",
-                        "quantity": "1",  # String as per model
-                        "stock_level": "empty",
-                        "monthly_quantity": None,
-                        "store_type": "grocery",
-                        "shopping_status": "pending",
-                        "claimed_by": None,
-                        "claimed_by_name": None,
-                        "bought_at": None,
-                        "notes": f"For {festival.get('name')}",
-                        "created_at": datetime.now(timezone.utc)
-                    }
-                    await db.shopping_list.insert_one(shopping_item)
-                    added_items.append(ingredient)
+
+                if existing:
+                    continue
+
+                # Honor a prior "Skip this trip" snooze. If the user
+                # snoozed this exact item, the festival auto-add
+                # shouldn't bring it right back.
+                suppression = await db.shopping_suppressions.find_one({
+                    "household_id": household_id,
+                    "name_en_lower": ingredient.lower(),
+                    "snoozed_until": {"$gt": today_iso},
+                })
+                if suppression:
+                    continue
+
+                # Create shopping item matching the ShoppingItem model schema
+                shopping_item = {
+                    "id": str(uuid.uuid4()),
+                    "household_id": household_id,
+                    "name_en": ingredient,
+                    "name_mr": None,
+                    "name_hi": None,
+                    "category": "festival",
+                    "quantity": "1",  # String as per model
+                    "stock_level": "empty",
+                    "monthly_quantity": None,
+                    "store_type": "grocery",
+                    "shopping_status": "pending",
+                    "claimed_by": None,
+                    "claimed_by_name": None,
+                    "bought_at": None,
+                    "notes": f"For {festival.get('name')}",
+                    "source": "auto",
+                    "source_ref": f"festival:{festival.get('id') or festival.get('name')}",
+                    "created_at": datetime.now(timezone.utc)
+                }
+                await db.shopping_list.insert_one(shopping_item)
+                added_items.append(ingredient)
         
         return {
             "success": True,

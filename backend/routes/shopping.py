@@ -4,10 +4,12 @@ Shopping list routes for Rasoi-Sync
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta, date
 import uuid
 
-from models.shopping import ShoppingItem, ShoppingItemCreate, ShoppingStatusUpdate
+from models.shopping import (
+    ShoppingItem, ShoppingItemCreate, ShoppingStatusUpdate, ShoppingSnoozeRequest,
+)
 
 security = HTTPBearer(auto_error=False)
 shopping_router = APIRouter(prefix="/api", tags=["Shopping"])
@@ -39,6 +41,11 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
             raise HTTPException(status_code=400, detail="No active household. Please create or join a kitchen first.")
         
         item_dict = item.model_dump()
+        # Manual POST endpoint always tags the row as user-typed.
+        # Server-side auto-add callers write directly to the collection
+        # and set their own source — they never come through here.
+        item_dict["source"] = "manual"
+        item_dict["source_ref"] = None
         shopping_item = ShoppingItem(**item_dict)
         shopping_item.household_id = household_id
         
@@ -143,6 +150,153 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
         """Clear entire shopping list"""
         await db.shopping_list.delete_many({})
         return {"message": "Shopping list cleared"}
+
+    @shopping_router.put("/shopping/{item_id}/snooze")
+    async def snooze_shopping_item(
+        item_id: str,
+        body: ShoppingSnoozeRequest,
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Skip-this-trip delete intent.
+
+        Sets a `auto_suggest_snoozed_until` date `body.days` ahead on
+        the inventory item that originally triggered this auto-suggest,
+        then removes the shopping row. The next inventory-low scan will
+        respect the snooze window and not re-add the row.
+
+        The snooze is keyed on case-insensitive name_en within the
+        household, so even if the source inventory id can't be matched
+        (legacy rows without a strong link), a same-name re-add is
+        still blocked. Both inventory.auto_suggest_snoozed_until AND a
+        household-scoped "suppression" doc are written for that
+        belt-and-braces reason.
+        """
+        item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        user = await get_user_from_token(credentials)
+        household_id = item.get("household_id") or user.get("active_household")
+
+        days = max(1, min(int(body.days or 7), 90))
+        snooze_until = (datetime.now(timezone.utc).date() + timedelta(days=days)).isoformat()
+
+        # 1) Update the linked inventory row if we can find one.
+        name_en = (item.get("name_en") or "").strip()
+        if household_id and name_en:
+            await db.inventory.update_one(
+                {
+                    "household_id": household_id,
+                    "name_en": {"$regex": f"^{name_en}$", "$options": "i"},
+                },
+                {"$set": {"auto_suggest_snoozed_until": snooze_until}},
+            )
+
+            # 2) Belt-and-braces suppression doc. Upsert keyed on the
+            # canonical name; the auto-add job consults this collection
+            # to suppress re-adds even when the inventory row doesn't
+            # exist (e.g. recipe-sourced items).
+            await db.shopping_suppressions.update_one(
+                {"household_id": household_id, "name_en_lower": name_en.lower()},
+                {"$set": {
+                    "household_id": household_id,
+                    "name_en_lower": name_en.lower(),
+                    "name_en": name_en,
+                    "snoozed_until": snooze_until,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }},
+                upsert=True,
+            )
+
+        # 3) Remove the shopping row.
+        await db.shopping_list.delete_one({"id": item_id})
+
+        if household_id:
+            await notify_shopping_change(
+                household_id,
+                "delete",
+                {"id": item_id, "name_en": item.get("name_en")},
+                user.get("name") if user else None,
+            )
+
+        return {
+            "message": "Snoozed",
+            "snoozed_until": snooze_until,
+            "name_en": item.get("name_en"),
+        }
+
+    @shopping_router.post("/shopping/{item_id}/already-have-it")
+    async def already_have_shopping_item(
+        item_id: str,
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Already-have-it delete intent.
+
+        Atomically: (1) flip the matching inventory item's stock_level
+        from `empty`/`low` to `full` so the auto-suggest job won't
+        re-add it next pass, and (2) remove the shopping row. Used by
+        the delete-intent sheet when the user says they already have
+        the item at home.
+
+        If no matching inventory row exists (orphan shopping entry),
+        the inventory step is silently skipped and only the shopping
+        row is removed — the user's intent (don't keep nagging me) is
+        still honored.
+        """
+        item = await db.shopping_list.find_one({"id": item_id}, {"_id": 0})
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        user = await get_user_from_token(credentials)
+        household_id = item.get("household_id") or user.get("active_household")
+
+        inventory_action = "none"
+        name_en = (item.get("name_en") or "").strip()
+        if household_id and name_en:
+            inv = await db.inventory.find_one(
+                {
+                    "household_id": household_id,
+                    "name_en": {"$regex": f"^{name_en}$", "$options": "i"},
+                },
+                {"_id": 0},
+            )
+            if inv:
+                await db.inventory.update_one(
+                    {"id": inv["id"]},
+                    {"$set": {
+                        "stock_level": "full",
+                        "last_updated_by": user.get("id") if user else None,
+                        # Clear any prior snooze — the user explicitly
+                        # said they have it now.
+                        "auto_suggest_snoozed_until": None,
+                    }},
+                )
+                inventory_action = "updated_existing"
+                if user:
+                    try:
+                        await notify_inventory_change(
+                            household_id, "update", {**inv, "stock_level": "full"}, user.get("name"),
+                        )
+                    except Exception:
+                        # Inventory broadcast is best-effort; don't fail
+                        # the shopping-side action if a listener errors.
+                        pass
+
+        await db.shopping_list.delete_one({"id": item_id})
+
+        if household_id:
+            await notify_shopping_change(
+                household_id,
+                "delete",
+                {"id": item_id, "name_en": item.get("name_en")},
+                user.get("name") if user else None,
+            )
+
+        return {
+            "message": "Marked as stocked",
+            "inventory_action": inventory_action,
+            "name_en": item.get("name_en"),
+        }
 
     @shopping_router.put("/shopping/{item_id}/status")
     async def update_shopping_status(item_id: str, status_update: ShoppingStatusUpdate):
