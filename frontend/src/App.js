@@ -122,7 +122,24 @@ function AppContent() {
             </ProtectedRoute>
           } />
         </Routes>
-        <Toaster position="top-center" className="md:bottom-4" />
+        {/* Mobile-first toast placement.
+            - position: bottom-center sits above the BottomNavigation
+              instead of being lost under the iOS Safari URL bar.
+            - offset: 96px (~bottom nav height + safe area) so the
+              toast never overlaps the nav.
+            - richColors: success → green, error → red, warning →
+              amber. Required for users to actually notice success/
+              undo toasts; without it sonner renders neutral gray
+              toasts that blend into the background.
+            - closeButton: explicit X so a wide undo toast can still
+              be dismissed by tap. */}
+        <Toaster
+          position="bottom-center"
+          offset={96}
+          richColors
+          closeButton
+          duration={4500}
+        />
       </BrowserRouter>
     </div>
   );
