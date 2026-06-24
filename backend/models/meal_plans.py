@@ -37,10 +37,14 @@ class MealPlanCreate(BaseModel):
 
 
 class PrepareMealPlanRequest(BaseModel):
+    # Accept None for optional string fields so callers passing JSON
+    # `null` (e.g. user-created recipes with no thumbnail) don't get a
+    # 422 that silently breaks the planner modal. Empty strings are
+    # also normalized via the None default.
     video_id: str
     video_title: str
-    video_thumbnail: str = ""
-    channel_name: str = ""
+    video_thumbnail: Optional[str] = ""
+    channel_name: Optional[str] = ""
     matched_ingredients: List[str] = []
 
 

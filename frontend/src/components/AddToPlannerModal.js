@@ -71,30 +71,44 @@ const AddToPlannerModal = ({
   const fetchPrepData = async () => {
     setIsLoading(true);
     try {
+      // Coerce nullable fields to empty strings — the backend Pydantic
+      // model declares video_thumbnail/channel_name as `str`, not
+      // Optional[str], and rejects `null` with 422. Recipes without a
+      // photo_url/youtube_thumbnail were sending null and blowing up
+      // the whole modal silently.
       const response = await axios.post(`${API}/meal-plans/prepare`, {
-        video_id: video.video_id,
-        video_title: video.title,
-        video_thumbnail: video.thumbnail,
+        video_id: video.video_id || '',
+        video_title: video.title || '',
+        video_thumbnail: video.thumbnail || '',
         channel_name: video.channel || video.channel_name || '',
         matched_ingredients: matchedIngredients,
         is_user_recipe: video.is_user_recipe || false
       });
-      
+
       setPrepData(response.data);
-      
+
       // Set initial selections
       const today = response.data.week_dates?.find(d => d.is_today);
       if (today) setSelectedDate(today.date);
-      
+
       // Pre-select in-stock ingredients
       const initialSelection = {};
       response.data.ingredient_options?.forEach(ing => {
         initialSelection[ing.ingredient_name] = ing.selected;
       });
       setSelectedIngredients(initialSelection);
-      
+
     } catch (error) {
       console.error('Failed to prepare meal plan:', error);
+      // Don't fail silently — the modal would otherwise show empty,
+      // unclickable section labels and look broken.
+      toast.error('Could not load planner', {
+        description: error?.response?.data?.detail
+          ? `Server error: ${typeof error.response.data.detail === 'string'
+              ? error.response.data.detail
+              : 'invalid recipe data'}`
+          : 'Please try again. If this keeps happening, report it.',
+      });
     } finally {
       setIsLoading(false);
     }
