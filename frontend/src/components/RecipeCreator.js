@@ -4,7 +4,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   ChefHat, Plus, Minus, GripVertical, Camera, X, Check,
   Clock, Users, Sparkles, BookOpen, Upload, Tag, Trash2,
-  AlertCircle, ShoppingCart, Heart, Share2, Search, Crop
+  AlertCircle, ShoppingCart, Heart, Share2, Search, Crop,
+  ImagePlus,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,48 +47,151 @@ const StockStatusBadge = ({ status }) => {
   );
 };
 
+// ============================================================================
+// Photo-less hero: per-tag emoji + colored gradient + ingredient pills.
+// ============================================================================
+// Recipes that haven't had a photo uploaded yet were rendering as text-only
+// blocks because the original photo container was gated behind `photo_url ||
+// youtube_thumbnail`. The cards looked dry on the list view and were
+// indistinguishable at a glance.
+//
+// The hero below ALWAYS renders for non-compact cards. It chooses an emoji
+// and a soft two-tone gradient based on the recipe's primary tag (first
+// match wins), then surfaces the top three ingredient names as pills so each
+// card actually tells you what the dish IS without needing a photo. A small
+// camera+ chip in the corner is a one-tap nudge to add a photo later.
+//
+// Order matters in this map — earlier keys are checked first, so put the
+// strong differentiators (upvas, festival) before generic ones (breakfast,
+// lunch) so a "breakfast, upvas" recipe gets the upvas hero, not the
+// breakfast one.
+const RECIPE_HERO_TAGS = [
+  ['upvas',         { emoji: '🔱', gradient: 'from-purple-100 to-pink-50',  text: 'text-purple-900' }],
+  ['fasting',       { emoji: '🔱', gradient: 'from-purple-100 to-pink-50',  text: 'text-purple-900' }],
+  ['festival',      { emoji: '🎉', gradient: 'from-amber-100 to-rose-50',   text: 'text-amber-900'  }],
+  ['dessert',       { emoji: '🍮', gradient: 'from-pink-100 to-amber-50',   text: 'text-rose-900'   }],
+  ['sweet',         { emoji: '🍮', gradient: 'from-pink-100 to-amber-50',   text: 'text-rose-900'   }],
+  ['snacks',        { emoji: '🍿', gradient: 'from-pink-50 to-orange-50',   text: 'text-orange-900' }],
+  ['snack',         { emoji: '🍿', gradient: 'from-pink-50 to-orange-50',   text: 'text-orange-900' }],
+  ['quick-breakfast', { emoji: '🥞', gradient: 'from-amber-100 to-yellow-50', text: 'text-amber-900' }],
+  ['breakfast',     { emoji: '🥞', gradient: 'from-amber-100 to-yellow-50', text: 'text-amber-900'  }],
+  ['lunch',         { emoji: '🍱', gradient: 'from-green-50 to-emerald-50', text: 'text-emerald-900' }],
+  ['dinner',        { emoji: '🌙', gradient: 'from-indigo-50 to-purple-50', text: 'text-indigo-900' }],
+  ['non-vegetarian', { emoji: '🍖', gradient: 'from-red-50 to-orange-50',   text: 'text-red-900'    }],
+  ['nonveg',        { emoji: '🍖', gradient: 'from-red-50 to-orange-50',    text: 'text-red-900'    }],
+  ['vegetarian',    { emoji: '🌿', gradient: 'from-green-50 to-lime-50',    text: 'text-green-900'  }],
+  ['veg',           { emoji: '🌿', gradient: 'from-green-50 to-lime-50',    text: 'text-green-900'  }],
+  ['maharashtrian', { emoji: '🥘', gradient: 'from-orange-100 to-amber-50', text: 'text-orange-900' }],
+  ['indian',        { emoji: '🥘', gradient: 'from-orange-100 to-amber-50', text: 'text-orange-900' }],
+];
+
+// Fallback when no tags match — the original orange/amber palette so existing
+// recipes don't suddenly look unfamiliar.
+const DEFAULT_RECIPE_HERO = {
+  emoji: '🍳',
+  gradient: 'from-orange-100 to-amber-50',
+  text: 'text-orange-900',
+};
+
+const getRecipeHero = (recipe) => {
+  const tags = (recipe?.tags || []).map(t => String(t).toLowerCase());
+  for (const [key, hero] of RECIPE_HERO_TAGS) {
+    if (tags.some(t => t.includes(key))) return hero;
+  }
+  return DEFAULT_RECIPE_HERO;
+};
+
 // Recipe Card Component
 export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPlanner, compact = false }) => {
   const { language } = useLanguage();
-  
+
   const getIngredientDisplay = (ing) => {
     if (language === 'mr' && ing.name_mr) return ing.name_mr;
     if (language === 'hi' && ing.name_hi) return ing.name_hi;
     return ing.name_en || ing.ingredient_name;
   };
-  
+
   const isYouTubeRecipe = recipe.recipe_type === 'youtube' || recipe.youtube_video_id;
-  
+  const hasPhoto = !!(recipe.photo_base64 || recipe.photo_url || recipe.youtube_thumbnail);
+  const hero = getRecipeHero(recipe);
+  const heroIngredients = (recipe.ingredients || []).slice(0, 3).map(getIngredientDisplay);
+  const extraIngredients = Math.max(0, (recipe.ingredients?.length || 0) - heroIngredients.length);
+
   return (
-    <Card 
+    <Card
       className={`overflow-hidden hover:shadow-lg transition-shadow cursor-pointer ${compact ? '' : 'h-full'}`}
       onClick={() => onView?.(recipe)}
       data-testid={`recipe-card-${recipe.id}`}
     >
-      {/* Photo/Thumbnail */}
-      {(recipe.photo_url || recipe.youtube_thumbnail) && !compact && (
+      {/* Hero — photo if one exists, otherwise the tag-themed ingredient strip.
+          Compact mode (used in dense lists) gets no hero at all by design. */}
+      {!compact && hasPhoto && (
         <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center">
           {recipe.photo_base64 ? (
-            <img 
-              src={`data:image/jpeg;base64,${recipe.photo_base64}`} 
-              alt={recipe.title}
-              className="w-full h-full object-cover"
-            />
-          ) : recipe.youtube_thumbnail || recipe.photo_url ? (
-            <img 
-              src={recipe.youtube_thumbnail || recipe.photo_url} 
+            <img
+              src={`data:image/jpeg;base64,${recipe.photo_base64}`}
               alt={recipe.title}
               className="w-full h-full object-cover"
             />
           ) : (
-            <ChefHat className="w-16 h-16 text-orange-300" />
+            <img
+              src={recipe.youtube_thumbnail || recipe.photo_url}
+              alt={recipe.title}
+              className="w-full h-full object-cover"
+            />
           )}
-          {/* YouTube Badge */}
           {isYouTubeRecipe && (
             <div className="absolute top-2 left-2">
               <Badge className="bg-red-600 text-white text-[10px]">
                 <Camera className="w-3 h-3 mr-1" /> YouTube
               </Badge>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!compact && !hasPhoto && (
+        <div
+          className={`relative bg-gradient-to-br ${hero.gradient} px-4 py-3.5`}
+          data-testid={`recipe-card-hero-${recipe.id}`}
+        >
+          {/* Top row: big emoji + camera-plus affordance.
+              The camera+ button bubbles its click up to the Card onClick —
+              we want a single tap target ("anywhere on this card opens the
+              recipe") instead of competing actions. The icon is purely a
+              visual nudge that an upload slot exists. */}
+          <div className="flex items-start justify-between">
+            <span className="text-3xl leading-none drop-shadow-sm" aria-hidden="true">
+              {hero.emoji}
+            </span>
+            <div
+              className="w-7 h-7 rounded-full bg-white/85 border border-white/60 flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <ImagePlus className={`w-3.5 h-3.5 ${hero.text}`} />
+            </div>
+          </div>
+
+          {/* Ingredient pills — what this dish IS, at a glance. Skipped when
+              the recipe has zero ingredients (e.g. legacy recipes that came
+              in via the YouTube saver before the migration). */}
+          {heroIngredients.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2.5">
+              {heroIngredients.map((name, idx) => (
+                <span
+                  key={idx}
+                  className={`bg-white/85 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${hero.text}`}
+                >
+                  {name}
+                </span>
+              ))}
+              {extraIngredients > 0 && (
+                <span
+                  className={`bg-white/65 rounded-full px-2.5 py-0.5 text-[10px] font-medium ${hero.text}`}
+                >
+                  +{extraIngredients} more
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -155,8 +259,11 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPla
           </div>
         )}
         
-        {/* Ingredients Preview */}
-        {!compact && recipe.ingredients?.length > 0 && (
+        {/* Ingredients preview — only when the hero is a photo. When the
+            ingredient-strip hero is rendered, the same names already appear
+            up top as pills, so showing them again as a text line would be
+            visual repetition. */}
+        {!compact && hasPhoto && recipe.ingredients?.length > 0 && (
           <p className="text-xs text-gray-600 line-clamp-2">
             {recipe.ingredients.slice(0, 4).map(i => getIngredientDisplay(i)).join(', ')}
             {recipe.ingredients.length > 4 && ` +${recipe.ingredients.length - 4} more`}
