@@ -541,11 +541,31 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
           </div>
           <div>
             <Label className="text-sm font-medium">Servings</Label>
+            {/* Servings used to coerce empty → 4 on every keystroke
+                (`parseInt('') || 4`), which made it impossible to
+                backspace the default and type a different number.
+                Empty is now allowed during editing; we snap back to
+                the default only on blur so the form never submits
+                with an empty servings field. */}
             <Input
               type="number"
-              value={recipe.servings}
-              onChange={(e) => setRecipe({ ...recipe, servings: parseInt(e.target.value) || 4 })}
+              value={recipe.servings ?? ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '') {
+                  setRecipe({ ...recipe, servings: null });
+                } else {
+                  const n = parseInt(v, 10);
+                  if (!isNaN(n)) setRecipe({ ...recipe, servings: n });
+                }
+              }}
+              onBlur={() => {
+                if (recipe.servings == null || recipe.servings < 1) {
+                  setRecipe({ ...recipe, servings: 4 });
+                }
+              }}
               min={1}
+              placeholder="4"
               className="mt-1"
             />
           </div>
