@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Upload, Calendar, Trash2, Edit, Plus, FileSpreadsheet,
   AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp,
@@ -33,6 +33,11 @@ const AdminFestivalManager = () => {
     region: 'Maharashtra'
   });
   const [expandedFestival, setExpandedFestival] = useState(null);
+  // Ref for the hidden CSV file input. The button-inside-label pattern
+  // that used to be here silently swallowed the click on shadcn's
+  // Button (which renders a real <button>, breaking the label→input
+  // forward). Explicit ref.click() sidesteps that entirely.
+  const csvFileInputRef = useRef(null);
   // AI-prompt generator state — used by the "Generate CSV with AI" card.
   // Admin fills in year + community + optional notes, we render a copy-
   // ready prompt they paste into any LLM; the LLM's CSV output is then
@@ -456,29 +461,36 @@ Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (sn
                   Upload a CSV file with columns: Festival Name, Date, Significance, Key Ingredients
                 </p>
                 <div className="flex gap-3">
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      disabled={isUploading}
-                      data-testid="csv-upload-input"
-                    />
-                    <Button
-                      as="span"
-                      disabled={isUploading}
-                      className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
-                      data-testid="upload-csv-btn"
-                    >
-                      {isUploading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Upload className="w-4 h-4" />
-                      )}
-                      {isUploading ? 'Uploading...' : 'Upload CSV'}
-                    </Button>
-                  </label>
+                  {/* Hidden file input triggered explicitly via ref.
+                      The previous <label><Button as="span">Upload</Button></label>
+                      pattern was broken: shadcn's Button always renders
+                      a real <button>, which consumes clicks and blocks
+                      the label→input forward, so nothing ever happened.
+                      as="span" is Chakra syntax and gets silently dropped
+                      by shadcn — no runtime warning, just a dead button. */}
+                  <input
+                    ref={csvFileInputRef}
+                    type="file"
+                    accept=".csv,.CSV,text/csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                    data-testid="csv-upload-input"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => csvFileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
+                    data-testid="upload-csv-btn"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {isUploading ? 'Uploading...' : 'Upload CSV'}
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={downloadSampleCSV}
