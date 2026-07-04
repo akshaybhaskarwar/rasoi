@@ -497,11 +497,24 @@ export const BrowseMenuPanel = ({ onPick, mealType }) => {
               if (addOpen.mode === 'edit') {
                 await editCustom(addOpen.initial.id, data);
                 toast.success('Updated');
+                setAddOpen(null);
               } else {
+                // Two-step used to be: (1) save custom dish, (2) tap the
+                // new row to add it to the meal plan. Users read the
+                // "Add your own" button as ONE action ("add this to my
+                // Tuesday breakfast"), so the second tap felt like a
+                // bug. After the save succeeds we now chain into onPick
+                // so the dish lands on the selected day+slot straight
+                // away. Skip the intermediate "Added to your menu"
+                // toast — handleAddFromMenu fires its own toast naming
+                // the meal slot, which is more useful anyway.
                 await addCustom(data);
-                toast.success('Added to your menu');
+                setAddOpen(null);
+                onPick({
+                  name_en: data.name_en,
+                  name_mr: data.name_mr || '',
+                });
               }
-              setAddOpen(null);
             } catch (e) {
               const detail = e?.response?.data?.detail || e.message;
               toast.error('Could not save', { description: detail });
