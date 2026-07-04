@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { 
-  Upload, Calendar, Trash2, Edit, Plus, FileSpreadsheet, 
+import { useState, useEffect, useMemo } from 'react';
+import {
+  Upload, Calendar, Trash2, Edit, Plus, FileSpreadsheet,
   AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp,
-  Download, RefreshCw
+  Download, RefreshCw, Sparkles, Copy, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,11 +33,106 @@ const AdminFestivalManager = () => {
     region: 'Maharashtra'
   });
   const [expandedFestival, setExpandedFestival] = useState(null);
+  // AI-prompt generator state — used by the "Generate CSV with AI" card.
+  // Admin fills in year + community + optional notes, we render a copy-
+  // ready prompt they paste into any LLM; the LLM's CSV output is then
+  // dropped into the existing upload flow below. Keeps this app zero-
+  // dependency on any specific LLM provider.
+  const currentYear = new Date().getFullYear();
+  const [promptYear, setPromptYear] = useState(String(currentYear + 1));
+  const [promptCommunity, setPromptCommunity] = useState('Maharashtrian (Deshastha Brahmin)');
+  const [promptNotes, setPromptNotes] = useState('');
+  const [promptCopied, setPromptCopied] = useState(false);
 
   // Fetch festivals on mount
   useEffect(() => {
     fetchFestivals();
   }, []);
+
+  // Community presets — surfaced as a datalist so the admin can either
+  // pick a common one or type a custom tradition (e.g. "Konkani GSB",
+  // "Chettinad Tamil"). Kept short and skewed toward Indian communities
+  // that observe distinct festival sets; extend as we onboard families
+  // from other regions.
+  const COMMUNITY_PRESETS = [
+    'Maharashtrian (Deshastha Brahmin)',
+    'Maharashtrian (CKP)',
+    'Maharashtrian (Konkanastha / Chitpavan)',
+    'Gujarati',
+    'Punjabi (Sikh)',
+    'Punjabi (Hindu)',
+    'Bengali',
+    'Tamil (Iyer)',
+    'Tamil (Iyengar)',
+    'Kannadiga (Madhwa)',
+    'Malayali',
+    'Telugu',
+    'Marwari',
+    'Kashmiri Pandit',
+    'North Indian (generic)',
+    'South Indian (generic)',
+  ];
+
+  // Builds the CSV-generation prompt. Keep the format section VERY
+  // strict — the moment the LLM introduces a stray column or wraps its
+  // output in ```csv fences, the upload endpoint chokes. The prompt
+  // explicitly requires: no markdown, no fences, no commentary, exact
+  // header row, ISO dates, quoted comma-containing fields.
+  const generatedPrompt = useMemo(() => {
+    const year = (promptYear || '').trim() || String(currentYear + 1);
+    const community = (promptCommunity || '').trim() || 'Maharashtrian';
+    const extra = (promptNotes || '').trim();
+
+    const extraBlock = extra
+      ? `\nADDITIONAL FAMILY-SPECIFIC ASKS\n${extra}\n`
+      : '';
+
+    return `You are helping build a Marathi-first Indian kitchen management app called Rasoi-Sync. Generate a CSV of festivals and traditional dishes for ${year}, tailored to a ${community} household. The CSV must be uploadable directly to the app — every rule below is strict.
+
+REQUIREMENTS
+1. Include every festival this community observes in ${year}. Cover:
+   - Major religious festivals (Diwali, Holi, Ganesh Chaturthi, Navratri, etc.)
+   - Regional / community-specific festivals unique to a ${community} household
+   - Monthly observances if applicable (Sankashti Chaturthi, Ekadashi, Pradosh, etc.)
+   - Fasting days (upvas / vrat)
+2. Dates MUST be actual ${year} calendar dates, computed from the lunar (Panchang) calendar. Verify against a public panchang before answering. Do not guess.
+3. Output ONLY a valid CSV. No prose, no markdown, no code fences, no leading blank line.
+
+FORMAT — header row (exact columns, exact order, exact spelling):
+Festival Name,Name (Marathi),Name (Hindi),Date,Significance,Key Ingredients,Recipes,Tips,Is Fasting Day,Region
+
+RULES FOR EACH FIELD
+- Festival Name: English in Roman script. Example: Ganesh Chaturthi
+- Name (Marathi): Devanagari. Example: गणेश चतुर्थी
+- Name (Hindi): Devanagari. Example: गणेश चतुर्थी
+- Date: ISO ${year}-MM-DD. Example: ${year}-08-27
+- Significance: One line, plain text. NEVER a comma — use "; " instead.
+- Key Ingredients: Comma-separated ingredients in English, wrapped in DOUBLE QUOTES. Example: "Rice flour, Coconut, Jaggery, Cardamom, Ghee"
+- Recipes: Pipe-separated (|) recipe names in English. Example: Ukdiche Modak|Fried Modak|Modak Payasam
+- Tips: One sentence of practical, grandmother-style advice. NEVER a comma.
+- Is Fasting Day: exactly "Yes" or "No"
+- Region: "${community}"
+
+QUALITY BAR
+- Recipe names must be dishes a ${community} family ACTUALLY cooks for that festival, not generic Indian dishes.
+- Ingredients must be things a household would buy or stock (skip water, salt, oil unless the festival needs a specific type).
+- Tips must be practical (soaking, resting, prep-ahead, shortcut) — not generic wisdom.
+
+Sort festivals by date ascending. Start with the header row, then one festival per row, no blank rows between.${extraBlock}`;
+  }, [promptYear, promptCommunity, promptNotes, currentYear]);
+
+  const handleCopyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedPrompt);
+      setPromptCopied(true);
+      toast.success('Prompt copied — paste it into ChatGPT / Claude / Gemini');
+      setTimeout(() => setPromptCopied(false), 2500);
+    } catch (err) {
+      // Older Safari / non-HTTPS contexts drop clipboard access —
+      // manual copy still works from the textarea below.
+      toast.error('Copy failed — select the text and copy manually');
+    }
+  };
 
   const fetchFestivals = async () => {
     setIsLoading(true);
@@ -214,6 +309,139 @@ Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (sn
             </Button>
           </div>
         </div>
+
+        {/* AI Prompt Generator — the recommended path for building next
+            year's calendar. Admin fills year + community + optional
+            notes, we render a strict prompt, they paste it into any
+            LLM, save the output as .csv, and drop it into the Upload
+            Section below. Zero LLM-vendor lock-in for the app. */}
+        <Card className="mb-6 border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center shadow-sm flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Generate CSV with AI
+                  <Badge className="ml-2 bg-purple-100 text-purple-700 border-purple-200 text-[10px] align-middle">
+                    Recommended
+                  </Badge>
+                </h3>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  Fill in year + community, copy the prompt, paste it into ChatGPT / Claude / Gemini,
+                  save the output as <code className="bg-gray-100 px-1 rounded text-xs">festivals.csv</code>,
+                  then drop it into the upload section below.
+                </p>
+              </div>
+            </div>
+
+            {/* Inputs — kept in a single row on desktop, stacked on mobile. */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Year</label>
+                <Input
+                  type="number"
+                  min={currentYear}
+                  max={currentYear + 5}
+                  value={promptYear}
+                  onChange={(e) => setPromptYear(e.target.value)}
+                  placeholder={String(currentYear + 1)}
+                  data-testid="prompt-year"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-xs font-medium text-gray-700 mb-1 block">
+                  Community / tradition
+                </label>
+                <Input
+                  list="community-presets"
+                  value={promptCommunity}
+                  onChange={(e) => setPromptCommunity(e.target.value)}
+                  placeholder="e.g. Maharashtrian (Deshastha Brahmin)"
+                  data-testid="prompt-community"
+                />
+                <datalist id="community-presets">
+                  {COMMUNITY_PRESETS.map(c => <option key={c} value={c} />)}
+                </datalist>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="text-xs font-medium text-gray-700 mb-1 block">
+                Family-specific asks (optional)
+              </label>
+              <textarea
+                value={promptNotes}
+                onChange={(e) => setPromptNotes(e.target.value)}
+                placeholder="e.g. Emphasize Ashadhi Ekadashi. Skip Karva Chauth. Add a Sunday-brunch column for our monthly get-togethers."
+                rows={2}
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-300"
+                data-testid="prompt-notes"
+              />
+            </div>
+
+            {/* Prompt preview + copy. The textarea is editable so an
+                admin who wants to hand-tweak (e.g. change a bullet)
+                can do it in-place before copying — no export flow
+                needed. */}
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-gray-50">
+                <span className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                  Prompt preview
+                </span>
+                <Button
+                  onClick={handleCopyPrompt}
+                  size="sm"
+                  className={`h-8 text-xs gap-1.5 ${
+                    promptCopied
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                  data-testid="copy-prompt-btn"
+                >
+                  {promptCopied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      Copy prompt
+                    </>
+                  )}
+                </Button>
+              </div>
+              <textarea
+                value={generatedPrompt}
+                onChange={(e) => {
+                  // Editing the preview breaks the round-trip from the
+                  // form inputs, so we mirror the edit into the notes
+                  // field would be too clever. Instead, treat manual
+                  // edits as ephemeral — user copies whatever's here
+                  // and the next form-field change regenerates.
+                  // This lets a power user tweak a line without
+                  // re-typing the whole prompt.
+                }}
+                readOnly
+                rows={10}
+                className="w-full px-3 py-2 text-[11px] font-mono text-gray-800 bg-white resize-none focus:outline-none leading-relaxed"
+                data-testid="prompt-preview"
+              />
+            </div>
+
+            <p className="mt-3 text-xs text-gray-500 flex items-start gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <span>
+                LLMs occasionally miss a lunar-date shift. Skim the CSV before uploading — especially
+                Diwali, Ganesh Chaturthi, and any regional New Year — and cross-check against a
+                published panchang.
+              </span>
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Upload Section */}
         <Card className="mb-8 border-2 border-dashed border-orange-300 bg-orange-50/50">
