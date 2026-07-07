@@ -575,6 +575,20 @@ def to_canonical_en(name: str) -> str:
     return _NAME_TO_EN.get(_normalize_name(name), name)
 
 
+def is_known_ingredient(name: str) -> bool:
+    """True if `name` (any en/mr/hi/alias form) resolves to a catalog entry.
+
+    to_canonical_en can't answer this — it returns the input unchanged on
+    a miss, which is indistinguishable from an exact-case catalog hit.
+    Matchers use this to decide whether a single token pulled out of a
+    longer inventory name ("salt" from "Tata Salt") is a real ingredient
+    word or just a brand/adjective fragment.
+    """
+    if not name:
+        return False
+    return _normalize_name(name) in _NAME_TO_EN
+
+
 # Inverse lookup: canonical English name -> list of all known variants
 # (en, mr, hi, aliases). Used by matchers that need to find an item's
 # Devanagari forms in user-generated text (YouTube titles, descriptions, etc.)
