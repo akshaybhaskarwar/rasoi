@@ -12,7 +12,44 @@ from googleapiclient.errors import HttpError
 import unicodedata
 
 from data.recipes import RECIPE_DATABASE
-from data.pantry_items import to_canonical_en, get_variants_for
+from data.pantry_items import to_canonical_en, get_variants_for, is_known_ingredient
+
+# Generic ingredient head-words that are NOT standalone catalog entries but
+# are safe fallback matches when they appear as a token inside an inventory
+# name. "Groundnut oil" should match a video that just says "oil"/"तेल".
+# Opt-in allowlist (not a brand blocklist) so fragments like "Tata", "green",
+# or form-words like "seeds"/"powder" can never match on their own.
+# Grouped so an English inventory token also matches the Devanagari word in
+# a Marathi/Hindi video title (and vice versa).
+_GENERIC_HEAD_GROUPS = [
+    ["oil", "तेल"],
+    ["flour", "पीठ", "आटा"],
+    ["masala", "मसाला"],
+    ["dal", "डाळ", "दाल"],
+    ["rice", "तांदूळ", "चावल"],
+    ["ghee", "तूप", "घी"],
+]
+GENERIC_INGREDIENT_HEADS = {}
+for _group in _GENERIC_HEAD_GROUPS:
+    for _tok in _group:
+        GENERIC_INGREDIENT_HEADS[_tok] = _group
+
+# Modifier and form words stripped when deriving the head noun of a
+# multi-word inventory name. If stripping these leaves exactly ONE token,
+# that token inherits ingredient-status from its parent ("Green chili" →
+# "chili", "Mustard seeds" → "mustard") even when the bare token isn't a
+# catalog entry itself. These words themselves are never matchable.
+_HEAD_STRIP_WORDS = {
+    # colors / freshness / size adjectives
+    "green", "red", "black", "white", "yellow", "brown",
+    "fresh", "dried", "dry", "raw", "whole", "organic", "baby",
+    "small", "big", "long",
+    "हिरवी", "हिरवा", "लाल", "काळी", "काळे", "पांढरी", "पांढरे",
+    # form words
+    "seeds", "seed", "powder", "leaves", "leaf", "paste",
+    "sticks", "stick", "pods", "pod",
+    "पूड", "पाने", "दाणे",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -217,13 +254,67 @@ def match_ingredients_in_text(text: str, inventory_items, min_matches: int = 2) 
         catalog_variants = get_variants_for(display)
         all_variants = []
         seen = set()
-        for v in [*seed_variants, *catalog_variants]:
+
+        def _add_variant(v):
             if not v:
-                continue
+                return
             key = unicodedata.normalize("NFC", v).strip().lower()
             if key and key not in seen:
                 seen.add(key)
                 all_variants.append(unicodedata.normalize("NFC", v).strip())
+
+        for v in [*seed_variants, *catalog_variants]:
+            _add_variant(v)
+
+        # Token fallback: inventory names are often MORE specific than the
+        # words a video uses — "Tata Salt" vs "salt", "Groundnut oil" vs
+        # "oil". The full-phrase variants above can never match those, and
+        # the user has no idea why their stocked staple isn't surfacing
+        # recipes. For each multi-word name, a token qualifies as a
+        # matchable variant through any of three tests:
+        #   1. It resolves to a pantry-catalog entry ("salt" → Salt) —
+        #      expanded to all locale forms, so "Tata Salt" also matches
+        #      Devanagari text saying "मीठ"/"नमक".
+        #   2. It's on the generic-heads allowlist ("oil"/"तेल",
+        #      "masala"/"मसाला") — expanded to its cross-locale group.
+        #   3. Stripping modifier/form words from the name leaves exactly
+        #      this one token ("Green chili" → "chili", "Mustard seeds"
+        #      → "mustard") — the token inherits ingredient-status from
+        #      its parent inventory name.
+        # Brand fragments ("Tata") and modifiers ("green", "seeds") fail
+        # all three and can never match alone.
+        for v in list(seed_variants):
+            if not v:
+                continue
+            tokens = v.split()
+            if len(tokens) < 2:
+                continue
+
+            def _norm_token(tok):
+                return unicodedata.normalize("NFC", tok).strip().lower()
+
+            meaningful = [
+                t for t in (_norm_token(tok) for tok in tokens)
+                if t and t not in _HEAD_STRIP_WORDS
+            ]
+            head_by_strip = meaningful[0] if len(meaningful) == 1 else None
+
+            for token in tokens:
+                t = _norm_token(token)
+                min_len = 3 if t.isascii() else 2
+                if len(t) < min_len:
+                    continue
+                if is_known_ingredient(t):
+                    for expanded in get_variants_for(t):
+                        _add_variant(expanded)
+                    _add_variant(t)
+                elif t in GENERIC_INGREDIENT_HEADS:
+                    for expanded in GENERIC_INGREDIENT_HEADS[t]:
+                        _add_variant(expanded)
+                elif t == head_by_strip:
+                    for expanded in get_variants_for(t):
+                        _add_variant(expanded)
+                    _add_variant(t)
 
         # Match: word-boundary for Latin variants (avoid "salt" matching "salty"
         # — but Devanagari has no word-boundary semantics in Python regex, so
