@@ -14,7 +14,6 @@ import HomePage from "@/pages/HomePage";
 import InventoryPage from "@/pages/InventoryPage";
 import ShoppingPage from "@/pages/ShoppingPage";
 import PlannerPage from "@/pages/PlannerPage";
-import CommunityPage from "@/pages/CommunityPage";
 import RecipesPage from "@/pages/RecipesPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
@@ -105,7 +104,11 @@ function AppContent() {
                       <Route path="/shopping" element={<ShoppingPage />} />
                       <Route path="/planner" element={<PlannerPage />} />
                       <Route path="/recipes" element={<RecipesPage />} />
-                      <Route path="/community" element={<CommunityPage />} />
+                      {/* /community redirects into Recipes — community
+                          recipes live in that page's Community tab; the
+                          old standalone page was a duplicated early
+                          draft and has been removed. */}
+                      <Route path="/community" element={<Navigate to="/recipes" replace />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/admin/festivals" element={<AdminFestivalManager />} />
                     </Routes>

@@ -40,6 +40,7 @@ from routes.barcode import create_barcode_routes, barcode_router
 from routes.pantry_items import create_pantry_routes, pantry_router
 from routes.menu import create_menu_routes, menu_router
 from routes.dadi import create_dadi_routes, dadi_router
+from routes.stats import create_stats_routes, stats_router
 
 # Import data for festival endpoint
 from data.festivals import FESTIVAL_CALENDAR
@@ -167,6 +168,7 @@ create_barcode_routes(db, EMERGENT_LLM_KEY)
 create_pantry_routes(None)  # No dependencies needed
 create_dadi_routes(db, decode_token)  # Digital Dadi routes
 create_menu_routes(db, decode_token)  # Browse Menu (Phase 1)
+create_stats_routes(db)  # Public aggregate stats (Home page motivation band)
 
 # ============ INCLUDE ROUTERS ============
 
@@ -188,6 +190,7 @@ app.include_router(barcode_router)
 app.include_router(pantry_router)
 app.include_router(dadi_router)
 app.include_router(menu_router)
+app.include_router(stats_router)
 
 # ============ CORS MIDDLEWARE ============
 

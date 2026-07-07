@@ -32,6 +32,33 @@ const AdminPage = () => {
     festivals: false,
     users: false
   });
+  // User drill-down — lazily fetched the first time the Total Users
+  // card is clicked, then toggled in place.
+  const [userDetails, setUserDetails] = useState(null);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+
+  const toggleUserDetails = async () => {
+    if (showUserDetails) {
+      setShowUserDetails(false);
+      return;
+    }
+    setShowUserDetails(true);
+    if (!userDetails) {
+      setLoadingUserDetails(true);
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const res = await axios.get(`${API}/api/admin/users`, { headers });
+        setUserDetails(res.data.users || []);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+        toast.error('Could not load user details');
+        setShowUserDetails(false);
+      } finally {
+        setLoadingUserDetails(false);
+      }
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -179,13 +206,22 @@ const AdminPage = () => {
         
         {expandedSections.stats && dashboard && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <Card
+              className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={toggleUserDetails}
+              data-testid="total-users-card"
+            >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <Users className="w-8 h-8 text-blue-600" />
                   <div>
                     <p className="text-2xl font-bold text-blue-800">{dashboard.users?.total || 0}</p>
-                    <p className="text-xs text-blue-600">Total Users</p>
+                    <p className="text-xs text-blue-600 flex items-center gap-1">
+                      Total Users
+                      {showUserDetails
+                        ? <ChevronUp className="w-3 h-3" />
+                        : <ChevronDown className="w-3 h-3" />}
+                    </p>
                     {dashboard.users?.new_this_week > 0 && (
                       <Badge variant="secondary" className="mt-1 text-[10px]">
                         +{dashboard.users.new_this_week} this week
@@ -242,6 +278,72 @@ const AdminPage = () => {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* User drill-down table — opens under the stats grid when the
+            Total Users card is clicked. Answers "how is each family
+            actually using the app". */}
+        {expandedSections.stats && showUserDetails && (
+          <Card data-testid="user-details-table">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-600" />
+                User activity ({userDetails?.length ?? '…'})
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Recipes are per-user; planner / inventory / shopping counts are per household
+                (shared across its members).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {loadingUserDetails ? (
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b bg-gray-50 text-left text-gray-600">
+                        <th className="px-3 py-2 font-medium">User</th>
+                        <th className="px-3 py-2 font-medium">Household</th>
+                        <th className="px-3 py-2 font-medium">Joined</th>
+                        <th className="px-3 py-2 font-medium text-right">Recipes</th>
+                        <th className="px-3 py-2 font-medium text-right">Meals</th>
+                        <th className="px-3 py-2 font-medium text-right">Pantry</th>
+                        <th className="px-3 py-2 font-medium text-right">Shopping</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(userDetails || []).map((u) => (
+                        <tr key={u.id} className="border-b last:border-0 hover:bg-blue-50/40">
+                          <td className="px-3 py-2">
+                            <div className="font-medium text-gray-800 flex items-center gap-1">
+                              {u.name}
+                              {u.is_admin && (
+                                <Badge className="text-[9px] py-0 px-1 bg-purple-100 text-purple-700 border-purple-200">
+                                  admin
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-gray-400">{u.email}</div>
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">{u.household_name}</td>
+                          <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
+                            {u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-right font-medium">{u.recipes_created}</td>
+                          <td className="px-3 py-2 text-right">{u.household_meal_plans}</td>
+                          <td className="px-3 py-2 text-right">{u.household_inventory_items}</td>
+                          <td className="px-3 py-2 text-right">{u.household_shopping_items}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
 
