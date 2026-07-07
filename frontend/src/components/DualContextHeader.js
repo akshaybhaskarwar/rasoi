@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Globe, Shield, Info } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { NAV_ITEMS } from '@/components/BottomNavigation';
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ export const DualContextHeader = ({ onLanguageChange }) => {
   const { language, changeLanguage, getLabel } = useLanguage();
   const { unitSystem, changeUnitSystem, UNIT_SYSTEMS } = useUnits();
   const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
 
   const handleLanguageChange = (value) => {
     changeLanguage(value);
@@ -191,6 +193,42 @@ export const DualContextHeader = ({ onLanguageChange }) => {
             </div>
           </div>
         </div>
+
+        {/* Desktop nav strip — the BottomNavigation is md:hidden by design,
+            which used to leave laptop users with NO way to reach Home /
+            Inventory / Planner / Recipes / Shopping (only About + Admin
+            were linked up here). This second-tier strip reuses the same
+            NAV_ITEMS the mobile bar renders, so both surfaces stay in
+            lockstep on destinations, labels, and per-route colors. */}
+        {isAuthenticated && (
+          <nav
+            className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-100"
+            data-testid="desktop-navigation"
+          >
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link key={item.path} to={item.path} data-testid={`${item.testId}-desktop`}>
+                  <span
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
+                      isActive
+                        ? `font-bold bg-gradient-to-br ${item.gradient} shadow-sm`
+                        : 'font-medium text-gray-600 hover:bg-gray-50'
+                    }`}
+                    style={isActive ? { color: item.color } : undefined}
+                  >
+                    <Icon
+                      className={`w-4 h-4 ${isActive ? 'stroke-[2.5px]' : 'stroke-[2px]'}`}
+                      style={{ color: item.color }}
+                    />
+                    {getLabel(item.labelKey)}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        )}
       </div>
     </header>
   );

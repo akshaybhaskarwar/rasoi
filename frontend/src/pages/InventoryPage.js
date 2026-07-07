@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
 import { BarcodeScanner } from '@/components/BarcodeScanner';
-import ReceiptScanButton from '@/components/ReceiptScanButton';
 import { StockQuantityEditor } from '@/components/StockQuantityEditor';
 import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
@@ -376,7 +375,10 @@ const InventoryPage = () => {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <ReceiptScanButton onSuccess={fetchInventory} />
+          {/* Receipt scanning lives on the Shopping List page only.
+              It was dual-placed here for a while, but users found two
+              entry points confusing — and the "just back from shopping"
+              moment naturally happens on the Shopping List anyway. */}
           <Button
             onClick={() => setIsPantryTemplateOpen(true)}
             className="bg-[#77DD77] hover:bg-[#66CC66] text-gray-900 rounded-full shadow-md"
