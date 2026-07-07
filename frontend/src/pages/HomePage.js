@@ -8,6 +8,8 @@ import DigitalDadi from '@/components/DigitalDadi';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
 const HomePage = () => {
   const { inventory } = useInventory();
   const { mealPlans } = useMealPlanner();
@@ -15,9 +17,26 @@ const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { getLabel, language } = useLanguage();
-  
+
   // Show essentials banner for new users
   const [showEssentialsBanner, setShowEssentialsBanner] = useState(false);
+
+  // Public aggregate stats for the motivation band. Fails silently —
+  // a missing band is better than an error state on the Home page.
+  const [publicStats, setPublicStats] = useState(null);
+  useEffect(() => {
+    fetch(`${API}/api/stats/public`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(setPublicStats)
+      .catch(() => {});
+  }, []);
+
+  // Localized motivation line for the family-count band.
+  const motivationText = {
+    en: (n) => `${n} families are cooking with Rasoi-Sync`,
+    hi: (n) => `${n} परिवार Rasoi-Sync के साथ खाना बना रहे हैं`,
+    mr: (n) => `${n} कुटुंबे Rasoi-Sync सोबत स्वयंपाक करत आहेत`,
+  };
   
   useEffect(() => {
     // Check if user just completed onboarding and hasn't dismissed banner
@@ -106,7 +125,10 @@ const HomePage = () => {
       testId: 'quick-nav-recipes'
     },
     {
-      path: '/community',
+      // Community recipes live inside the Recipes page (Community tab) —
+      // the old standalone /community page was an orphaned early draft
+      // that duplicated it and has been retired.
+      path: '/recipes',
       icon: Users,
       labelKey: 'community',
       description: 'Connect & share',
@@ -211,6 +233,22 @@ const HomePage = () => {
       <div className="bg-gradient-to-r from-[#FF9933] to-[#FFCC00] rounded-2xl p-6 text-white shadow-lg">
         <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeMessage')}</h2>
         <p className="text-white/90">{getLabel('intelligentKitchenCompanion')}</p>
+
+        {/* Community-size band — social proof / motivation. Hidden until
+            the fetch resolves AND there are at least 3 families, so early
+            days never read as "you're alone here". */}
+        {publicStats?.families >= 3 && (
+          <div
+            className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium"
+            data-testid="family-count-band"
+          >
+            <Users className="w-4 h-4" />
+            {(motivationText[language] || motivationText.en)(publicStats.families)}
+            {publicStats.meals_planned > 0 && (
+              <span className="opacity-80">· {publicStats.meals_planned}+ meals planned</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Digital Dadi - Festival Reminders & Tips */}

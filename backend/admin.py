@@ -391,6 +391,76 @@ def create_admin_routes(db, decode_token_func):
             "upcoming_festivals": upcoming_festivals
         }
     
+    @admin_router.get("/users")
+    async def get_user_details(
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+        """Per-user activity breakdown for the admin dashboard drill-down.
+
+        Answers "how is each family actually using the app": who joined
+        when, which household they're in, how many recipes they created,
+        and how active their household's planner/inventory/shopping are.
+        Household-level counts are shared across members by design — a
+        kitchen is a shared space; per-member attribution only exists
+        where the data records a creator (recipes).
+
+        Deliberately capped at 500 users — pagination is not worth
+        building before the app has anywhere near that many.
+        """
+        await verify_admin(credentials)
+
+        users = await db.users.find(
+            {}, {"_id": 0, "hashed_password": 0}
+        ).sort("created_at", -1).to_list(500)
+
+        # Batch the aggregates — 4 grouped queries total instead of 4×N.
+        recipes_by_creator = {
+            r["_id"]: r["count"]
+            for r in await db.user_recipes.aggregate([
+                {"$group": {"_id": "$created_by", "count": {"$sum": 1}}}
+            ]).to_list(1000)
+        }
+        plans_by_household = {
+            r["_id"]: r["count"]
+            for r in await db.meal_plans.aggregate([
+                {"$group": {"_id": "$household_id", "count": {"$sum": 1}}}
+            ]).to_list(1000)
+        }
+        inventory_by_household = {
+            r["_id"]: r["count"]
+            for r in await db.inventory.aggregate([
+                {"$group": {"_id": "$household_id", "count": {"$sum": 1}}}
+            ]).to_list(1000)
+        }
+        shopping_by_household = {
+            r["_id"]: r["count"]
+            for r in await db.shopping_list.aggregate([
+                {"$group": {"_id": "$household_id", "count": {"$sum": 1}}}
+            ]).to_list(1000)
+        }
+        household_names = {
+            h["id"]: h.get("name", "—")
+            for h in await db.households.find({}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+        }
+
+        rows = []
+        for u in users:
+            hh = u.get("active_household")
+            rows.append({
+                "id": u.get("id"),
+                "name": u.get("name", "—"),
+                "email": u.get("email", "—"),
+                "is_admin": bool(u.get("is_admin")),
+                "created_at": u.get("created_at"),
+                "household_name": household_names.get(hh, "— none —") if hh else "— none —",
+                "recipes_created": recipes_by_creator.get(u.get("id"), 0),
+                "household_meal_plans": plans_by_household.get(hh, 0) if hh else 0,
+                "household_inventory_items": inventory_by_household.get(hh, 0) if hh else 0,
+                "household_shopping_items": shopping_by_household.get(hh, 0) if hh else 0,
+            })
+
+        return {"users": rows, "total": len(rows)}
+
     @admin_router.post("/make-admin/{user_id}")
     async def make_admin(
         user_id: str,

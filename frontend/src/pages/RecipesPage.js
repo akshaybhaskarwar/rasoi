@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
@@ -280,6 +280,47 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
   );
 };
 
+// ============================================================================
+// Veg / non-veg classification — ingredient-driven, zero user effort.
+// ============================================================================
+// Users asked to browse only the recipes matching their diet. Rather than
+// requiring every recipe to be re-tagged, we classify from what the recipe
+// actually contains: if the title or any ingredient names a non-veg item,
+// it's non-veg; otherwise veg. Egg counts as non-veg (the standard line in
+// Maharashtrian vegetarian households). Latin keywords match on word
+// boundaries so "egg" can never fire on "eggplant"; Devanagari uses plain
+// substring since Python-style \b doesn't apply cleanly there either way.
+const NON_VEG_KEYWORDS_LATIN = [
+  'chicken', 'mutton', 'lamb', 'fish', 'prawn', 'prawns', 'shrimp',
+  'egg', 'eggs', 'anda', 'meat', 'keema', 'kheema', 'crab', 'squid',
+  'surmai', 'bangda', 'bombil', 'pomfret', 'rohu', 'katla',
+];
+const NON_VEG_KEYWORDS_DEVANAGARI = [
+  'अंडा', 'अंडे', 'अंडी', 'चिकन', 'मटण', 'मटन', 'मांस', 'कीमा',
+  'मासे', 'मासा', 'मच्छी', 'मछली', 'झिंगा', 'कोलंबी', 'सुरमई', 'बांगडा', 'बोंबील',
+];
+const isNonVegRecipe = (recipe) => {
+  const haystack = [
+    recipe.title,
+    ...(recipe.tags || []),
+    ...(recipe.ingredients || []).flatMap(i => [
+      i.ingredient_name, i.name_en, i.name_mr, i.name_hi,
+    ]),
+  ].filter(Boolean).join(' ').toLowerCase();
+  return (
+    NON_VEG_KEYWORDS_LATIN.some(k =>
+      new RegExp(`\\b${k}\\b`).test(haystack)
+    ) ||
+    NON_VEG_KEYWORDS_DEVANAGARI.some(k => haystack.includes(k))
+  );
+};
+
+const DIET_FILTERS = [
+  { key: 'all', label: 'All', emoji: '🍽️' },
+  { key: 'veg', label: 'Veg', emoji: '🌿' },
+  { key: 'nonveg', label: 'Non-veg', emoji: '🍖' },
+];
+
 // Main Recipe Page
 const RecipesPage = () => {
   const { user, activeHousehold } = useAuth();
@@ -296,6 +337,18 @@ const RecipesPage = () => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [plannerRecipe, setPlannerRecipe] = useState(null);
+  const [dietFilter, setDietFilter] = useState('all');
+
+  // Diet-filtered views of both lists. Classification is client-side and
+  // cheap (string scan per recipe), so useMemo per list-change is plenty.
+  const dietMatches = (r) =>
+    dietFilter === 'all' ? true
+      : dietFilter === 'nonveg' ? isNonVegRecipe(r)
+      : !isNonVegRecipe(r);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const visibleRecipes = useMemo(() => recipes.filter(dietMatches), [recipes, dietFilter]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const visibleCommunity = useMemo(() => communityRecipes.filter(dietMatches), [communityRecipes, dietFilter]);
   
   // Fetch tags
   useEffect(() => {
@@ -463,6 +516,30 @@ const RecipesPage = () => {
           />
         </div>
         
+        {/* Diet filter — veg households never want to scroll past non-veg
+            recipes (and vice versa). Segmented control, not a tag: it
+            composes with the tag filter below rather than replacing it. */}
+        <div className="flex gap-2" data-testid="diet-filter">
+          {DIET_FILTERS.map((d) => (
+            <button
+              key={d.key}
+              onClick={() => setDietFilter(d.key)}
+              className={`flex-1 sm:flex-none sm:px-6 py-2 rounded-xl text-sm font-medium transition-all border-2 ${
+                dietFilter === d.key
+                  ? d.key === 'nonveg'
+                    ? 'bg-red-50 border-red-400 text-red-700'
+                    : d.key === 'veg'
+                      ? 'bg-green-50 border-green-500 text-green-700'
+                      : 'bg-orange-50 border-orange-400 text-orange-700'
+                  : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+              }`}
+              data-testid={`diet-${d.key}`}
+            >
+              {d.emoji} {d.label}
+            </button>
+          ))}
+        </div>
+
         {/* Tag Filter */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
@@ -521,9 +598,15 @@ const RecipesPage = () => {
                 Create First Recipe
               </Button>
             </Card>
+          ) : visibleRecipes.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-sm text-gray-500">
+                No {dietFilter === 'veg' ? 'vegetarian' : 'non-veg'} recipes in your kitchen yet.
+              </p>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recipes.map((recipe) => (
+              {visibleRecipes.map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
                   recipe={recipe}
@@ -551,9 +634,15 @@ const RecipesPage = () => {
                 Be the first to share a recipe with the community!
               </p>
             </Card>
+          ) : visibleCommunity.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-sm text-gray-500">
+                No {dietFilter === 'veg' ? 'vegetarian' : 'non-veg'} community recipes right now.
+              </p>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {communityRecipes.map((recipe) => (
+              {visibleCommunity.map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
                   recipe={recipe}
