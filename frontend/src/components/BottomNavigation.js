@@ -2,17 +2,15 @@ import { Home, Package, ShoppingCart, Calendar, BookOpen } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-export const BottomNavigation = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { getLabel } = useLanguage();
-
-  // Per-route colors are meaningful: orange=warmth (home), green=fresh
-  // (inventory), purple=creative (planner), pink=culinary (recipes),
-  // blue=trustworthy (shopping). Each tab carries its color even when
-  // inactive; the active tab makes it bolder via gradient background,
-  // tighter stroke, scale lift, and a pulsing indicator.
-  const navItems = [
+// Per-route colors are meaningful: orange=warmth (home), green=fresh
+// (inventory), purple=creative (planner), pink=culinary (recipes),
+// blue=trustworthy (shopping). Each tab carries its color even when
+// inactive; the active tab makes it bolder via gradient background,
+// tighter stroke, scale lift, and a pulsing indicator.
+// Exported so DualContextHeader's desktop nav strip renders the same
+// destinations with the same colors — one source of truth for both
+// navigation surfaces.
+export const NAV_ITEMS = [
     {
       path: '/',
       icon: Home,
@@ -58,7 +56,13 @@ export const BottomNavigation = () => {
       gradient: 'from-blue-100 to-sky-50',
       ring: 'ring-blue-300/40',
     },
-  ];
+];
+
+export const BottomNavigation = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { getLabel } = useLanguage();
+  const navItems = NAV_ITEMS;
 
   return (
     <nav

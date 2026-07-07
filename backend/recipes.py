@@ -102,6 +102,12 @@ RECIPE_TAGS = [
     {"id": "kids-favorite", "label_en": "Kids Favorite", "label_mr": "मुलांचे आवडते", "label_hi": "बच्चों का पसंदीदा", "emoji": "👶"},
     {"id": "traditional", "label_en": "Traditional", "label_mr": "पारंपारिक", "label_hi": "पारंपरिक", "emoji": "🏺"},
     {"id": "grandmas-recipe", "label_en": "Grandma's Recipe", "label_mr": "आजीची रेसिपी", "label_hi": "दादी की रेसिपी", "emoji": "👵"},
+    # Not a dish — families use recipe records to document poojas: the
+    # "ingredients" are the samagri list, "instructions" are the vidhi,
+    # and the stock badge + add-missing-to-shopping flow answer "what do
+    # I need to buy before the pooja". Deliberately reusing the recipe
+    # model instead of a new entity — one user request, zero new schema.
+    {"id": "pooja-samagri", "label_en": "Pooja Samagri", "label_mr": "पूजा साहित्य", "label_hi": "पूजा सामग्री", "emoji": "🪔"},
 ]
 
 UNIT_OPTIONS = [

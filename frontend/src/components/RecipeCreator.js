@@ -66,6 +66,7 @@ const StockStatusBadge = ({ status }) => {
 // lunch) so a "breakfast, upvas" recipe gets the upvas hero, not the
 // breakfast one.
 const RECIPE_HERO_TAGS = [
+  ['pooja',         { emoji: '🪔', gradient: 'from-amber-100 to-rose-50',   text: 'text-amber-900'  }],
   ['upvas',         { emoji: '🔱', gradient: 'from-purple-100 to-pink-50',  text: 'text-purple-900' }],
   ['fasting',       { emoji: '🔱', gradient: 'from-purple-100 to-pink-50',  text: 'text-purple-900' }],
   ['festival',      { emoji: '🎉', gradient: 'from-amber-100 to-rose-50',   text: 'text-amber-900'  }],
