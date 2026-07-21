@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   ChefHat, Plus, Search, Filter, Heart, ShoppingCart, 
-  Clock, Users, BookOpen, Globe, Home, X, ArrowLeft, Edit, Youtube, Link2, Calendar
+  Clock, Users, BookOpen, Globe, Home, X, ArrowLeft, Edit, Youtube, Link2, Calendar, Play
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,7 +77,14 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
   }, [recipe?.id]);
   
   if (!recipe) return null;
-  
+
+  const youtubeUrl = recipe.youtube_url || (recipe.youtube_video_id
+    ? `https://www.youtube.com/watch?v=${recipe.youtube_video_id}`
+    : null);
+  const youtubeThumb = recipe.youtube_thumbnail || (recipe.youtube_video_id
+    ? `https://img.youtube.com/vi/${recipe.youtube_video_id}/hqdefault.jpg`
+    : null);
+
   const getIngredientName = (ing) => {
     if (language === 'mr' && ing.name_mr) return ing.name_mr;
     if (language === 'hi' && ing.name_hi) return ing.name_hi;
@@ -89,11 +96,30 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
       {/* Header with Photo */}
       <div className="relative h-48 bg-gradient-to-br from-orange-100 to-amber-50 -mx-6 -mt-6 mb-4">
         {photoData ? (
-          <img 
-            src={`data:image/jpeg;base64,${photoData}`} 
+          <img
+            src={`data:image/jpeg;base64,${photoData}`}
             alt={recipe.title}
             className="w-full h-full object-cover"
           />
+        ) : youtubeThumb && youtubeUrl ? (
+          <a
+            href={youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block w-full h-full relative"
+            aria-label="Watch on YouTube"
+          >
+            <img
+              src={youtubeThumb}
+              alt={recipe.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+              <span className="w-16 h-16 bg-red-600 group-hover:bg-red-700 rounded-full flex items-center justify-center shadow-lg transition-colors">
+                <Play className="w-7 h-7 text-white ml-1" fill="white" />
+              </span>
+            </div>
+          </a>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <ChefHat className="w-20 h-20 text-orange-200" />
@@ -122,10 +148,17 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-2xl font-bold text-gray-800">{recipe.title}</h2>
-          {recipe.youtube_video_id && (
-            <Badge variant="outline" className="shrink-0 bg-red-50 text-red-600 border-red-200">
-              <Youtube className="w-3 h-3 mr-1" /> YouTube
-            </Badge>
+          {youtubeUrl && (
+            <a
+              href={youtubeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0"
+            >
+              <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 cursor-pointer transition-colors">
+                <Youtube className="w-3 h-3 mr-1" /> YouTube
+              </Badge>
+            </a>
           )}
         </div>
         
