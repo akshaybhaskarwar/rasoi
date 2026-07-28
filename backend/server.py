@@ -268,6 +268,22 @@ async def startup_event():
     await db.receipts.create_index("household_id")
     await db.receipts.create_index("created_at", expireAfterSeconds=30 * 24 * 60 * 60)
 
+    # Price history — DELIBERATELY NO TTL.
+    #
+    # The receipt audit log above expires after 30 days because it holds
+    # raw_ocr_text, which is bulky and is a transcription of a household's
+    # receipt. The per-item prices live inside those same documents, so they
+    # were being destroyed as a side effect of that cleanup. This collection
+    # keeps only the thin durable record (item, rate, unit, date, vendor) so
+    # "last paid" still works when someone shops again 40 days later.
+    #
+    # Append-only: one row per item per purchase. The compound index serves
+    # the only hot query — latest price per item for a household.
+    await db.price_history.create_index("id", unique=True)
+    await db.price_history.create_index(
+        [("household_id", 1), ("canonical_name", 1), ("bought_on", -1)]
+    )
+
     # Catalog suggestions (Phase 1.1): when a user adds a custom item from a
     # receipt, we silently upsert into this collection keyed by the receipt's
     # Devanagari text. Admin can later see which custom items repeat across
