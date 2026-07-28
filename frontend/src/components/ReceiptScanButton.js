@@ -252,6 +252,12 @@ const ReceiptScanButton = ({ onSuccess }) => {
       // an English alias on the inventory item so future English-text
       // searches find brand-name-Devanagari custom items.
       original_canonical_en: r.is_custom ? (r.original_canonical_en || null) : null,
+      // Per-line price from the scan, forwarded so the backend can record it
+      // in price_history for the "last paid" comparison on the shopping list.
+      // The confirm screen already displays `amount`; these were simply not
+      // being sent. Null for rows the OCR could not price.
+      rate: typeof r.rate === 'number' ? r.rate : null,
+      amount: typeof r.amount === 'number' ? r.amount : null,
     }));
 
     // Phase A — collect the shopping list ids the user is OK marking bought

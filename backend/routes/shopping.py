@@ -7,9 +7,28 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta, date
 import uuid
 
+from pydantic import BaseModel
+
 from models.shopping import (
     ShoppingItem, ShoppingItemCreate, ShoppingStatusUpdate, ShoppingSnoozeRequest,
 )
+from models.prices import PriceRecord, normalise_unit
+
+
+class ManualPriceEntry(BaseModel):
+    """Body for POST /shopping/{item_id}/price — the user typing what they paid.
+
+    Two shapes are accepted, because both are natural at the till:
+      - amount + qty  -> rate is derived (paid ₹284 for 2 kg -> ₹142/kg)
+      - rate only     -> taken as-is (the shelf label said ₹142/kg)
+    `unit` is the receipt-style code ('K', 'L', 'UT', 'g', ...) and decides
+    whether this is stored as ₹/kg, ₹/L or ₹/pack.
+    """
+    amount: Optional[float] = None
+    qty: Optional[float] = None
+    rate: Optional[float] = None
+    unit: str = "UT"
+    vendor: Optional[str] = None
 
 security = HTTPBearer(auto_error=False)
 shopping_router = APIRouter(prefix="/api", tags=["Shopping"])
@@ -457,7 +476,115 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
         
         if item.get("household_id"):
             await notify_shopping_change(item["household_id"], "status", {**item, "shopping_status": "bought"}, user_name)
-        
+
         return result
+
+    # ---- Price comparison ------------------------------------------------
+
+    @shopping_router.get("/shopping/last-prices")
+    async def get_last_prices(
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+        """Latest recorded price per item for the household.
+
+        Returns one map for the whole list rather than a lookup per row — a
+        shopping list of 30 items would otherwise be 30 requests.
+
+        The client is given `bought_on` alongside the rate and decides how to
+        present staleness. A rate from last year is worse than showing nothing,
+        but where that line sits is a product judgement, so the API does not
+        silently hide old data.
+        """
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        if not household_id:
+            return {"prices": {}}
+
+        # Sorted oldest-first so the last write into the dict per item wins,
+        # which leaves the most recent purchase. Cheaper than an aggregation
+        # for the volumes involved (a household accumulates a few hundred rows
+        # a year) and avoids depending on $group ordering semantics.
+        cursor = db.price_history.find(
+            {"household_id": household_id},
+            {"_id": 0, "canonical_name": 1, "rate": 1, "unit_basis": 1,
+             "vendor": 1, "bought_on": 1, "source": 1},
+        ).sort("bought_on", 1)
+
+        prices: Dict[str, Any] = {}
+        async for row in cursor:
+            name = row.get("canonical_name")
+            if not name:
+                continue
+            prices[name.lower()] = {
+                "rate": row.get("rate"),
+                "unit_basis": row.get("unit_basis"),
+                "vendor": row.get("vendor"),
+                "bought_on": row.get("bought_on"),
+                "source": row.get("source"),
+            }
+        return {"prices": prices, "count": len(prices)}
+
+    @shopping_router.post("/shopping/{item_id}/price")
+    async def record_manual_price(
+        item_id: str,
+        entry: ManualPriceEntry,
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ):
+        """Record what the user says they paid for a shopping list item.
+
+        This is the path for households that do not scan receipts. It writes
+        the same price_history shape as the receipt path, tagged
+        source='manual', so the shopping list reads both identically.
+        """
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        if not household_id:
+            raise HTTPException(status_code=400, detail="No active household")
+
+        item = await db.shopping_list.find_one(
+            {"id": item_id, "household_id": household_id}, {"_id": 0}
+        )
+        if not item:
+            raise HTTPException(status_code=404, detail="Shopping item not found")
+
+        rate = entry.rate
+        if rate is None:
+            if entry.amount is None or not entry.qty:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Provide either rate, or amount together with qty",
+                )
+            try:
+                rate = float(entry.amount) / float(entry.qty)
+            except (TypeError, ValueError, ZeroDivisionError):
+                raise HTTPException(status_code=400, detail="Could not derive a rate")
+
+        try:
+            rate = float(rate)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Rate is not a number")
+        if rate <= 0:
+            raise HTTPException(status_code=400, detail="Rate must be positive")
+
+        basis, multiplier = normalise_unit(entry.unit)
+        record = PriceRecord(
+            household_id=household_id,
+            canonical_name=item.get("name_en"),
+            rate=round(rate * multiplier, 2),
+            unit_basis=basis,
+            qty=entry.qty,
+            unit_raw=entry.unit,
+            amount=entry.amount,
+            vendor=entry.vendor or None,
+            store_type=item.get("store_type"),
+            source="manual",
+        )
+        await db.price_history.insert_one(record.model_dump())
+        return {
+            "success": True,
+            "canonical_name": record.canonical_name,
+            "rate": record.rate,
+            "unit_basis": record.unit_basis,
+        }
 
     return shopping_router

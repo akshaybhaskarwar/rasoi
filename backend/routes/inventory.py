@@ -11,6 +11,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 
 from models.inventory import InventoryItem, InventoryItemCreate, DEFAULT_MONTHLY_QUANTITIES
+from models.prices import price_from_receipt_row
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,14 @@ class BulkUpdateItem(BaseModel):
     custom_name: Optional[str] = None      # required when is_custom=True
     custom_category: Optional[str] = None  # falls back to "other"
     devanagari_hint: Optional[str] = None  # receipt's printed name, for catalog_suggestions
+    # Per-line price, forwarded straight through from the receipt scan. The
+    # confirm screen already has both (it renders `amount` per row) and simply
+    # wasn't sending them. Passing them here rather than re-reading the receipt
+    # audit doc avoids having to guess which parsed row a confirmed row came
+    # from after the user has re-mapped names or edited quantities.
+    # Optional: manually-added rows and older clients just omit them.
+    rate: Optional[float] = None
+    amount: Optional[float] = None
     # When the user adds a row "as new" but Claude+catalog had already
     # resolved it to a canonical English name (e.g., brand-name Devanagari
     # -> "Groundnut Oil"), the frontend preserves that resolution here and
@@ -89,6 +98,38 @@ def _qty_to_base_units(qty: float, unit: str) -> int:
         return int(q)
     # UT/pcs/unknown — treat as count
     return max(int(q), 1)
+
+
+def _collect_price(sink: List[Dict[str, Any]], canonical_name: str, row,
+                   household_id: str, receipt_id: Optional[str]) -> None:
+    """Queue a price_history row for a confirmed receipt line, if it has a price.
+
+    `require_confidence=False` on purpose: the user has just seen this item and
+    its amount on the confirm screen and accepted it, which is a stronger
+    signal than the model's own match confidence. The arithmetic and null
+    checks in price_from_receipt_row still apply.
+
+    Never raises — a receipt with unreadable prices must still update inventory.
+    """
+    if row.rate is None and row.amount is None:
+        return
+    try:
+        record, _ = price_from_receipt_row(
+            {
+                "name_canonical_en": canonical_name,
+                "qty": row.qty,
+                "unit": row.unit,
+                "rate": row.rate,
+                "amount": row.amount,
+            },
+            household_id=household_id,
+            receipt_id=receipt_id,
+            require_confidence=False,
+        )
+        if record:
+            sink.append(record.model_dump())
+    except Exception:
+        logger.exception("Failed to build price record for %s", canonical_name)
 
 
 def create_inventory_routes(db, decode_token, translate_service, notify_inventory_change,
@@ -294,6 +335,10 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         added: List[Dict[str, Any]] = []
         skipped: List[str] = []
         errors: List[Dict[str, Any]] = []
+        # Price rows are collected here and written once at the end, so a
+        # problem with price capture can never fail the inventory update the
+        # user actually asked for.
+        price_rows: List[Dict[str, Any]] = []
 
         import re
         import unicodedata  # local — only used here, avoids hot-path cost
@@ -445,6 +490,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                     "new_current_stock": new_current,
                     "is_custom": True,
                 })
+                _collect_price(price_rows, name, row, household_id, request.receipt_id)
 
                 # Silently log to catalog_suggestions so admins can promote
                 # repeatedly-suggested items into PANTRY_TEMPLATE later.
@@ -549,6 +595,29 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                 "delta_base_units": delta,
                 "new_current_stock": new_current,
             })
+            _collect_price(price_rows, details["name_en"], row, household_id, request.receipt_id)
+
+        # ---- Persist prices ------------------------------------------------
+        # Written after the inventory work so a failure here cannot lose the
+        # user's confirmed stock update. The vendor lives on the receipt audit
+        # doc rather than on each row, so stamp it on in one pass.
+        if price_rows:
+            try:
+                vendor = None
+                store_type = None
+                if request.receipt_id:
+                    receipt_doc = await db.receipts.find_one(
+                        {"id": request.receipt_id, "household_id": household_id},
+                        {"_id": 0, "vendor": 1},
+                    )
+                    vendor = (receipt_doc or {}).get("vendor")
+                for pr in price_rows:
+                    pr["vendor"] = vendor
+                    pr["store_type"] = store_type
+                await db.price_history.insert_many(price_rows)
+            except Exception:
+                logger.exception("Failed to write price history for receipt %s",
+                                 request.receipt_id)
 
         # Update receipt audit log with what the user actually confirmed
         if request.receipt_id:
