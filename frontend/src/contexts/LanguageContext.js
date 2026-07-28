@@ -234,7 +234,25 @@ export const UI_LABELS = {
     dayOneSetup: 'Day 1: Setup Your Kitchen',
     weeklyPlanShop: 'Weekly: Plan & Shop',
     dailyCookEnjoy: 'Daily: Cook & Enjoy',
-    monthlyReviewOptimize: 'Monthly: Review & Optimize'
+    monthlyReviewOptimize: 'Monthly: Review & Optimize',
+
+    // Digital Dadi - Upcoming Festivals
+    upcomingFestivals: 'Upcoming Festivals',
+    // Both numbers live inside the string: Marathi and Hindi put the count
+    // after the day-range, English puts it first.
+    festivalsInNextDays: '{count} in next {n} days',
+    festivalToday: 'Today!',
+    festivalTomorrow: 'Tomorrow!',
+    festivalDaysUrgent: '{n} days - Urgent!',
+    festivalDays: '{n} days',
+    fastingDay: 'Fasting Day',
+    readiness: 'Readiness',
+    addMissing: 'Add {n} Missing',
+    addedToList: 'Added to List',
+    ingredientStatus: 'Ingredient Status:',
+    dadisTips: "Dadi's Tips:",
+    noFestivals: 'No festivals in the next 14 days',
+    uploadFestivalCalendar: 'Upload festival calendar from Admin panel'
   },
   hi: {
     // App branding
@@ -461,7 +479,23 @@ export const UI_LABELS = {
     dayOneSetup: 'पहला दिन: अपनी रसोई सेट करें',
     weeklyPlanShop: 'साप्ताहिक: योजना बनाएं और खरीदारी करें',
     dailyCookEnjoy: 'दैनिक: पकाएं और आनंद लें',
-    monthlyReviewOptimize: 'मासिक: समीक्षा करें और अनुकूलित करें'
+    monthlyReviewOptimize: 'मासिक: समीक्षा करें और अनुकूलित करें',
+
+    // Digital Dadi - Upcoming Festivals
+    upcomingFestivals: 'आगामी त्योहार',
+    festivalsInNextDays: 'अगले {n} दिनों में {count}',
+    festivalToday: 'आज!',
+    festivalTomorrow: 'कल!',
+    festivalDaysUrgent: '{n} दिन - जरूरी!',
+    festivalDays: '{n} दिन',
+    fastingDay: 'व्रत का दिन',
+    readiness: 'तैयारी',
+    addMissing: '{n} गायब जोड़ें',
+    addedToList: 'सूची में जोड़ा गया',
+    ingredientStatus: 'सामग्री की स्थिति:',
+    dadisTips: 'दादी की सलाह:',
+    noFestivals: 'अगले 14 दिनों में कोई त्योहार नहीं',
+    uploadFestivalCalendar: 'एडमिन पैनल से त्योहार कैलेंडर अपलोड करें'
   },
   mr: {
     // App branding
@@ -688,7 +722,23 @@ export const UI_LABELS = {
     dayOneSetup: 'पहिला दिवस: तुमचे स्वयंपाकघर सेट करा',
     weeklyPlanShop: 'साप्ताहिक: नियोजन करा आणि खरेदी करा',
     dailyCookEnjoy: 'दैनंदिन: शिजवा आणि आनंद घ्या',
-    monthlyReviewOptimize: 'मासिक: पुनरावलोकन करा आणि अनुकूल करा'
+    monthlyReviewOptimize: 'मासिक: पुनरावलोकन करा आणि अनुकूल करा',
+
+    // Digital Dadi - Upcoming Festivals
+    upcomingFestivals: 'आगामी सण',
+    festivalsInNextDays: 'पुढील {n} दिवसांत {count}',
+    festivalToday: 'आज!',
+    festivalTomorrow: 'उद्या!',
+    festivalDaysUrgent: '{n} दिवस - तातडीचे!',
+    festivalDays: '{n} दिवस',
+    fastingDay: 'उपवासाचा दिवस',
+    readiness: 'तयारी',
+    addMissing: '{n} शिल्लक जोडा',
+    addedToList: 'यादीत जोडले',
+    ingredientStatus: 'साहित्याची स्थिती:',
+    dadisTips: 'आजीच्या टिप्स:',
+    noFestivals: 'पुढील 14 दिवसांत कोणताही सण नाही',
+    uploadFestivalCalendar: 'ॲडमिन पॅनेलमधून सण दिनदर्शिका अपलोड करा'
   }
 };
 
@@ -710,8 +760,17 @@ export const LanguageProvider = ({ children }) => {
   };
 
   // Get UI label
-  const getLabel = (key) => {
-    return UI_LABELS[language]?.[key] || UI_LABELS.en[key] || key;
+  // getLabel('addMissing', { n: 3 }) -> "Add 3 Missing" / "3 शिल्लक जोडा".
+  // Placeholders are named rather than positional because word order differs
+  // between English and Marathi/Hindi — the count doesn't always come first.
+  const getLabel = (key, params) => {
+    let label = UI_LABELS[language]?.[key] || UI_LABELS.en[key] || key;
+    if (params) {
+      for (const [name, value] of Object.entries(params)) {
+        label = label.split(`{${name}}`).join(String(value));
+      }
+    }
+    return label;
   };
 
   // Get translated name based on current language

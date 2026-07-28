@@ -28,6 +28,8 @@ const AdminFestivalManager = () => {
     name_hi: '',
     date: '',
     significance: '',
+    significance_mr: '',
+    significance_hi: '',
     key_ingredients: [],
     is_fasting_day: false,
     region: 'Maharashtra'
@@ -104,7 +106,7 @@ REQUIREMENTS
 3. Output ONLY a valid CSV. No prose, no markdown, no code fences, no leading blank line.
 
 FORMAT — header row (exact columns, exact order, exact spelling):
-Festival Name,Name (Marathi),Name (Hindi),Date,Significance,Key Ingredients,Recipes,Tips,Is Fasting Day,Region
+Festival Name,Name (Marathi),Name (Hindi),Date,Significance,Significance (Marathi),Significance (Hindi),Key Ingredients,Recipes,Tips,Tips (Marathi),Tips (Hindi),Is Fasting Day,Region
 
 RULES FOR EACH FIELD
 - Festival Name: English in Roman script. Example: Ganesh Chaturthi
@@ -112,11 +114,21 @@ RULES FOR EACH FIELD
 - Name (Hindi): Devanagari. Example: गणेश चतुर्थी
 - Date: ISO ${year}-MM-DD. Example: ${year}-08-27
 - Significance: One line, plain text. NEVER a comma — use "; " instead.
+- Significance (Marathi): The SAME meaning in Devanagari Marathi. NEVER a comma — use "; " instead.
+- Significance (Hindi): The SAME meaning in Devanagari Hindi. NEVER a comma — use "; " instead.
 - Key Ingredients: Comma-separated ingredients in English, wrapped in DOUBLE QUOTES. Example: "Rice flour, Coconut, Jaggery, Cardamom, Ghee"
 - Recipes: Pipe-separated (|) recipe names in English. Example: Ukdiche Modak|Fried Modak|Modak Payasam
 - Tips: One sentence of practical, grandmother-style advice. NEVER a comma.
+- Tips (Marathi): The SAME tip in Devanagari Marathi. NEVER a comma.
+- Tips (Hindi): The SAME tip in Devanagari Hindi. NEVER a comma.
 - Is Fasting Day: exactly "Yes" or "No"
 - Region: "${community}"
+
+TRANSLATION RULES (the app shows these verbatim to Marathi and Hindi households)
+- Translate the MEANING, not word by word. The Marathi line should read like a Marathi speaker wrote it.
+- Keep religious and proper nouns in their normal Devanagari form (व्यास, आषाढ पौर्णिमा, एकादशी) — do not transliterate the English spelling back.
+- Marathi and Hindi are NOT interchangeable. तांदूळ vs चावल, सण vs त्योहार, आजी vs दादी. Never paste the same string into both columns unless the word genuinely is identical.
+- If you are unsure of a translation, leave that cell EMPTY. The app falls back to English, which is far better than a wrong or awkward rendering of devotional text.
 
 QUALITY BAR
 - Recipe names must be dishes a ${community} family ACTUALLY cooks for that festival, not generic Indian dishes.
@@ -174,6 +186,8 @@ Sort festivals by date ascending. Start with the header row, then one festival p
         name_hi: '',
         date: '',
         significance: '',
+        significance_mr: '',
+        significance_hi: '',
         key_ingredients: [],
         is_fasting_day: false,
         region: 'Maharashtra'
@@ -260,15 +274,19 @@ Sort festivals by date ascending. Start with the header row, then one festival p
   };
 
   const downloadSampleCSV = () => {
-    const sampleData = `Festival Name,Name (Marathi),Name (Hindi),Date,Significance,Key Ingredients,Recipes,Tips,Is Fasting Day,Region
-Makar Sankranti,मकर संक्रांती,मकर संक्रांति,Jan 14,Til-Gul interchange,"Til (Sesame), Gul (Jaggery), Peanuts, Bajra, Sugarcane",Tilgul Ladoo|Puran Poli,Make tilgul ladoos a day before for best taste,No,Maharashtra
-Mahashivratri,महाशिवरात्री,महाशिवरात्रि,Feb 15,Major Fasting day,"Sabudana, Peanuts, Potatoes, Varai (Bhagar), Milk",Sabudana Khichdi|Sabudana Vada,Soak sabudana overnight for fluffy texture,Yes,Maharashtra
-Holi (Shimga),होळी,होली,March 4,Puran Poli / Sweets,"Chana Dal, Gul (Jaggery), Maida, Nutmeg (Jaiphal)",Puran Poli|Thandai,Start puran poli prep a day early,No,Maharashtra
-Gudi Padwa,गुढीपाडवा,गुड़ी पड़वा,March 19,Marathi New Year,"Shrikhand, Neem Leaves, Jaggery, Saffron, Ghee",Shrikhand|Puran Poli|Shreekhand Puri,Hang curd overnight for thick shrikhand,No,Maharashtra
-Ganesh Chaturthi,गणेश चतुर्थी,गणेश चतुर्थी,Sept 14,The Big One,"Modak Peeth (Rice Flour), Fresh Coconut, Gul, Cardamom",Ukdiche Modak|Fried Modak,Steam modaks for 15 mins on medium heat,No,Maharashtra
-Gauri Pujan,गौरी पूजन,गौरी पूजन,Sept 16,Arrival of Goddess Gauri; specialized feast,"Mixed Veg, Ambemohar Rice, Dal	Gaurichi Bhaji, Puran Poli",Use 5 types of seasonal vegetables,No,Maharashtra
-Dussehra,दसरा,दशहरा,Oct 21,Victory of good over evil; Aapta leaves,"Besan, Sugar, Ghee, Jalebi, Fafda, Basundi",Buy Apta leaves early as they sell out fast,No,Maharashtra
-Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (snacks),"Besan, Poha, Rava, Maida, Ghee	Chivda, Chakli, Ladoo, Karanji",Make sweets that last longer first,No,Maharashtra
+    // NOTE: two rows here used to have a stray TAB where the quote-comma
+    // between Key Ingredients and Recipes belongs (Gauri Pujan and Diwali),
+    // which collapsed them to 9 fields and shifted every later column.
+    // Both are corrected below.
+    const sampleData = `Festival Name,Name (Marathi),Name (Hindi),Date,Significance,Significance (Marathi),Significance (Hindi),Key Ingredients,Recipes,Tips,Tips (Marathi),Tips (Hindi),Is Fasting Day,Region
+Makar Sankranti,मकर संक्रांती,मकर संक्रांति,Jan 14,Til-Gul interchange,तिळगूळ देवाणघेवाण,तिल-गुड़ का आदान-प्रदान,"Til (Sesame), Gul (Jaggery), Peanuts, Bajra, Sugarcane",Tilgul Ladoo|Puran Poli,Make tilgul ladoos a day before for best taste,उत्तम चवीसाठी तिळगूळ लाडू एक दिवस आधी करा,बेहतरीन स्वाद के लिए तिलगुड़ लड्डू एक दिन पहले बनाएं,No,Maharashtra
+Mahashivratri,महाशिवरात्री,महाशिवरात्रि,Feb 15,Major fasting day,मोठा उपवासाचा दिवस,बड़ा व्रत का दिन,"Sabudana, Peanuts, Potatoes, Varai (Bhagar), Milk",Sabudana Khichdi|Sabudana Vada,Soak sabudana overnight for fluffy texture,मोकळ्या साबुदाण्यासाठी रात्रभर भिजवा,खिले-खिले साबूदाने के लिए रातभर भिगोएं,Yes,Maharashtra
+Holi (Shimga),होळी,होली,March 4,Puran Poli and sweets,पुरणपोळी आणि गोडधोड,पूरन पोली और मिठाई,"Chana Dal, Gul (Jaggery), Maida, Nutmeg (Jaiphal)",Puran Poli|Thandai,Start puran poli prep a day early,पुरणपोळीची तयारी एक दिवस आधी सुरू करा,पूरन पोली की तैयारी एक दिन पहले शुरू करें,No,Maharashtra
+Gudi Padwa,गुढीपाडवा,गुड़ी पड़वा,March 19,Marathi New Year,मराठी नववर्ष,मराठी नववर्ष,"Shrikhand, Neem Leaves, Jaggery, Saffron, Ghee",Shrikhand|Puran Poli|Shreekhand Puri,Hang curd overnight for thick shrikhand,घट्ट श्रीखंडासाठी दही रात्रभर टांगून ठेवा,गाढ़े श्रीखंड के लिए दही को रातभर टांगकर रखें,No,Maharashtra
+Ganesh Chaturthi,गणेश चतुर्थी,गणेश चतुर्थी,Sept 14,The biggest festival of the year,वर्षातील सर्वात मोठा सण,साल का सबसे बड़ा त्योहार,"Modak Peeth (Rice Flour), Fresh Coconut, Gul, Cardamom",Ukdiche Modak|Fried Modak,Steam modaks for 15 mins on medium heat,मोदक मध्यम आचेवर पंधरा मिनिटे वाफवा,मोदक को मध्यम आंच पर पंद्रह मिनट भाप में पकाएं,No,Maharashtra
+Gauri Pujan,गौरी पूजन,गौरी पूजन,Sept 16,Arrival of Goddess Gauri; a special feast is cooked,गौरीचे आगमन; खास नैवेद्याचा बेत केला जातो,गौरी का आगमन; विशेष भोग बनाया जाता है,"Mixed Veg, Ambemohar Rice, Dal",Gaurichi Bhaji|Puran Poli,Use 5 types of seasonal vegetables,पाच प्रकारच्या हंगामी भाज्या वापरा,पांच प्रकार की मौसमी सब्जियां इस्तेमाल करें,No,Maharashtra
+Dussehra,दसरा,दशहरा,Oct 21,Victory of good over evil; Aapta leaves are exchanged,वाईटावर चांगल्याचा विजय; आपट्याची पाने दिली जातात,बुराई पर अच्छाई की जीत; आपटा के पत्ते बांटे जाते हैं,"Besan, Sugar, Ghee, Jalebi, Fafda, Basundi",Basundi|Jalebi,Buy Apta leaves early as they sell out fast,आपट्याची पाने लवकर संपतात म्हणून आधीच घ्या,आपटा के पत्ते जल्दी बिक जाते हैं इसलिए पहले ही खरीद लें,No,Maharashtra
+Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; the Faral snack box is prepared,दिव्यांचा सण; दिवाळीचा फराळ बनवला जातो,रोशनी का त्योहार; दिवाली के पकवान बनाए जाते हैं,"Besan, Poha, Rava, Maida, Ghee",Chivda|Chakli|Ladoo|Karanji,Make sweets that last longer first,जास्त टिकणारे पदार्थ आधी करा,ज्यादा दिन टिकने वाली मिठाइयां पहले बनाएं,No,Maharashtra
 `;
 
     const blob = new Blob([sampleData], { type: 'text/csv' });
@@ -458,7 +476,7 @@ Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (sn
                   Upload Festival Calendar (CSV)
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
-                  Upload a CSV file with columns: Festival Name, Date, Significance, Key Ingredients
+                  Upload a CSV file with columns: Festival Name, Date, Significance, Significance (Marathi), Significance (Hindi), Key Ingredients. Translation columns are optional — blank falls back to English.
                 </p>
                 <div className="flex gap-3">
                   {/* Hidden file input triggered explicitly via ref.
@@ -622,13 +640,33 @@ Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (sn
                     {expandedFestival === festival.id && (
                       <div className="p-4 border-t bg-white">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* All three languages are listed side by side so a
+                              missing translation is visible at a glance —
+                              nothing auto-fills these, so gaps have to be
+                              findable or they never get written. */}
                           <div>
-                            <p className="text-sm font-medium text-gray-500 mb-1">Significance</p>
+                            <p className="text-sm font-medium text-gray-500 mb-1">Significance (English)</p>
                             <p className="text-gray-700">{festival.significance || '-'}</p>
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-500 mb-1">Region</p>
                             <p className="text-gray-700">{festival.region || 'Maharashtra'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500 mb-1">Significance (मराठी)</p>
+                            {festival.significance_mr ? (
+                              <p className="text-gray-700">{festival.significance_mr}</p>
+                            ) : (
+                              <p className="text-amber-600 text-sm">Not translated — shows English</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500 mb-1">Significance (हिन्दी)</p>
+                            {festival.significance_hi ? (
+                              <p className="text-gray-700">{festival.significance_hi}</p>
+                            ) : (
+                              <p className="text-amber-600 text-sm">Not translated — shows English</p>
+                            )}
                           </div>
                           <div className="md:col-span-2">
                             <p className="text-sm font-medium text-gray-500 mb-2">Key Ingredients</p>
@@ -691,10 +729,28 @@ Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (sn
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Significance</label>
+                <label className="text-sm font-medium text-gray-700">Significance (English)</label>
                 <Input
                   value={editingFestival.significance || ''}
                   onChange={(e) => setEditingFestival({ ...editingFestival, significance: e.target.value })}
+                />
+              </div>
+              {/* Translations are authored by hand — never machine-translated.
+                  Left blank, the app falls back to the English text above. */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Significance (मराठी)</label>
+                <Input
+                  value={editingFestival.significance_mr || ''}
+                  onChange={(e) => setEditingFestival({ ...editingFestival, significance_mr: e.target.value })}
+                  placeholder="Leave blank to show the English text"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Significance (हिन्दी)</label>
+                <Input
+                  value={editingFestival.significance_hi || ''}
+                  onChange={(e) => setEditingFestival({ ...editingFestival, significance_hi: e.target.value })}
+                  placeholder="Leave blank to show the English text"
                 />
               </div>
               <div>
@@ -773,11 +829,29 @@ Diwali,दिवाळी,दिवाली,Nov 8,Festival of lights; Faral (sn
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Significance</label>
+              <label className="text-sm font-medium text-gray-700">Significance (English)</label>
               <Input
                 value={newFestival.significance}
                 onChange={(e) => setNewFestival({ ...newFestival, significance: e.target.value })}
                 placeholder="e.g., Lord Ganesha's birthday"
+              />
+            </div>
+            {/* Translations are authored by hand — never machine-translated.
+                Left blank, the app falls back to the English text above. */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">Significance (मराठी)</label>
+              <Input
+                value={newFestival.significance_mr}
+                onChange={(e) => setNewFestival({ ...newFestival, significance_mr: e.target.value })}
+                placeholder="Leave blank to show the English text"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Significance (हिन्दी)</label>
+              <Input
+                value={newFestival.significance_hi}
+                onChange={(e) => setNewFestival({ ...newFestival, significance_hi: e.target.value })}
+                placeholder="Leave blank to show the English text"
               />
             </div>
             <div>

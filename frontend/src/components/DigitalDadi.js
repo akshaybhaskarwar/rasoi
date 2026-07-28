@@ -56,24 +56,38 @@ const IngredientBadge = ({ ingredient, status }) => {
 // Single Festival Card
 const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+  const { language, getLabel } = useLanguage();
+
   // Use backend flag for whether items are already in shopping list
   const isAlreadyAdded = festival.all_missing_in_shopping;
-  
+
+  // Festival copy is human-authored per language (never machine-translated —
+  // it's devotional text). Anything not yet translated falls back to English
+  // rather than showing an empty card.
+  const regionalName = language === 'mr' ? festival.name_mr
+    : language === 'hi' ? festival.name_hi
+    : null;
+  const significance = (language === 'mr' && festival.significance_mr)
+    || (language === 'hi' && festival.significance_hi)
+    || festival.significance;
+  const tips = ((language === 'mr' && festival.tips_mr?.length && festival.tips_mr)
+    || (language === 'hi' && festival.tips_hi?.length && festival.tips_hi)
+    || festival.tips) || [];
+
   // Calculate urgency based on days until
   const getUrgencyColor = (days) => {
     if (days <= 3) return 'from-red-500 to-orange-500';
     if (days <= 7) return 'from-orange-400 to-amber-400';
     return 'from-amber-300 to-yellow-300';
   };
-  
+
   const getUrgencyText = (days) => {
-    if (days === 0) return 'Today!';
-    if (days === 1) return 'Tomorrow!';
-    if (days <= 3) return `${days} days - Urgent!`;
-    return `${days} days`;
+    if (days === 0) return getLabel('festivalToday');
+    if (days === 1) return getLabel('festivalTomorrow');
+    if (days <= 3) return getLabel('festivalDaysUrgent', { n: days });
+    return getLabel('festivalDays', { n: days });
   };
-  
+
   return (
     <Card 
       className="overflow-hidden hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-400"
@@ -94,27 +108,29 @@ const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
                 </div>
                 {festival.is_fasting_day && (
                   <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                    🙏 Fasting Day
+                    🙏 {getLabel('fastingDay')}
                   </Badge>
                 )}
               </div>
-              
+
+              {/* The parenthesised name follows the active language. It used to
+                  be hardcoded to name_mr, so Hindi users were shown Marathi. */}
               <h3 className="text-lg font-bold text-gray-800 mb-1">
                 {festival.name}
-                {festival.name_mr && (
+                {regionalName && (
                   <span className="text-orange-500 font-normal text-base ml-2">
-                    ({festival.name_mr})
+                    ({regionalName})
                   </span>
                 )}
               </h3>
-              
-              <p className="text-sm text-gray-600 mb-3">{festival.significance}</p>
+
+              <p className="text-sm text-gray-600 mb-3">{significance}</p>
               
               {/* Readiness Score */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 max-w-[200px]">
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-gray-500">Readiness</span>
+                    <span className="text-gray-500">{getLabel('readiness')}</span>
                     <span className={`font-medium ${
                       festival.readiness_score >= 80 ? 'text-green-600' :
                       festival.readiness_score >= 50 ? 'text-yellow-600' : 'text-red-600'
@@ -150,7 +166,9 @@ const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
                     ) : (
                       <ShoppingCart className="w-3 h-3" />
                     )}
-                    {isAlreadyAdded ? 'Added to List' : `Add ${festival.missing_ingredients.length} Missing`}
+                    {isAlreadyAdded
+                      ? getLabel('addedToList')
+                      : getLabel('addMissing', { n: festival.missing_ingredients.length })}
                   </Button>
                 )}
               </div>
@@ -165,7 +183,7 @@ const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
           <div className="px-4 pb-4 border-t bg-gradient-to-b from-orange-50/50 to-white">
             {/* Ingredients Status */}
             <div className="pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Ingredient Status:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{getLabel('ingredientStatus')}</p>
               <div className="flex flex-wrap gap-2">
                 {festival.ingredient_status.map((ing, idx) => (
                   <IngredientBadge 
@@ -178,14 +196,14 @@ const FestivalCard = ({ festival, onAddToShopping, isAdding }) => {
             </div>
             
             {/* Dadi's Tips */}
-            {festival.tips?.length > 0 && (
+            {tips.length > 0 && (
               <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
                 <p className="text-sm font-medium text-amber-800 mb-2 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Dadi&apos;s Tips:
+                  {getLabel('dadisTips')}
                 </p>
                 <ul className="text-sm text-amber-900 space-y-1">
-                  {festival.tips.map((tip, idx) => (
+                  {tips.map((tip, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-amber-500">💡</span>
                       {tip}
@@ -207,7 +225,7 @@ const DigitalDadi = () => {
   const [tipOfDay, setTipOfDay] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingToShopping, setIsAddingToShopping] = useState(null);
-  const { language } = useLanguage();
+  const { language, getLabel } = useLanguage();
 
   const fetchUpcomingFestivals = useCallback(async () => {
     try {
@@ -325,10 +343,10 @@ const DigitalDadi = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-orange-500" />
-              Upcoming Festivals
+              {getLabel('upcomingFestivals')}
             </h3>
             <Badge variant="outline" className="bg-orange-50 text-orange-700">
-              {upcomingFestivals.length} in next 14 days
+              {getLabel('festivalsInNextDays', { count: upcomingFestivals.length, n: 14 })}
             </Badge>
           </div>
           
@@ -345,9 +363,9 @@ const DigitalDadi = () => {
         <Card className="border-dashed border-orange-300 bg-orange-50/30">
           <CardContent className="p-6 text-center">
             <Calendar className="w-12 h-12 text-orange-300 mx-auto mb-3" />
-            <p className="text-gray-600">No festivals in the next 14 days</p>
+            <p className="text-gray-600">{getLabel('noFestivals')}</p>
             <p className="text-sm text-gray-500 mt-1">
-              Upload festival calendar from Admin panel
+              {getLabel('uploadFestivalCalendar')}
             </p>
           </CardContent>
         </Card>

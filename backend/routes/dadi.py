@@ -26,9 +26,16 @@ class FestivalBase(BaseModel):
     name_hi: Optional[str] = Field(None, description="Festival name in Hindi")
     date: str = Field(..., description="Festival date (YYYY-MM-DD or Month Day format)")
     significance: str = Field(..., description="Cultural significance")
+    # Translations are human-authored, never machine-generated: this is
+    # devotional text where a mistranslated term reads badly. When a language
+    # is missing the client falls back to English rather than guessing.
+    significance_mr: Optional[str] = Field(None, description="Cultural significance in Marathi")
+    significance_hi: Optional[str] = Field(None, description="Cultural significance in Hindi")
     key_ingredients: List[str] = Field(default=[], description="List of key ingredients")
     recipes: Optional[List[str]] = Field(default=[], description="Associated recipes")
     tips: Optional[List[str]] = Field(default=[], description="Dadi's tips for this festival")
+    tips_mr: Optional[List[str]] = Field(default=[], description="Dadi's tips in Marathi")
+    tips_hi: Optional[List[str]] = Field(default=[], description="Dadi's tips in Hindi")
     is_fasting_day: bool = Field(default=False, description="Whether it's a fasting day")
     region: str = Field(default="Maharashtra", description="Primary region")
 
@@ -43,9 +50,13 @@ class FestivalUpdate(BaseModel):
     name_hi: Optional[str] = None
     date: Optional[str] = None
     significance: Optional[str] = None
+    significance_mr: Optional[str] = None
+    significance_hi: Optional[str] = None
     key_ingredients: Optional[List[str]] = None
     recipes: Optional[List[str]] = None
     tips: Optional[List[str]] = None
+    tips_mr: Optional[List[str]] = None
+    tips_hi: Optional[List[str]] = None
     is_fasting_day: Optional[bool] = None
     region: Optional[str] = None
 
@@ -64,12 +75,16 @@ class UpcomingFestival(BaseModel):
     date: str
     days_until: int
     significance: str
+    significance_mr: Optional[str] = None
+    significance_hi: Optional[str] = None
     key_ingredients: List[str]
     ingredient_status: List[dict]  # {name, status: 'in_stock'|'low'|'missing', current_stock, unit}
     readiness_score: int  # Percentage of ingredients in stock
     missing_ingredients: List[str]
     is_fasting_day: bool
     tips: List[str]
+    tips_mr: List[str] = []
+    tips_hi: List[str] = []
 
 
 def create_dadi_routes(db, decode_token):
@@ -140,12 +155,20 @@ def create_dadi_routes(db, decode_token):
                     
                     # Parse other fields
                     significance = (normalized_row.get('significance') or '').strip()
+                    significance_mr = (normalized_row.get('significance (marathi)') or
+                                       normalized_row.get('significance_mr') or '').strip()
+                    significance_hi = (normalized_row.get('significance (hindi)') or
+                                       normalized_row.get('significance_hi') or '').strip()
                     name_mr = (normalized_row.get('name (marathi)') or normalized_row.get('name_mr') or '').strip()
                     name_hi = (normalized_row.get('name (hindi)') or normalized_row.get('name_hi') or '').strip()
                     recipes_str = (normalized_row.get('recipes') or '')
                     recipes = [r.strip() for r in recipes_str.split(',') if r.strip()]
                     tips_str = (normalized_row.get('tips') or normalized_row.get("dadi's tips") or '')
                     tips = [t.strip() for t in tips_str.split('|') if t.strip()]  # Use | as separator for tips
+                    tips_mr_str = (normalized_row.get('tips (marathi)') or normalized_row.get('tips_mr') or '')
+                    tips_mr = [t.strip() for t in tips_mr_str.split('|') if t.strip()]
+                    tips_hi_str = (normalized_row.get('tips (hindi)') or normalized_row.get('tips_hi') or '')
+                    tips_hi = [t.strip() for t in tips_hi_str.split('|') if t.strip()]
                     is_fasting = (normalized_row.get('is fasting day') or normalized_row.get('fasting') or '').lower() in ['yes', 'true', '1', 'y']
                     region = (normalized_row.get('region') or 'Maharashtra').strip()
                     
@@ -156,9 +179,13 @@ def create_dadi_routes(db, decode_token):
                         "name_hi": name_hi or None,
                         "date": date_str,
                         "significance": significance,
+                        "significance_mr": significance_mr or None,
+                        "significance_hi": significance_hi or None,
                         "key_ingredients": key_ingredients,
                         "recipes": recipes,
                         "tips": tips,
+                        "tips_mr": tips_mr,
+                        "tips_hi": tips_hi,
                         "is_fasting_day": is_fasting,
                         "region": region,
                         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -175,9 +202,13 @@ def create_dadi_routes(db, decode_token):
             updated_count = 0
             
             for festival in festivals_to_insert:
-                # Check if festival with same name and date exists (upsert)
+                # Check if a festival with this name exists (upsert).
+                # The name MUST be regex-escaped: unescaped, a name like
+                # "Holi (Shimga)" compiles to a pattern with a capture group
+                # that no longer matches the stored literal, so re-uploading
+                # the same calendar silently inserted duplicates.
                 existing = await db.festivals.find_one({
-                    "name": {"$regex": f"^{festival['name']}$", "$options": "i"}
+                    "name": {"$regex": f"^{re.escape(festival['name'])}$", "$options": "i"}
                 })
                 
                 if existing:
@@ -361,8 +392,12 @@ def create_dadi_routes(db, decode_token):
                 "unit": item.get("unit", "")
             }
         
-        # Calculate upcoming festivals
-        today = datetime.now()
+        # Calculate upcoming festivals.
+        # Normalised to midnight so a festival dated TODAY counts as today
+        # (days_until == 0) instead of being treated as already past — with a
+        # datetime.now() comparison, anything dated today was "past" from
+        # 00:00:01 onwards and silently dropped out of the list.
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         current_year = today.year
         upcoming = []
         
@@ -385,10 +420,22 @@ def create_dadi_routes(db, decode_token):
                 if not festival_date:
                     continue
                 
-                # If festival date has passed this year, check next year
+                # Past festivals are EXCLUDED, not rolled forward.
+                #
+                # This used to do `festival_date.replace(year=current_year + 1)`,
+                # which keeps the same month and day. That is right for a solar
+                # festival (Makar Sankranti is always ~14 January) and wrong for
+                # every lunar one — Ganesh Chaturthi 2026-09-14 does not recur on
+                # 2027-09-14. The result was that a festival which had passed
+                # reappeared on a confident-looking but fabricated date.
+                #
+                # Skipping is the honest behaviour: next year's dates have to be
+                # loaded from a verified panchang, not guessed from this year's.
+                # Year-less values ("Feb 15") are assumed to be the current year
+                # and so drop out once passed, which is the intended effect.
                 if festival_date < today:
-                    festival_date = festival_date.replace(year=current_year + 1)
-                
+                    continue
+
                 days_until = (festival_date - today).days
                 
                 if 0 <= days_until <= days_ahead:
@@ -459,7 +506,12 @@ def create_dadi_routes(db, decode_token):
                         "date": festival_date.strftime("%Y-%m-%d"),
                         "date_display": festival_date.strftime("%b %d"),
                         "days_until": days_until,
+                        # All three languages ship in one payload and the client
+                        # picks — same as name/name_mr/name_hi above. Keeps the
+                        # response language-independent and cacheable.
                         "significance": festival.get("significance"),
+                        "significance_mr": festival.get("significance_mr"),
+                        "significance_hi": festival.get("significance_hi"),
                         "key_ingredients": festival.get("key_ingredients", []),
                         "ingredient_status": ingredient_status,
                         "readiness_score": readiness_score,
@@ -468,6 +520,8 @@ def create_dadi_routes(db, decode_token):
                         "all_missing_in_shopping": all_missing_in_shopping,
                         "is_fasting_day": festival.get("is_fasting_day", False),
                         "tips": festival.get("tips", []),
+                        "tips_mr": festival.get("tips_mr", []),
+                        "tips_hi": festival.get("tips_hi", []),
                         "recipes": festival.get("recipes", [])
                     })
                     
@@ -592,12 +646,18 @@ def create_dadi_routes(db, decode_token):
         # Get tips from festivals
         festivals_with_tips = await db.festivals.find(
             {"tips": {"$exists": True, "$ne": []}},
-            {"_id": 0, "tips": 1, "name": 1, "name_mr": 1, "name_hi": 1}
+            {"_id": 0, "tips": 1, "tips_mr": 1, "tips_hi": 1,
+             "name": 1, "name_mr": 1, "name_hi": 1}
         ).to_list(50)
-        
+
         all_tips = []
         for f in festivals_with_tips:
-            for tip in f.get("tips", []):
+            # tips_mr / tips_hi are index-matched against tips. A festival may
+            # have no translations yet, or a partial list, so each tip falls
+            # back to English on its own rather than all-or-nothing.
+            translated = (f.get(f"tips_{lang}") or []) if lang in ("mr", "hi") else []
+            for idx, tip in enumerate(f.get("tips", [])):
+                localized = translated[idx] if idx < len(translated) and translated[idx] else tip
                 # Get festival name in requested language
                 if lang == "mr" and f.get("name_mr"):
                     context = f.get("name_mr")
@@ -605,7 +665,7 @@ def create_dadi_routes(db, decode_token):
                     context = f.get("name_hi")
                 else:
                     context = f.get("name")
-                all_tips.append({"tip_en": tip, "context": context})
+                all_tips.append({"tip_en": localized, "context": context})
         
         # Multilingual general tips
         general_tips = [
