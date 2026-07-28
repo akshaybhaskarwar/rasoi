@@ -90,8 +90,10 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
         name_hi = await translate_service.translate_text_simple(item.name_en, "hi")
         shopping_item.name_hi = name_hi
         
-        if item.stock_level:
-            shopping_item.stock_level = item.stock_level
+        # NOT persisted: stock_level is derived from inventory and served live
+        # by GET /shopping. Storing it here is what produced rows that showed
+        # "Empty" long after the item was restocked. The field stays on the
+        # model because the response carries it — it is just never written.
         if item.monthly_quantity:
             shopping_item.monthly_quantity = item.monthly_quantity
         
@@ -146,11 +148,43 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
             query["store_type"] = store_type
         
         items = await db.shopping_list.find(query, {"_id": 0}).to_list(1000)
-        
+
+        # `stock_level` is DERIVED from inventory, not owned by the shopping
+        # row. It used to be stamped in at row-creation time and never touched
+        # again, so a row created while an item was empty kept showing "Empty"
+        # forever — including after a receipt scan restocked it. The shopping
+        # list said Sabudana was empty while inventory said 2 kg / full.
+        #
+        # Reading it live here makes the two screens agree by construction
+        # instead of by remembering to write back from every inventory path.
+        inventory = await db.inventory.find(
+            {"household_id": household_id},
+            {"_id": 0, "name_en": 1, "stock_level": 1, "current_stock": 1, "aliases": 1},
+        ).to_list(1000)
+
+        stock_by_name = {}
+        for inv in inventory:
+            level = inv.get("stock_level")
+            if not level:
+                continue
+            name = (inv.get("name_en") or "").strip().lower()
+            if name:
+                stock_by_name[name] = level
+            # Aliases let "Besan" on the shopping list find "Gram Flour" in
+            # inventory. Never overwrite a direct name match.
+            for alias in (inv.get("aliases") or []):
+                key = (alias or "").strip().lower()
+                if key:
+                    stock_by_name.setdefault(key, level)
+
         for item in items:
             if isinstance(item.get('created_at'), str):
                 item['created_at'] = datetime.fromisoformat(item['created_at'])
-        
+            key = (item.get("name_en") or "").strip().lower()
+            # Absent from inventory means the household genuinely has none of
+            # it, which is what an empty shopping row is for.
+            item["stock_level"] = stock_by_name.get(key)
+
         return items
 
     @shopping_router.delete("/shopping/{item_id}")
