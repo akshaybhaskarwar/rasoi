@@ -116,6 +116,28 @@ const fileToResizedBase64 = (file) =>
 const formatINR = (n) =>
   typeof n === 'number' ? `₹${n.toFixed(2)}` : '';
 
+// A scan runs 12-15 seconds: Google Vision OCR (~3s) then Claude matching each
+// line against the pantry catalog (~5-10s). Previously the only feedback was a
+// spinner inside the button, which on a phone reads as "nothing is happening"
+// long before the work is done — so people tap away or retry.
+//
+// These messages track the real pipeline rather than counting down a fake
+// progress bar, so what the user reads is actually what is happening.
+const SCAN_STAGES = [
+  { after: 0,  text: 'Uploading your receipt…' },
+  { after: 3,  text: 'Reading the text…' },
+  { after: 7,  text: 'Matching items to your pantry…' },
+  { after: 13, text: 'Almost done — longer bills take a little more time' },
+];
+
+const scanStageText = (seconds) => {
+  let current = SCAN_STAGES[0].text;
+  for (const stage of SCAN_STAGES) {
+    if (seconds >= stage.after) current = stage.text;
+  }
+  return current;
+};
+
 // Does rate × qty reconcile with the printed amount?
 //
 // The OCR flattens the receipt's columns and the model re-pairs them, so a
@@ -187,6 +209,8 @@ const ReceiptScanButton = ({ onSuccess }) => {
   const fileInputRef = useRef(null);
 
   const [stage, setStage] = useState('idle'); // idle | confirming
+  // Seconds since the scan started, driving the progress copy below.
+  const [scanSeconds, setScanSeconds] = useState(0);
   const [receipt, setReceipt] = useState(null); // server response
   const [rows, setRows] = useState([]);         // editable copy of items
   const [catalogOpen, setCatalogOpen] = useState(null); // row_id of row being matched
@@ -206,6 +230,17 @@ const ReceiptScanButton = ({ onSuccess }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
+
+  // Tick a seconds counter for as long as a scan is running. Reset on finish
+  // so the next scan starts its messaging from the beginning.
+  useEffect(() => {
+    if (!parsing) {
+      setScanSeconds(0);
+      return undefined;
+    }
+    const id = setInterval(() => setScanSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [parsing]);
 
   const handlePickFile = () => {
     fileInputRef.current?.click();
@@ -434,6 +469,37 @@ const ReceiptScanButton = ({ onSuccess }) => {
         )}
         <span>{getLabel('scanReceipt')}</span>
       </Button>
+
+      {/* Scan progress. Deliberately blocking: the work takes 12-15 seconds
+          and there is nothing useful to do meanwhile, so the honest thing is
+          to hold the screen and say what is happening rather than leave a
+          spinner on a button people assume has failed. */}
+      <Dialog open={parsing}>
+        <DialogContent
+          className="max-w-xs text-center [&>button]:hidden"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-center text-base">Scanning your receipt</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center">
+                <Receipt className="w-7 h-7 text-[#FF9933]" />
+              </div>
+              <Loader2 className="w-16 h-16 absolute inset-0 text-[#FF9933]/40 animate-spin" />
+            </div>
+
+            <p className="text-sm font-medium text-gray-800 min-h-[20px]" data-testid="scan-stage-text">
+              {scanStageText(scanSeconds)}
+            </p>
+            <p className="text-xs text-gray-500">
+              This usually takes 10–15 seconds. Please keep the app open.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Hidden input — opens device camera on mobile, file picker on desktop */}
       <input

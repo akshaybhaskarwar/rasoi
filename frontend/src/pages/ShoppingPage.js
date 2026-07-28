@@ -14,11 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import TranslatedLabel from '@/components/TranslatedLabel';
 import { ShoppingBarcodeScanner } from '@/components/ShoppingBarcodeScanner';
 import ReceiptScanButton from '@/components/ReceiptScanButton';
 import { ShoppingDeleteSheet } from '@/components/ShoppingDeleteSheet';
 import { LastPaidLine } from '@/components/LastPaidLine';
+import { IngredientAvatar } from '@/components/IngredientAvatar';
+import { getCategoryInfo } from '@/lib/inventoryUtils';
 import { PricePromptSheet } from '@/components/PricePromptSheet';
 import { useLastPrices, usablePrice } from '@/hooks/useLastPrices';
 import { toast } from 'sonner';
@@ -676,23 +677,32 @@ const ShoppingPage = () => {
                           {/* Top Row - Item info, quantity, delete */}
                           <div className="flex items-center gap-3">
                             {/* Item Info */}
+                            {/* Matches the Inventory list row: category-tinted
+                                avatar, name at 17px, regional name and stock
+                                on a quieter second line. The two screens show
+                                the same items, so they should read the same. */}
+                            <IngredientAvatar
+                              item={item}
+                              categoryInfo={getCategoryInfo(item.category)}
+                              size="sm"
+                            />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-800 truncate">
-                                <TranslatedLabel 
-                                  textEn={item.name_en}
-                                  textRegional={language === 'hi' ? item.name_hi : item.name_mr}
-                                  targetLanguage={language}
-                                  showVerification={false}
-                                  size="sm"
-                                />
+                              <p className="text-[15px] md:text-[17px] font-bold text-gray-800 truncate">
+                                {item.name_en}
                               </p>
-                              {item.stock_level && (
-                                <span className={`text-xs ${
-                                  item.stock_level === 'empty' ? 'text-gray-500' : 'text-orange-600'
-                                }`}>
-                                  {item.stock_level === 'empty' ? '○ Empty' : '◔ Low stock'}
-                                </span>
-                              )}
+                              <p className="text-[13px] text-gray-500 truncate">
+                                {(language === 'hi' ? item.name_hi : item.name_mr) && (
+                                  <span>{language === 'hi' ? item.name_hi : item.name_mr}</span>
+                                )}
+                                {item.stock_level && (
+                                  <span className={
+                                    item.stock_level === 'empty' ? 'text-gray-500' : 'text-orange-600'
+                                  }>
+                                    {(language === 'hi' ? item.name_hi : item.name_mr) ? ' · ' : ''}
+                                    {item.stock_level === 'empty' ? 'empty' : item.stock_level}
+                                  </span>
+                                )}
+                              </p>
                             </div>
 
                           {/* Quick Quantity Selector with Custom Input */}
