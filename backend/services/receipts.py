@@ -100,34 +100,15 @@ def _build_catalog_text() -> str:
 _CATALOG_TEXT = _build_catalog_text()
 
 
-ROW_ALIGNED_PARSE_PROMPT = """\
-Below are the rows of an Indian grocery receipt. Each line has ALREADY been
-reconstructed from the OCR word positions, so the name and its numbers on a
-given line belong together. Do NOT re-associate values across lines — the
-pairing is authoritative.
-
-Your job:
-1. For each line that is a purchased item, read off its qty/unit/rate/amount
-   as printed on that line.
-2. Map each item to the closest entry from the CATALOG above (canonical
-   English name).
-
-Skip header lines, totals, shop details and any line that is not a purchase.
-"""
-
-# Retained for the fallback path: if row reconstruction produced too little to
-# be trustworthy, we send the flattened text with the old instructions rather
-# than feeding the model rows we do not believe in.
-CLAUDE_PARSE_PROMPT = """\
-Below is OCR text extracted from an Indian grocery receipt. The OCR engine
-preserved character accuracy but flattened the column layout — typically item
-names appear first as a block, then quantity/unit/rate/amount as another block.
-
-Your job:
-1. Re-pair each item name with its qty/unit/rate/amount row.
-2. Map each item to the closest entry from the CATALOG above (canonical
-   English name).
-
+# The output contract, shared by BOTH prompts below.
+#
+# Kept as one constant on purpose. It previously lived inline inside the single
+# prompt; when a second prompt was added for the row-aligned path, the schema
+# was left behind in the original and the new one shipped with no output format
+# at all. Claude answered in prose, json.loads() got an empty string, and every
+# scan failed with "Claude returned non-JSON". Sharing it makes that class of
+# mistake impossible.
+_PARSE_OUTPUT_CONTRACT = """
 Common unit codes: UT = unit/packet, K = kg, G = gram, L = litre.
 
 Return STRICT JSON (no prose, no markdown fences):
@@ -155,7 +136,38 @@ Confidence guide:
   unmatched = no plausible catalog entry; set name_canonical_en to null
 
 If you cannot read a field, set it to null. Do not invent items.
+"""
 
+ROW_ALIGNED_PARSE_PROMPT = """\
+Below are the rows of an Indian grocery receipt. Each line has ALREADY been
+reconstructed from the OCR word positions, so the name and its numbers on a
+given line belong together. Do NOT re-associate values across lines — the
+pairing is authoritative.
+
+Your job:
+1. For each line that is a purchased item, read off its qty/unit/rate/amount
+   as printed on that line.
+2. Map each item to the closest entry from the CATALOG above (canonical
+   English name).
+
+Skip header lines, totals, shop details and any line that is not a purchase.
+""" + _PARSE_OUTPUT_CONTRACT + """
+RECEIPT ROWS:
+"""
+
+# Retained for the fallback path: if row reconstruction produced too little to
+# be trustworthy, we send the flattened text with the old instructions rather
+# than feeding the model rows we do not believe in.
+CLAUDE_PARSE_PROMPT = """\
+Below is OCR text extracted from an Indian grocery receipt. The OCR engine
+preserved character accuracy but flattened the column layout — typically item
+names appear first as a block, then quantity/unit/rate/amount as another block.
+
+Your job:
+1. Re-pair each item name with its qty/unit/rate/amount row.
+2. Map each item to the closest entry from the CATALOG above (canonical
+   English name).
+""" + _PARSE_OUTPUT_CONTRACT + """
 OCR TEXT:
 """
 
@@ -287,11 +299,26 @@ class ReceiptIngestionService:
             cleaned = text.strip().lstrip("`").rstrip("`")
             if cleaned.startswith("json"):
                 cleaned = cleaned[4:].strip()
-            return json.loads(cleaned)
+            try:
+                return json.loads(cleaned)
+            except json.JSONDecodeError:
+                # Logged here because `cleaned` only exists in this closure.
+                # The decoder's own message is identical whether the model
+                # replied with prose, an empty string or a truncated object,
+                # so without the raw reply a prompt bug is indistinguishable
+                # from an API failure.
+                logger.error(
+                    "Claude returned non-JSON (%d chars, first 300): %r",
+                    len(cleaned), cleaned[:300],
+                )
+                raise
         try:
             return await asyncio.to_thread(_sync)
         except json.JSONDecodeError as e:
-            raise ReceiptIngestionError(f"Claude returned non-JSON: {e}") from e
+            # The raw reply was already logged inside _sync, where it is in scope.
+            raise ReceiptIngestionError(
+                "Claude did not return JSON — see server logs for the raw reply"
+            ) from e
 
     def _apply_fuzzy_fallback(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
         """Salvage items Claude marked `unmatched` via rapidfuzz on aliases."""
