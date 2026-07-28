@@ -501,6 +501,37 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
           {/* Confirmation — uses the shared ManualItemEntryForm so the
               receipt-scan "Add as new item" flow reuses the same UX. */}
           {scanMode === 'confirm' && (
+            <>
+              {/* Retry the DATE only, keeping the name that was already
+                  scanned. Without this the sole way out of a failed expiry
+                  read was Cancel — which calls resetState() and wipes
+                  productData, forcing the whole two-step scan again just to
+                  re-attempt the second step. */}
+              {!expiryDate && (
+                <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                  <Calendar className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-amber-800 font-medium">No expiry date read</p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Type it below, leave it blank, or try the photo again.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-amber-400 text-amber-800 hover:bg-amber-100 flex-shrink-0"
+                    onClick={() => {
+                      setError(null);
+                      setCapturedImage(null);
+                      setScanMode('photo_expiry');
+                    }}
+                    data-testid="retry-expiry-scan"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                    Retry date
+                  </Button>
+                </div>
+              )}
             <ManualItemEntryForm
               initialName={productData.name_en}
               initialCategory={productData.category}
@@ -523,6 +554,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
               }}
               onCancel={resetState}
             />
+            </>
           )}
         </div>
       </DialogContent>
