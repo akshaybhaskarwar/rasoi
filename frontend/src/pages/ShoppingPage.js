@@ -147,10 +147,17 @@ const ShoppingPage = () => {
     return category === 'vegetables' || category === 'fruits' || category === 'mandi';
   }).length;
 
-  // Get low stock items
+  // Get low stock items. Items the user snoozed via the delete-intent
+  // sheet are excluded until their snooze window lapses — otherwise
+  // deleting a low staple immediately re-offers it under the "Update N"
+  // button, which is what made deletes feel like they didn't stick.
+  // The snooze self-expires, so the item returns on the next cycle
+  // without the user having to do anything.
   const getLowStockItems = () => {
-    return inventory.filter(item => 
-      item.stock_level === 'low' || item.stock_level === 'empty'
+    const today = new Date().toISOString().slice(0, 10);
+    return inventory.filter(item =>
+      (item.stock_level === 'low' || item.stock_level === 'empty') &&
+      !(item.auto_suggest_snoozed_until && item.auto_suggest_snoozed_until > today)
     );
   };
 
@@ -183,7 +190,13 @@ const ShoppingPage = () => {
             quantity: '-',
             store_type: item.category === 'vegetables' || item.category === 'fruits' ? 'mandi' : 'grocery',
             stock_level: item.stock_level,
-            monthly_quantity: defaultQty
+            monthly_quantity: defaultQty,
+            // Mark as auto-suggested so deleting this row opens the
+            // intent sheet ("already have it" / "skip") rather than a
+            // bare hard-delete, which would leave the item low-stock
+            // and immediately re-offered by the Update button.
+            source: 'auto',
+            source_ref: `inventory:${item.id}`
           });
           addedCount++;
         }
@@ -312,6 +325,9 @@ const ShoppingPage = () => {
     try {
       const result = await alreadyHaveItem(item.id);
       const inventoryAction = result?.inventory_action;
+      // Pantry stock level changed server-side — refetch so the
+      // low-stock "Update N" badge reflects it straight away.
+      await fetchInventory();
       toast.success(`Marked ${item.name_en} as stocked`, {
         description: inventoryAction === 'updated_existing'
           ? 'Pantry updated, removed from shopping list.'
@@ -329,13 +345,20 @@ const ShoppingPage = () => {
   };
 
   const handleSheetSnooze = async (item, days) => {
-    setDeleteSheetBusy('snooze');
+    setDeleteSheetBusy(days >= 30 ? 'snooze-month' : 'snooze');
     try {
       await snoozeItem(item.id, days);
-      toast.success(`Snoozed ${item.name_en} for ${days} days`, {
-        description: 'Won’t auto-suggest again until then.',
-        duration: 4000,
-      });
+      // The snooze lives on the inventory row; refetch so the
+      // "Update N" badge stops offering the item immediately.
+      await fetchInventory();
+      toast.success(
+        days >= 30
+          ? `Skipping ${item.name_en} this month`
+          : `Snoozed ${item.name_en} for ${days} days`,
+        {
+          description: 'It’ll be suggested again after that — no action needed.',
+          duration: 4000,
+        });
       setDeleteSheetItem(null);
     } catch (error) {
       toast.error('Could not snooze', {

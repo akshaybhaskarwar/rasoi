@@ -1,111 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 // useUnits no longer called directly on InventoryPage (the editor uses it internally).
-import { Search, Lock, Trash2, Package2, Sparkles, Edit, Camera, AlertTriangle, Calendar } from 'lucide-react';
+import { Search, Lock, Package2, Sparkles, AlertTriangle, LayoutGrid, List } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { IndianPantryTemplate } from '@/components/IndianPantryTemplate';
 import { BarcodeScanner } from '@/components/BarcodeScanner';
-import { StockQuantityEditor } from '@/components/StockQuantityEditor';
 import { Badge } from '@/components/ui/badge';
 import TranslatedLabel from '@/components/TranslatedLabel';
+import { IngredientAvatar } from '@/components/IngredientAvatar';
+import { InventoryItemDetails } from '@/components/InventoryItemDetails';
+import { InventoryRow } from '@/components/InventoryRow';
+import {
+  CATEGORIES,
+  DEFAULT_MONTHLY,
+  calculateStockStatus,
+  getCalculatedStockLevel,
+  getCategoryInfo,
+  getExpiryStatus,
+} from '@/lib/inventoryUtils';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// Default monthly quantities by category (display is computed dynamically via UnitContext)
-const DEFAULT_MONTHLY = {
-  'grains': { quantity: 5000, unit: 'g', step: 1000 },
-  'pulses': { quantity: 500, unit: 'g', step: 250 },
-  'spices': { quantity: 100, unit: 'g', step: 50 },
-  'dairy': { quantity: 5000, unit: 'ml', step: 500 },
-  'oils': { quantity: 1000, unit: 'ml', step: 250 },
-  'bakery': { quantity: 2, unit: 'pcs', step: 1 },
-  'snacks': { quantity: 500, unit: 'g', step: 100 },
-  'beverages': { quantity: 500, unit: 'g', step: 100 },
-  'vegetables': { quantity: 2000, unit: 'g', step: 500 },
-  'fruits': { quantity: 2000, unit: 'g', step: 500 },
-  'fasting': { quantity: 500, unit: 'g', step: 100 },
-  'household': { quantity: 1, unit: 'pcs', step: 1 },
-  'cleaning': { quantity: 1, unit: 'pcs', step: 1 },
-  'medicine': { quantity: 1, unit: 'pcs', step: 1 },
-  'other': { quantity: 1000, unit: 'g', step: 250 }
-};
-
-// Helper function to check expiry status
-const getExpiryStatus = (expiryDate) => {
-  if (!expiryDate) return null;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(expiryDate);
-  expiry.setHours(0, 0, 0, 0);
-  
-  const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-  
-  if (daysUntilExpiry < 0) {
-    return { status: 'expired', days: Math.abs(daysUntilExpiry), message: `Expired ${Math.abs(daysUntilExpiry)} days ago` };
-  } else if (daysUntilExpiry === 0) {
-    return { status: 'today', days: 0, message: 'Expires today!' };
-  } else if (daysUntilExpiry <= 30) {
-    return { status: 'soon', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
-  }
-  return { status: 'ok', days: daysUntilExpiry, message: `Expires in ${daysUntilExpiry} days` };
-};
-
-const CATEGORIES = [
-  { value: 'grains', label: '🌾 Grains & Cereals', color: 'bg-amber-50' },
-  { value: 'pulses', label: '🫘 Pulses & Lentils', color: 'bg-yellow-50' },
-  { value: 'spices', label: '🌶️ Spices & Masalas', color: 'bg-red-50' },
-  { value: 'vegetables', label: '🧅 Vegetables', color: 'bg-green-50' },
-  { value: 'fruits', label: '🍎 Fruits', color: 'bg-pink-50' },
-  { value: 'dairy', label: '🥛 Dairy & Essentials', color: 'bg-blue-50' },
-  { value: 'oils', label: '🧴 Oils & Condiments', color: 'bg-yellow-100' },
-  { value: 'bakery', label: '🍞 Bakery Items', color: 'bg-amber-100' },
-  { value: 'fasting', label: '🔱 Upvas/Fasting', color: 'bg-purple-50' },
-  { value: 'snacks', label: '🥣 Snacks & Ready Mix', color: 'bg-orange-100' },
-  { value: 'beverages', label: '☕ Tea & Coffee', color: 'bg-brown-50' },
-  { value: 'medicine', label: '💊 Medicine', color: 'bg-rose-50' },
-  { value: 'household', label: '🧹 Cleaning & Household', color: 'bg-cyan-50' },
-  { value: 'other', label: '📦 Other', color: 'bg-gray-50' }
-];
-
-const STOCK_LEVELS = [
-  { value: 'empty', label: 'Empty', color: 'bg-gray-200 text-gray-700', icon: '○' },
-  { value: 'low', label: 'Low', color: 'bg-[#FF9933] text-white', icon: '◔' },
-  { value: 'half', label: 'Half', color: 'bg-[#FFCC00] text-gray-800', icon: '◑' },
-  { value: 'full', label: 'Full', color: 'bg-[#77DD77] text-white', icon: '●' }
-];
-
-// Calculate stock status based on current stock vs monthly need
-const calculateStockStatus = (currentStock, monthlyNeed) => {
-  if (!monthlyNeed || monthlyNeed === 0) {
-    return currentStock > 0 ? { value: 'full', label: 'Full', color: 'bg-[#77DD77] text-white', icon: '●' } 
-                           : { value: 'empty', label: 'Empty', color: 'bg-gray-200 text-gray-700', icon: '○' };
-  }
-  
-  const percentage = (currentStock / monthlyNeed) * 100;
-  
-  if (percentage === 0) {
-    return { value: 'empty', label: 'Empty', color: 'bg-gray-200 text-gray-700', icon: '○' };
-  } else if (percentage <= 25) {
-    return { value: 'low', label: 'Low', color: 'bg-[#FF9933] text-white', icon: '◔' };
-  } else if (percentage <= 75) {
-    return { value: 'half', label: 'Half', color: 'bg-[#FFCC00] text-gray-800', icon: '◑' };
-  } else {
-    return { value: 'full', label: 'Full', color: 'bg-[#77DD77] text-white', icon: '●' };
-  }
-};
 
 const InventoryPage = () => {
   const { inventory, loading, addItem, updateItem, deleteItem, fetchInventory } = useInventory();
-  const { language, getLabel, isEnglish } = useLanguage();
+  const { language, getLabel } = useLanguage();
   // formatQuantity/Minus/Plus moved into StockQuantityEditor.
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -114,6 +38,37 @@ const InventoryPage = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [editingExpiryItemId, setEditingExpiryItemId] = useState(null);
   const [newExpiryDate, setNewExpiryDate] = useState('');
+  // 'grid' = the original card grid, 'list' = compact rows with an inline
+  // stepper. Persisted because it's a standing preference, not a per-visit
+  // choice — a 40-item pantry wants list every time.
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('rasoi.inventoryViewMode') === 'list' ? 'list' : 'grid';
+    } catch {
+      return 'grid'; // Safari private mode throws on localStorage access
+    }
+  });
+  // Only one list row is expanded at a time — otherwise the list balloons
+  // back into the card grid it's meant to replace.
+  const [expandedRowId, setExpandedRowId] = useState(null);
+
+  const changeViewMode = (mode) => {
+    setViewMode(mode);
+    setExpandedRowId(null);
+    try {
+      localStorage.setItem('rasoi.inventoryViewMode', mode);
+    } catch {
+      /* preference just won't persist */
+    }
+  };
+
+  const toggleExpandedRow = (itemId) => {
+    setExpandedRowId((current) => (current === itemId ? null : itemId));
+    // Leaving an open expiry editor behind on a collapsed row would strand
+    // the draft date with no visible Save button.
+    setEditingExpiryItemId(null);
+    setNewExpiryDate('');
+  };
 
   // Get items expiring soon (within 30 days)
   const expiringItems = inventory.filter(item => {
@@ -124,14 +79,6 @@ const InventoryPage = () => {
     const statusB = getExpiryStatus(b.expiry_date);
     return statusA.days - statusB.days;
   });
-
-  // Helper function to get calculated stock level for an item
-  const getCalculatedStockLevel = (item) => {
-    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
-    const currentStock = item.current_stock || 0;
-    const monthlyNeed = item.monthly_quantity || defaults.quantity;
-    return calculateStockStatus(currentStock, monthlyNeed).value;
-  };
 
   const filteredInventory = inventory.filter(item => {
     const query = searchQuery.toLowerCase();
@@ -164,37 +111,6 @@ const InventoryPage = () => {
     }
   };
 
-  const handleUpdateStock = async (itemId, stockLevel) => {
-    try {
-      await updateItem(itemId, { stock_level: stockLevel });
-    } catch (error) {
-      console.error('Error updating stock:', error);
-    }
-  };
-
-  const handleMonthlyQuantityChange = async (item, direction) => {
-    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
-    const currentQty = item.monthly_quantity || defaults.quantity;
-    const currentUnit = item.monthly_unit || defaults.unit;
-    const step = defaults.step;
-    
-    let newQty;
-    if (direction === 'increase') {
-      newQty = currentQty + step;
-    } else {
-      newQty = Math.max(step, currentQty - step); // Don't go below one step
-    }
-    
-    try {
-      await updateItem(item.id, { 
-        monthly_quantity: newQty, 
-        monthly_unit: currentUnit 
-      });
-    } catch (error) {
-      console.error('Error updating monthly quantity:', error);
-    }
-  };
-
   // Set current_stock to an exact value. Used by StockQuantityEditor's chips
   // (additive — pre-computed at the chip click site) and inline numpad (set).
   const setCurrentStock = async (item, newStock) => {
@@ -222,33 +138,6 @@ const InventoryPage = () => {
       });
     } catch (error) {
       console.error('Error setting monthly quantity:', error);
-    }
-  };
-
-  // Handle current stock changes (for consumption tracking)
-  const handleCurrentStockChange = async (item, direction) => {
-    const defaults = DEFAULT_MONTHLY[item.category] || DEFAULT_MONTHLY['other'];
-    const currentStock = item.current_stock || 0;
-    const step = defaults.step;
-    
-    let newStock;
-    if (direction === 'increase') {
-      newStock = currentStock + step;
-    } else {
-      newStock = Math.max(0, currentStock - step); // Don't go below 0
-    }
-    
-    try {
-      // Calculate the new stock level based on current stock vs monthly need
-      const monthlyNeed = item.monthly_quantity || defaults.quantity;
-      const newStatus = calculateStockStatus(newStock, monthlyNeed);
-      
-      await updateItem(item.id, { 
-        current_stock: newStock,
-        stock_level: newStatus.value // Also update stock_level for backward compatibility
-      });
-    } catch (error) {
-      console.error('Error updating current stock:', error);
     }
   };
 
@@ -305,14 +194,6 @@ const InventoryPage = () => {
   const cancelEditingExpiry = () => {
     setEditingExpiryItemId(null);
     setNewExpiryDate('');
-  };
-
-  const getCategoryInfo = (categoryValue) => {
-    return CATEGORIES.find(c => c.value === categoryValue) || CATEGORIES[CATEGORIES.length - 1];
-  };
-
-  const getStockLevelInfo = (level) => {
-    return STOCK_LEVELS.find(s => s.value === level) || STOCK_LEVELS[0];
   };
 
   const handleStockFilterClick = (stockLevel) => {
@@ -374,7 +255,34 @@ const InventoryPage = () => {
             {getLabel('manageYourKitchen')}
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {/* Grid ⇄ list density toggle. Grid stays the default for small
+              pantries; list is for the 40-item case where card height turns
+              "did I run out of haldi?" into a scrolling exercise. */}
+          <div className="flex items-center bg-gray-100 rounded-full p-1" data-testid="view-mode-toggle">
+            <button
+              onClick={() => changeViewMode('grid')}
+              className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium transition-colors ${
+                viewMode === 'grid' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+              aria-pressed={viewMode === 'grid'}
+              data-testid="view-mode-grid"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Cards</span>
+            </button>
+            <button
+              onClick={() => changeViewMode('list')}
+              className={`flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium transition-colors ${
+                viewMode === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+              aria-pressed={viewMode === 'list'}
+              data-testid="view-mode-list"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+          </div>
           {/* Receipt scanning lives on the Shopping List page only.
               It was dual-placed here for a while, but users found two
               entry points confusing — and the "just back from shopping"
@@ -556,48 +464,80 @@ const InventoryPage = () => {
                   </Badge>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                  {items.map((item) => {
-                    const stockInfo = getStockLevelInfo(item.stock_level);
-                    
-                    return (
-                      <Card 
+                {viewMode === 'list' ? (
+                  /* ---- List view (D1 + D2) ----
+                     Compact rows with an always-visible ±step stepper, each
+                     expandable in place into the same detail block the card
+                     renders. One card-height surface for the whole category
+                     instead of one per item. */
+                  <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                    {items.map((item) => (
+                      <InventoryRow
+                        key={item.id}
+                        item={item}
+                        categoryInfo={categoryInfo}
+                        isExpanded={expandedRowId === item.id}
+                        onToggleExpanded={() => toggleExpandedRow(item.id)}
+                        isEditingExpiry={editingExpiryItemId === item.id}
+                        newExpiryDate={newExpiryDate}
+                        onNewExpiryDateChange={setNewExpiryDate}
+                        onStartEditingExpiry={() => startEditingExpiry(item)}
+                        onCancelEditingExpiry={cancelEditingExpiry}
+                        onSaveExpiry={() => handleUpdateExpiryDate(item.id)}
+                        onCurrentStockChange={(newStock) => setCurrentStock(item, newStock)}
+                        onMonthlyQuantityChange={(newQty) => setMonthlyQuantity(item, newQty)}
+                        isPendingDelete={pendingDeleteId === item.id}
+                        onDelete={() => handleDelete(item.id, item.name_en)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                    {items.map((item) => (
+                      <Card
                         key={item.id}
                         className={`${categoryInfo.color} border-2 border-gray-200 hover-lift transition-all`}
                         data-testid={`inventory-item-${item.id}`}
                       >
                         <CardContent className="p-4 md:p-5">
-                          {/* Header with Secret Stash */}
+                          {/* Header — avatar, bilingual name, badges, stash lock */}
                           <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1 min-w-0">
-                              {/* Bilingual Item Name - Using TranslatedLabel */}
-                              <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 break-words group">
-                                <TranslatedLabel 
-                                  textEn={item.name_en}
-                                  textRegional={language === 'hi' ? item.name_hi : item.name_mr}
-                                  targetLanguage={language}
-                                  showVerification={true}
-                                  size="md"
-                                />
-                              </h3>
-                              
-                              {/* Category + Custom-source Badges */}
-                              <div className="flex flex-wrap items-center gap-1">
-                                <Badge variant="outline" className="text-[10px] md:text-xs border-gray-400">
-                                  {categoryInfo.label}
-                                </Badge>
-                                {item.is_custom && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-[10px] md:text-xs border-purple-300 text-purple-700 bg-purple-50"
-                                    title="Added from a receipt — not yet in the catalog"
-                                  >
-                                    custom
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <IngredientAvatar item={item} categoryInfo={categoryInfo} size="md" />
+                              <div className="flex-1 min-w-0">
+                                {/* sizeClass/stacked are load-bearing: TranslatedLabel
+                                    sets the font-size on its own wrapper span, so a
+                                    text-xl on this <h3> would be silently overridden. */}
+                                <h3 className="mb-1 break-words group">
+                                  <TranslatedLabel
+                                    textEn={item.name_en}
+                                    textRegional={language === 'hi' ? item.name_hi : item.name_mr}
+                                    targetLanguage={language}
+                                    showVerification={true}
+                                    sizeClass="text-lg md:text-xl"
+                                    stacked
+                                    primaryClassName="font-bold text-gray-800"
+                                  />
+                                </h3>
+
+                                {/* Category + Custom-source Badges */}
+                                <div className="flex flex-wrap items-center gap-1">
+                                  <Badge variant="outline" className="text-[10px] md:text-xs border-gray-400">
+                                    {categoryInfo.label}
                                   </Badge>
-                                )}
+                                  {item.is_custom && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] md:text-xs border-purple-300 text-purple-700 bg-purple-50"
+                                      title="Added from a receipt — not yet in the catalog"
+                                    >
+                                      custom
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            
+
                             {item.is_secret_stash && (
                               <div className="flex-shrink-0 ml-2">
                                 <Lock className="w-5 h-5 text-[#FFCC00]" />
@@ -605,219 +545,24 @@ const InventoryPage = () => {
                             )}
                           </div>
 
-                          {/* Freshness Bar (if applicable) */}
-                          {item.freshness !== null && (
-                            <div className="mb-4 p-3 bg-white/50 rounded-lg">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-medium text-gray-700">Freshness</span>
-                                <span className="text-xs font-bold text-gray-800">{item.freshness}%</span>
-                              </div>
-                              <Progress 
-                                value={item.freshness} 
-                                className="h-2"
-                              />
-                            </div>
-                          )}
-
-                          {/* Expiry Date Display & Editor */}
-                          {editingExpiryItemId === item.id ? (
-                            <div className="mb-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
-                              <div className="flex flex-col gap-2">
-                                <Label className="text-xs font-medium text-blue-800">Update Expiry Date</Label>
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    type="date"
-                                    value={newExpiryDate}
-                                    onChange={(e) => setNewExpiryDate(e.target.value)}
-                                    className="flex-1 h-9 text-sm"
-                                    data-testid={`edit-expiry-input-${item.id}`}
-                                  />
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleUpdateExpiryDate(item.id)}
-                                    className="h-9 px-3 bg-green-600 hover:bg-green-700"
-                                    data-testid={`save-expiry-${item.id}`}
-                                  >
-                                    Save
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={cancelEditingExpiry}
-                                    className="h-9 px-3"
-                                    data-testid={`cancel-expiry-${item.id}`}
-                                  >
-                                    Cancel
-                                  </Button>
-                                </div>
-                                {newExpiryDate && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setNewExpiryDate('')}
-                                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 h-7"
-                                  >
-                                    Clear expiry date
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          ) : item.expiry_date ? (
-                            (() => {
-                              const expStatus = getExpiryStatus(item.expiry_date);
-                              return (
-                                <div className={`mb-3 p-2 rounded-lg ${
-                                  expStatus.status === 'expired' ? 'bg-red-100 border border-red-300' :
-                                  expStatus.status === 'today' ? 'bg-red-50 border border-red-200' :
-                                  expStatus.status === 'soon' ? 'bg-amber-50 border border-amber-200' :
-                                  'bg-gray-50 border border-gray-200'
-                                }`}>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      {(expStatus.status === 'expired' || expStatus.status === 'today' || expStatus.status === 'soon') && (
-                                        <AlertTriangle className={`w-4 h-4 ${
-                                          expStatus.status === 'expired' ? 'text-red-500' :
-                                          expStatus.status === 'today' ? 'text-red-400' :
-                                          'text-amber-500'
-                                        }`} />
-                                      )}
-                                      <span className={`text-xs font-medium ${
-                                        expStatus.status === 'expired' ? 'text-red-700' :
-                                        expStatus.status === 'today' ? 'text-red-600' :
-                                        expStatus.status === 'soon' ? 'text-amber-700' :
-                                        'text-gray-600'
-                                      }`}>
-                                        {expStatus.message}
-                                      </span>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => startEditingExpiry(item)}
-                                      className={`h-7 px-2 text-xs ${
-                                        expStatus.status === 'expired' ? 'text-red-600 hover:bg-red-200' :
-                                        expStatus.status === 'today' ? 'text-red-500 hover:bg-red-100' :
-                                        expStatus.status === 'soon' ? 'text-amber-600 hover:bg-amber-100' :
-                                        'text-gray-500 hover:bg-gray-100'
-                                      }`}
-                                      title="Update expiry date (bought fresh stock?)"
-                                      data-testid={`edit-expiry-btn-${item.id}`}
-                                    >
-                                      <Edit className="w-3 h-3 mr-1" />
-                                      Update
-                                    </Button>
-                                  </div>
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            <div className="mb-3">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => startEditingExpiry(item)}
-                                className="w-full h-8 text-xs text-gray-500 border-dashed"
-                                data-testid={`add-expiry-btn-${item.id}`}
-                              >
-                                <Calendar className="w-3 h-3 mr-1" />
-                                Add expiry date
-                              </Button>
-                            </div>
-                          )}
-
-                          {/* Stock Level Display - Now Dynamic */}
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">Stock Level</span>
-                              {(() => {
-                                const currentStock = item.current_stock || 0;
-                                const monthlyNeed = item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500;
-                                const calculatedStatus = calculateStockStatus(currentStock, monthlyNeed);
-                                return (
-                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${calculatedStatus.color}`}>
-                                    {calculatedStatus.icon} {calculatedStatus.label}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                          </div>
-
-                          {/* Current Stock — stepper + additive chips + inline numpad.
-                              Chips ADD to the current value (semantic: "I just bought
-                              another 1 kg"). Tap the bold quantity or "Set…" to type
-                              an exact value. */}
-                          <div className="mb-3">
-                            <StockQuantityEditor
-                              value={item.current_stock || 0}
-                              baseUnit={item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'}
-                              category={item.category}
-                              step={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
-                              variant="additive"
-                              label="Current Stock"
-                              colors={{
-                                containerBorder: 'border-gray-200',
-                                valueBg: 'bg-[#E8F5E9] text-gray-800',
-                                valueBorder: 'border-[#77DD77]/30',
-                                plusBg: 'bg-[#77DD77] hover:bg-[#66CC66] active:bg-[#55BB55]',
-                                saveBg: 'bg-[#66CC66] hover:bg-[#55BB55]',
-                                editingBorder: 'border-[#77DD77]',
-                                setChipBorder: 'border-green-300 text-green-700',
-                              }}
-                              onChange={(newStock) => setCurrentStock(item, newStock)}
-                              testIdPrefix={`stock-${item.id}`}
-                            />
-                          </div>
-
-                          {/* Monthly Need — same controls, but chips SET to value
-                              (semantic: "my monthly target is 5 kg"). No
-                              minBound — user is free to set any positive value
-                              (e.g., 250 g monthly need for a niche spice). */}
-                          <div className="mb-3">
-                            <StockQuantityEditor
-                              value={item.monthly_quantity || DEFAULT_MONTHLY[item.category]?.quantity || 500}
-                              baseUnit={item.monthly_unit || DEFAULT_MONTHLY[item.category]?.unit || 'g'}
-                              category={item.category}
-                              step={DEFAULT_MONTHLY[item.category]?.step || DEFAULT_MONTHLY.other.step}
-                              variant="set"
-                              label="Monthly Need"
-                              colors={{
-                                containerBorder: 'border-gray-200',
-                                valueBg: 'bg-[#FFFBF0] text-gray-800',
-                                valueBorder: 'border-[#FFCC00]/30',
-                                plusBg: 'bg-[#FF9933] hover:bg-[#E68A2E] active:bg-[#D07A20]',
-                                saveBg: 'bg-[#FF9933] hover:bg-[#E68A2E]',
-                                editingBorder: 'border-[#FF9933]',
-                                setChipBorder: 'border-orange-300 text-orange-700',
-                              }}
-                              onChange={(newQty) => setMonthlyQuantity(item, newQty)}
-                              testIdPrefix={`monthly-${item.id}`}
-                            />
-                          </div>
-
-                          {/* Delete Button — two-tap confirm, no browser dialog.
-                              First tap arms; second tap within 5s removes.
-                              iOS PWA mode silently blocks window.confirm(), so
-                              the older one-tap-with-confirm flow felt broken on
-                              the home-screen-installed app. */}
-                          <Button
-                            variant={pendingDeleteId === item.id ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => handleDelete(item.id, item.name_en)}
-                            className={`w-full rounded-lg ${
-                              pendingDeleteId === item.id
-                                ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                                : 'border-red-300 text-red-600 hover:bg-red-50'
-                            }`}
-                            data-testid={`delete-${item.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            {pendingDeleteId === item.id ? 'Tap to confirm Delete' : 'Delete'}
-                          </Button>
+                          <InventoryItemDetails
+                            item={item}
+                            isEditingExpiry={editingExpiryItemId === item.id}
+                            newExpiryDate={newExpiryDate}
+                            onNewExpiryDateChange={setNewExpiryDate}
+                            onStartEditingExpiry={() => startEditingExpiry(item)}
+                            onCancelEditingExpiry={cancelEditingExpiry}
+                            onSaveExpiry={() => handleUpdateExpiryDate(item.id)}
+                            onCurrentStockChange={(newStock) => setCurrentStock(item, newStock)}
+                            onMonthlyQuantityChange={(newQty) => setMonthlyQuantity(item, newQty)}
+                            isPendingDelete={pendingDeleteId === item.id}
+                            onDelete={() => handleDelete(item.id, item.name_en)}
+                          />
                         </CardContent>
                       </Card>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

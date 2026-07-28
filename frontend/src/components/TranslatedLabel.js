@@ -18,7 +18,17 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
  * - targetLanguage: 'hi' | 'mr' (from language selector)
  * - showVerification: Show verify/edit controls (default: true)
  * - onTranslationUpdate: Callback when translation is edited
- * - size: 'sm' | 'md' | 'lg' (default: 'md')
+ * - size: 'sm' | 'md' | 'lg' | 'xl' (default: 'md')
+ * - sizeClass: Tailwind text-size class(es) that override `size` entirely.
+ *              Use when the call site needs responsive sizing, e.g.
+ *              "text-base md:text-xl".
+ * - stacked: Put the regional name on its own second line at text-sm instead
+ *            of inline after a "/" separator. Long bilingual names (plus the
+ *            verification chrome) used to wrap mid-name and read as one dense
+ *            strip; stacking gives the English name a full line of its own.
+ * - primaryClassName: Classes for the English name itself. Override when the
+ *                     call site needs a different weight/colour than the
+ *                     default (the inventory heading wants font-bold).
  * - className: Additional classes
  */
 export const TranslatedLabel = ({
@@ -28,6 +38,9 @@ export const TranslatedLabel = ({
   showVerification = true,
   onTranslationUpdate = null,
   size = 'md',
+  sizeClass = null,
+  stacked = false,
+  primaryClassName = 'font-medium text-gray-900',
   className = ''
 }) => {
   const [translation, setTranslation] = useState(null);
@@ -36,12 +49,18 @@ export const TranslatedLabel = ({
   const [editValue, setEditValue] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Size classes
+  // Size classes. NOTE: this class lands on the wrapper <span>, so it wins
+  // over any font-size set by the parent element — a parent <h3 class="text-xl">
+  // wrapping <TranslatedLabel size="md"> renders at text-sm, not text-xl.
+  // Pass `sizeClass` (or a bigger `size`) rather than styling the parent.
   const sizeClasses = {
     sm: 'text-xs',
     md: 'text-sm',
-    lg: 'text-base'
+    lg: 'text-base',
+    xl: 'text-xl'
   };
+
+  const resolvedSizeClass = sizeClass || sizeClasses[size] || sizeClasses.md;
 
   // Fetch translation if not provided
   useEffect(() => {
@@ -149,12 +168,12 @@ export const TranslatedLabel = ({
 
   // If English only or loading
   if (targetLanguage === 'en') {
-    return <span className={`${sizeClasses[size]} ${className}`}>{textEn}</span>;
+    return <span className={`${resolvedSizeClass} ${className}`}>{textEn}</span>;
   }
 
   if (isLoading) {
     return (
-      <span className={`${sizeClasses[size]} ${className}`}>
+      <span className={`${resolvedSizeClass} ${className}`}>
         {textEn}
         <span className="text-gray-400 ml-1 animate-pulse">/ ...</span>
       </span>
@@ -164,15 +183,17 @@ export const TranslatedLabel = ({
   // Render bilingual label
   return (
     <TooltipProvider>
-      <span className={`inline-flex flex-wrap items-center gap-1 ${sizeClasses[size]} ${className}`}>
+      <span className={`${stacked ? 'flex flex-col items-start' : 'inline-flex flex-wrap items-center gap-1'} ${resolvedSizeClass} ${className}`}>
         {/* English (Primary) */}
-        <span className="font-medium text-gray-900">{textEn}</span>
-        
-        {/* Separator */}
+        <span className={primaryClassName}>{textEn}</span>
+
+        {/* Regional name + verification chrome. In stacked mode this whole
+            group drops to its own line at text-sm so it can't crowd or wrap
+            the primary name. */}
         {translation && (
-          <>
-            <span className="text-gray-400 mx-0.5">/</span>
-            
+          <span className={`inline-flex flex-wrap items-center gap-1 ${stacked ? 'text-sm font-normal' : ''}`}>
+            {!stacked && <span className="text-gray-400 mx-0.5">/</span>}
+
             {/* Regional Translation */}
             {isEditing ? (
               <span className="inline-flex items-center gap-1">
@@ -310,7 +331,7 @@ export const TranslatedLabel = ({
                 )}
               </span>
             )}
-          </>
+          </span>
         )}
       </span>
     </TooltipProvider>

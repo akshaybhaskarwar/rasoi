@@ -18,7 +18,6 @@ class InventoryItem(BaseModel):
     stock_level: str = "empty"  # empty, low, half, full
     current_stock: int = 0  # Actual current stock quantity in this item's `unit`
                             # (g/ml for food, pcs for household & countable items).
-    freshness: Optional[int] = None  # 0-100 for perishables
     is_secret_stash: bool = False
     unit: str = "kg"
     expiry_date: Optional[str] = None  # ISO date string YYYY-MM-DD
@@ -33,6 +32,12 @@ class InventoryItem(BaseModel):
     # to show a "custom" badge and (separately) drives the catalog_suggestions
     # admin pipeline for promoting popular custom items into the catalog.
     is_custom: bool = False
+    # Set by the "Skip this trip" delete intent (PUT /shopping/{id}/snooze).
+    # While this date is in the future the shopping UI hides this item from
+    # the low-stock "Update N" suggestion. Declared here because the model
+    # is `extra="ignore"` and GET /inventory serialises through it — without
+    # the field the snooze never reaches the client.
+    auto_suggest_snoozed_until: Optional[str] = None  # YYYY-MM-DD
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -43,7 +48,6 @@ class InventoryItemCreate(BaseModel):
     category: str
     stock_level: str = "empty"
     current_stock: int = 0
-    freshness: Optional[int] = None
     is_secret_stash: bool = False
     unit: str = "kg"
     expiry_date: Optional[str] = None

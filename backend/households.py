@@ -86,7 +86,6 @@ async def populate_essentials(db, household_id: str, user_id: str):
             "stock_level": "empty",
             "current_stock": 0,
             "monthly_quantity": item["monthly_quantity"],
-            "freshness": None,
             "is_secret_stash": False,
             "expiry_date": None,
             "barcode": None,

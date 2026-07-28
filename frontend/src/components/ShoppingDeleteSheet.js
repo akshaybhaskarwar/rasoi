@@ -12,6 +12,10 @@
  *   - "Skip this trip" → 7-day snooze + remove row. Backend honors
  *     the snooze in recipes' add-missing flow and dadi festival mode.
  *     Backend: PUT /shopping/{id}/snooze {days: 7}
+ *   - "Don't need it this month" → same snooze at 30 days, for the
+ *     common "not this cycle, but next one" case. The snooze expires
+ *     on its own, so the item re-appears as a suggestion next month
+ *     with no action from the user.
  *   - "Cancel" → close the sheet, no change.
  *
  * For source:'manual' rows the parent (ShoppingPage) bypasses this
@@ -21,7 +25,7 @@
  */
 import { useEffect } from 'react';
 import {
-  X, Trash2, CheckCircle2, Clock, ChevronRight, Loader2,
+  X, Trash2, CheckCircle2, Clock, CalendarClock, ChevronRight, Loader2,
 } from 'lucide-react';
 
 export const ShoppingDeleteSheet = ({
@@ -45,7 +49,9 @@ export const ShoppingDeleteSheet = ({
   const isBusy = Boolean(busyAction);
   const sourceLabel = item.source === 'recipe'
     ? 'From a recipe'
-    : 'Auto-suggested · pantry low';
+    : item.category === 'festival'
+      ? 'Auto-added · festival'
+      : 'Auto-suggested · pantry low';
 
   return (
     <div
@@ -142,6 +148,29 @@ export const ShoppingDeleteSheet = ({
               <div className="font-semibold text-sm text-gray-900">Skip this trip</div>
               <div className="text-xs text-gray-500 mt-0.5">
                 Snooze auto-suggest for 7 days
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSnooze(item, 30)}
+            disabled={isBusy}
+            data-testid="shopping-delete-snooze-month"
+            className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-amber-300 hover:bg-amber-50/40 active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+              {busyAction === 'snooze-month' ? (
+                <Loader2 className="w-5 h-5 text-amber-700 animate-spin" />
+              ) : (
+                <CalendarClock className="w-5 h-5 text-amber-700" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="font-semibold text-sm text-gray-900">Don’t need it this month</div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                Comes back automatically next month
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />

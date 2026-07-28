@@ -77,7 +77,6 @@ def migrate():
                     "stock_level": "empty",
                     "current_stock": 0,
                     "monthly_quantity": essential["monthly_quantity"],
-                    "freshness": None,
                     "is_secret_stash": False,
                     "expiry_date": None,
                     "barcode": None,

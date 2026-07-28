@@ -41,11 +41,17 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
             raise HTTPException(status_code=400, detail="No active household. Please create or join a kitchen first.")
         
         item_dict = item.model_dump()
-        # Manual POST endpoint always tags the row as user-typed.
-        # Server-side auto-add callers write directly to the collection
-        # and set their own source — they never come through here.
-        item_dict["source"] = "manual"
-        item_dict["source_ref"] = None
+        # Tag how the row landed on the list. Defaults to "manual" (a
+        # user typing/scanning an item), but the inventory low-stock
+        # sync posts source="auto" so those rows route to the delete-
+        # intent sheet instead of hard-deleting — otherwise deleting a
+        # low-stock staple just re-offers it under the "Update N"
+        # button on the next render. Whitelisted so a client can't
+        # invent a source the delete UX doesn't understand.
+        requested_source = (item_dict.get("source") or "manual").lower()
+        item_dict["source"] = requested_source if requested_source in ("manual", "auto", "recipe") else "manual"
+        if item_dict["source"] == "manual":
+            item_dict["source_ref"] = None
         shopping_item = ShoppingItem(**item_dict)
         shopping_item.household_id = household_id
         
