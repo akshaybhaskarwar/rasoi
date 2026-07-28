@@ -118,8 +118,14 @@ export const useReceiptIngestion = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  // 'auth_token' is the key the login flow writes and every other call site
+  // in the app reads. This hook alone used 'rasoi_token', which nothing ever
+  // sets — so receipt scan and confirm went out with no Authorization header
+  // and the backend answered 401. Cross-origin, a 401 without CORS headers is
+  // opaque to the browser, so axios surfaced it as "Network Error" rather
+  // than as an auth failure, which sent the debugging in the wrong direction.
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('rasoi_token');
+    const token = localStorage.getItem('auth_token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 

@@ -14,7 +14,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Receipt, Camera, Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Plus, Sparkles,
-  ShoppingCart,
+  ShoppingCart, AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -42,6 +42,40 @@ const CONFIDENCE_STYLES = {
 const MAX_DIM = 1800;       // pixels — receipt text remains crisp at this width
 const JPEG_QUALITY = 0.85;  // ~5x smaller than full-quality, no OCR loss
 
+// Hard ceiling for the base64 payload we will send.
+//
+// This used to compress ONCE at fixed settings and never look at the result.
+// A receipt is dense text, which compresses badly, so a long or detailed one
+// could still land at 2 MB+ — and nginx's default client_max_body_size is
+// 1 MB. The proxy rejected it with a 413 that carried no CORS headers, so the
+// browser discarded the response and axios reported a bare "Network Error"
+// with no status to debug from.
+//
+// Raising the proxy limit fixed that, but the client should not depend on a
+// server config it cannot see. This keeps the request under a size that any
+// reasonable proxy accepts.
+const TARGET_B64_BYTES = 1_200_000;
+
+// Quality is sacrificed BEFORE resolution. OCR tolerates JPEG artefacts far
+// better than it tolerates small text losing pixels, so shrinking dimensions
+// is the last resort rather than the first.
+const QUALITY_LADDER = [JPEG_QUALITY, 0.7, 0.55, 0.45];
+const DIM_LADDER = [MAX_DIM, 1500, 1200];
+
+const encodeAt = (img, dim, quality) => {
+  const longest = Math.max(img.width, img.height);
+  const scale = longest > dim ? dim / longest : 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported on this device');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', quality);
+  const comma = dataUrl.indexOf(',');
+  return comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+};
+
 const fileToResizedBase64 = (file) =>
   new Promise((resolve, reject) => {
     const fileReader = new FileReader();
@@ -49,25 +83,29 @@ const fileToResizedBase64 = (file) =>
     fileReader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const longest = Math.max(img.width, img.height);
-        const scale = longest > MAX_DIM ? MAX_DIM / longest : 1;
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Canvas not supported on this device'));
-          return;
+        try {
+          let best = null;
+          for (const dim of DIM_LADDER) {
+            for (const quality of QUALITY_LADDER) {
+              best = encodeAt(img, dim, quality);
+              if (best.length <= TARGET_B64_BYTES) {
+                resolve(best);
+                return;
+              }
+            }
+          }
+          // Everything on both ladders still overshot — send the smallest we
+          // managed rather than failing outright. An oversized request that
+          // might work beats a guaranteed local failure, and the user gets a
+          // real server error instead of silence if it doesn't.
+          console.warn(
+            `[receipt] could not compress under ${TARGET_B64_BYTES} bytes; ` +
+            `sending ${best.length} bytes`
+          );
+          resolve(best);
+        } catch (err) {
+          reject(err);
         }
-        ctx.drawImage(img, 0, 0, w, h);
-
-        // toDataURL gives base64; strip the "data:image/jpeg;base64," prefix
-        const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
-        const comma = dataUrl.indexOf(',');
-        resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
       };
       img.onerror = () => reject(new Error('Could not load image — file may be corrupt'));
       img.src = fileReader.result;
@@ -77,6 +115,21 @@ const fileToResizedBase64 = (file) =>
 
 const formatINR = (n) =>
   typeof n === 'number' ? `₹${n.toFixed(2)}` : '';
+
+// Does rate × qty reconcile with the printed amount?
+//
+// The OCR flattens the receipt's columns and the model re-pairs them, so a
+// rate can end up attached to the wrong line. This catches the case where the
+// three numbers disagree with each other. It does NOT catch a whole triple
+// shifted onto the wrong name — 190 × 1 = 190 is self-consistent even when it
+// belongs to the row below. That is why the rate is now shown: a human
+// glancing at "Groundnuts · 1 UT · ₹190/UT" spots what arithmetic cannot.
+const rateReconciles = (row) => {
+  const { rate, qty, amount } = row || {};
+  if (typeof rate !== 'number' || typeof qty !== 'number' || typeof amount !== 'number') return true;
+  if (amount <= 0) return true;
+  return Math.abs(rate * qty - amount) / amount <= 0.02;
+};
 
 // Normalize a name for matching: NFC + trim + lowercase. Devanagari survives
 // untouched; Latin gets case-folded.
@@ -561,10 +614,33 @@ const ReceiptScanButton = ({ onSuccess }) => {
                           className="h-7 w-20 text-xs"
                         />
                         <span className="text-gray-500">{row.unit}</span>
+                        {/* Rate and unit, shown so a mispaired row is visible
+                            BEFORE it is written to inventory and price
+                            history. "Groundnuts · 1 UT · ₹190/UT" reads as
+                            obviously wrong next to a 1.5 kg bag; the same
+                            error is invisible if only the total is shown. */}
+                        {typeof row.rate === 'number' && (
+                          <>
+                            <span className="text-gray-400">·</span>
+                            <span className="font-medium text-gray-700">
+                              ₹{row.rate.toFixed(2)}/{row.unit}
+                            </span>
+                          </>
+                        )}
                         <Badge variant="outline" className="text-[10px] py-0">
                           {style.label}
                         </Badge>
                       </div>
+
+                      {!rateReconciles(row) && (
+                        <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1.5 flex items-start gap-1">
+                          <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <span>
+                            Rate × quantity is {formatINR(row.rate * row.qty)}, but the line total
+                            reads {formatINR(row.amount)}. Check this row against the receipt.
+                          </span>
+                        </p>
+                      )}
                     </div>
 
                     <Button

@@ -21,11 +21,50 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from data.pantry_items import PANTRY_TEMPLATE, to_canonical_en_fuzzy
 
 logger = logging.getLogger(__name__)
+
+
+def group_words_into_rows(words: List[Dict[str, Any]]) -> List[str]:
+    """Rebuild receipt lines from OCR word boxes, grouping by vertical position.
+
+    Each returned string is one physical row of the receipt with its name and
+    its numbers together, in left-to-right order — which is the pairing the
+    flattened OCR text destroys.
+
+    Two words share a row when their vertical spans overlap by more than half
+    the shorter word's height. Overlap is used rather than a fixed pixel
+    tolerance because receipts are photographed at arbitrary distances, and it
+    tolerates the slight baseline drift of a hand-held photo without merging
+    genuinely separate lines.
+    """
+    if not words:
+        return []
+
+    rows: List[List[Dict[str, Any]]] = []
+    for word in sorted(words, key=lambda w: (w["y_mid"], w["x"])):
+        placed = False
+        for row in rows:
+            ref = row[-1]
+            overlap = min(word["y_bottom"], ref["y_bottom"]) - max(word["y_top"], ref["y_top"])
+            shorter = min(word["y_bottom"] - word["y_top"], ref["y_bottom"] - ref["y_top"])
+            if shorter > 0 and overlap > shorter * 0.5:
+                row.append(word)
+                placed = True
+                break
+        if not placed:
+            rows.append([word])
+
+    lines = []
+    for row in rows:
+        row.sort(key=lambda w: w["x"])
+        line = " ".join(w["text"] for w in row).strip()
+        if line:
+            lines.append(line)
+    return lines
 
 
 # ----------------------------------------------------------------------------- #
@@ -61,6 +100,24 @@ def _build_catalog_text() -> str:
 _CATALOG_TEXT = _build_catalog_text()
 
 
+ROW_ALIGNED_PARSE_PROMPT = """\
+Below are the rows of an Indian grocery receipt. Each line has ALREADY been
+reconstructed from the OCR word positions, so the name and its numbers on a
+given line belong together. Do NOT re-associate values across lines — the
+pairing is authoritative.
+
+Your job:
+1. For each line that is a purchased item, read off its qty/unit/rate/amount
+   as printed on that line.
+2. Map each item to the closest entry from the CATALOG above (canonical
+   English name).
+
+Skip header lines, totals, shop details and any line that is not a purchase.
+"""
+
+# Retained for the fallback path: if row reconstruction produced too little to
+# be trustworthy, we send the flattened text with the old instructions rather
+# than feeding the model rows we do not believe in.
 CLAUDE_PARSE_PROMPT = """\
 Below is OCR text extracted from an Indian grocery receipt. The OCR engine
 preserved character accuracy but flattened the column layout — typically item
@@ -154,8 +211,23 @@ class ReceiptIngestionService:
 
     # ---------------------------- pipeline steps -----------------------------
 
-    async def _google_ocr(self, image_bytes: bytes) -> str:
-        """Run Google Vision document_text_detection on raw image bytes."""
+    async def _google_ocr(self, image_bytes: bytes) -> Tuple[str, List[str]]:
+        """Run Google Vision document_text_detection on raw image bytes.
+
+        Returns (flattened_text, rows).
+
+        `rows` are reconstructed from the word bounding boxes rather than from
+        the flattened text. This is the fix for the pairing bug: reading
+        `full_text_annotation.text` collapses the receipt's columns into
+        reading order, which typically emits every item NAME as one block and
+        every qty/rate/amount as another. Re-associating them is then pure
+        inference, and it drifts — on a real receipt it attached the tea row's
+        "1 UT 190.00" to the groundnuts above it.
+
+        The geometry that encodes the true pairing is already in the response.
+        Grouping words by vertical position recovers it deterministically, so
+        the model never has to guess which numbers belong to which name.
+        """
         def _sync():
             from google.cloud import vision  # type: ignore
             client = self._get_google_client()
@@ -166,10 +238,30 @@ class ReceiptIngestionService:
             )
             if resp.error and resp.error.message:
                 raise ReceiptIngestionError(f"Google Vision: {resp.error.message}")
-            return resp.full_text_annotation.text if resp.full_text_annotation else ""
+
+            text = resp.full_text_annotation.text if resp.full_text_annotation else ""
+
+            # text_annotations[0] is the whole block; [1:] are individual words
+            # with bounding boxes.
+            words = []
+            for ann in list(resp.text_annotations or [])[1:]:
+                verts = [(v.x, v.y) for v in ann.bounding_poly.vertices]
+                if not verts:
+                    continue
+                ys = [v[1] for v in verts]
+                xs = [v[0] for v in verts]
+                words.append({
+                    "text": ann.description,
+                    "x": min(xs),
+                    "y_top": min(ys),
+                    "y_bottom": max(ys),
+                    "y_mid": (min(ys) + max(ys)) / 2.0,
+                })
+            return text, group_words_into_rows(words)
+
         return await asyncio.to_thread(_sync)
 
-    async def _claude_parse(self, ocr_text: str) -> Dict[str, Any]:
+    async def _claude_parse(self, ocr_text: str, prompt: str = None) -> Dict[str, Any]:
         """Pass OCR text + cached catalog to Claude; return structured JSON."""
         def _sync():
             client = self._get_anthropic_client()
@@ -187,7 +279,7 @@ class ReceiptIngestionService:
                          "text": _CATALOG_TEXT,
                          "cache_control": {"type": "ephemeral"}},
                         {"type": "text",
-                         "text": CLAUDE_PARSE_PROMPT + ocr_text},
+                         "text": (prompt or CLAUDE_PARSE_PROMPT) + ocr_text},
                     ],
                 }],
             )
@@ -228,13 +320,30 @@ class ReceiptIngestionService:
         if not image_bytes:
             raise ReceiptIngestionError("Empty image payload")
 
-        ocr_text = await self._google_ocr(image_bytes)
+        ocr_text, rows = await self._google_ocr(image_bytes)
         if not ocr_text.strip():
             raise ReceiptIngestionError(
                 "OCR returned no text. The image may be too blurry or low-contrast."
             )
 
-        parsed = await self._claude_parse(ocr_text)
+        # Prefer the geometry-aligned rows. Fall back to the flattened text
+        # when reconstruction produced implausibly few lines — a receipt has
+        # far more rows than this, so a small count means the word boxes were
+        # unusable (odd angle, heavy skew) and the rows would be worse than
+        # the flattened text rather than better.
+        if len(rows) >= 5:
+            payload = "\n".join(rows)
+            prompt = ROW_ALIGNED_PARSE_PROMPT
+            logger.info("Receipt parsed from %d geometry-aligned rows", len(rows))
+        else:
+            payload = ocr_text
+            prompt = CLAUDE_PARSE_PROMPT
+            logger.warning(
+                "Row reconstruction yielded only %d rows; falling back to flattened OCR text",
+                len(rows),
+            )
+
+        parsed = await self._claude_parse(payload, prompt)
         if not isinstance(parsed, dict) or "items" not in parsed:
             raise ReceiptIngestionError("Claude did not return the expected JSON shape")
 
