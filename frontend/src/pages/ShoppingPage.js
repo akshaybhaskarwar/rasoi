@@ -18,6 +18,9 @@ import TranslatedLabel from '@/components/TranslatedLabel';
 import { ShoppingBarcodeScanner } from '@/components/ShoppingBarcodeScanner';
 import ReceiptScanButton from '@/components/ReceiptScanButton';
 import { ShoppingDeleteSheet } from '@/components/ShoppingDeleteSheet';
+import { LastPaidLine } from '@/components/LastPaidLine';
+import { PricePromptSheet } from '@/components/PricePromptSheet';
+import { useLastPrices, usablePrice } from '@/hooks/useLastPrices';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -76,6 +79,13 @@ const ShoppingPage = () => {
   // `deleteSheetBusy` disables the rows while an action is in-flight.
   const [deleteSheetItem, setDeleteSheetItem] = useState(null);
   const [deleteSheetBusy, setDeleteSheetBusy] = useState(null);
+  // "Last paid" comparison. Fetched once for the whole list rather than per
+  // row. Failures are swallowed inside the hook — the shopping list has to
+  // work identically when no price history exists.
+  const { prices, refreshPrices } = useLastPrices();
+  // Item awaiting a manual price. Held in state (not read from the list)
+  // because marking an item purchased deletes its shopping row.
+  const [pricePromptItem, setPricePromptItem] = useState(null);
 
   // Real-time sync - refresh shopping list when other household members make changes
   const handleShoppingChange = useCallback((action, data) => {
@@ -469,7 +479,12 @@ const ShoppingPage = () => {
       
       // Refresh inventory
       await fetchInventory();
-      
+
+      // Ask what they paid — AFTER the purchase is committed, never before.
+      // `item` is captured here because deleteItem() above has already removed
+      // the row from the list, so there is nothing left to look up.
+      setPricePromptItem(item);
+
     } catch (error) {
       console.error('Error marking as purchased:', error);
       toast.error('Failed to update inventory');
@@ -762,7 +777,16 @@ const ShoppingPage = () => {
                             <Trash2 className="w-4 h-4" />
                           </Button>
                           </div>
-                          
+
+                          {/* Last paid — full width, BELOW the row rather than
+                              inside the name column. That column is squeezed
+                              between the name and the quantity selector, and a
+                              price caption in there truncated down to "₹142/kg
+                              · 1…", losing the date that makes the rate
+                              meaningful. Renders nothing when there is no
+                              history or it is too stale — see usablePrice(). */}
+                          <LastPaidLine price={usablePrice(prices, item)} className="mt-1" />
+
                           {/* Expiry Date Display & Editor - Exact replica from Inventory */}
                           {editingExpiryItemId === item.id ? (
                             <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
@@ -923,6 +947,15 @@ const ShoppingPage = () => {
         }}
         onAlreadyHave={handleSheetAlreadyHave}
         onSnooze={handleSheetSnooze}
+      />
+
+      {/* Optional "what did you pay?" prompt, opened after a purchase is
+          already committed. Skipping it costs nothing but a data point. */}
+      <PricePromptSheet
+        item={pricePromptItem}
+        open={!!pricePromptItem}
+        onClose={() => setPricePromptItem(null)}
+        onSaved={refreshPrices}
       />
     </div>
   );

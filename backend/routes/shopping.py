@@ -16,7 +16,12 @@ from models.prices import PriceRecord, normalise_unit
 
 
 class ManualPriceEntry(BaseModel):
-    """Body for POST /shopping/{item_id}/price — the user typing what they paid.
+    """Body for POST /shopping/price — the user typing what they paid.
+
+    Keyed on `canonical_name`, NOT on a shopping list item id. Marking an item
+    purchased deletes its shopping row (it moves into inventory), so anything
+    scoped to that row would 404 by the time the user finishes typing a price.
+    A price belongs to the item, not to the list entry that prompted it.
 
     Two shapes are accepted, because both are natural at the till:
       - amount + qty  -> rate is derived (paid ₹284 for 2 kg -> ₹142/kg)
@@ -24,11 +29,13 @@ class ManualPriceEntry(BaseModel):
     `unit` is the receipt-style code ('K', 'L', 'UT', 'g', ...) and decides
     whether this is stored as ₹/kg, ₹/L or ₹/pack.
     """
+    canonical_name: str
     amount: Optional[float] = None
     qty: Optional[float] = None
     rate: Optional[float] = None
     unit: str = "UT"
     vendor: Optional[str] = None
+    store_type: Optional[str] = None
 
 security = HTTPBearer(auto_error=False)
 shopping_router = APIRouter(prefix="/api", tags=["Shopping"])
@@ -524,13 +531,12 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
             }
         return {"prices": prices, "count": len(prices)}
 
-    @shopping_router.post("/shopping/{item_id}/price")
+    @shopping_router.post("/shopping/price")
     async def record_manual_price(
-        item_id: str,
         entry: ManualPriceEntry,
         credentials: HTTPAuthorizationCredentials = Depends(security)
     ):
-        """Record what the user says they paid for a shopping list item.
+        """Record what the user says they paid for an item.
 
         This is the path for households that do not scan receipts. It writes
         the same price_history shape as the receipt path, tagged
@@ -541,11 +547,9 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
         if not household_id:
             raise HTTPException(status_code=400, detail="No active household")
 
-        item = await db.shopping_list.find_one(
-            {"id": item_id, "household_id": household_id}, {"_id": 0}
-        )
-        if not item:
-            raise HTTPException(status_code=404, detail="Shopping item not found")
+        name = (entry.canonical_name or "").strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="canonical_name is required")
 
         rate = entry.rate
         if rate is None:
@@ -569,14 +573,14 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
         basis, multiplier = normalise_unit(entry.unit)
         record = PriceRecord(
             household_id=household_id,
-            canonical_name=item.get("name_en"),
+            canonical_name=name,
             rate=round(rate * multiplier, 2),
             unit_basis=basis,
             qty=entry.qty,
             unit_raw=entry.unit,
             amount=entry.amount,
             vendor=entry.vendor or None,
-            store_type=item.get("store_type"),
+            store_type=entry.store_type,
             source="manual",
         )
         await db.price_history.insert_one(record.model_dump())
