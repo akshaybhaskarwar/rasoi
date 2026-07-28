@@ -38,14 +38,20 @@ const InventoryPage = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [editingExpiryItemId, setEditingExpiryItemId] = useState(null);
   const [newExpiryDate, setNewExpiryDate] = useState('');
-  // 'grid' = the original card grid, 'list' = compact rows with an inline
-  // stepper. Persisted because it's a standing preference, not a per-visit
-  // choice — a 40-item pantry wants list every time.
+  // 'list' = compact rows with an inline stepper, 'grid' = the original card
+  // grid. Persisted because it's a standing preference, not a per-visit
+  // choice — a 40-item pantry wants the same view every time.
+  //
+  // List is the default: a real pantry runs 60+ items and the card grid turns
+  // "did I run out of haldi?" into a scrolling exercise. Only an explicit
+  // 'grid' in storage opts back out, so a user who has actually tapped Cards
+  // keeps Cards; everyone else — including existing users who never touched
+  // the toggle — gets list.
   const [viewMode, setViewMode] = useState(() => {
     try {
-      return localStorage.getItem('rasoi.inventoryViewMode') === 'list' ? 'list' : 'grid';
+      return localStorage.getItem('rasoi.inventoryViewMode') === 'grid' ? 'grid' : 'list';
     } catch {
-      return 'grid'; // Safari private mode throws on localStorage access
+      return 'list'; // Safari private mode throws on localStorage access
     }
   });
   // Only one list row is expanded at a time — otherwise the list balloons
@@ -269,7 +275,7 @@ const InventoryPage = () => {
               data-testid="view-mode-grid"
             >
               <LayoutGrid className="w-4 h-4" />
-              <span className="hidden sm:inline">Cards</span>
+              <span>Cards</span>
             </button>
             <button
               onClick={() => changeViewMode('list')}
@@ -280,7 +286,7 @@ const InventoryPage = () => {
               data-testid="view-mode-list"
             >
               <List className="w-4 h-4" />
-              <span className="hidden sm:inline">List</span>
+              <span>List</span>
             </button>
           </div>
           {/* Receipt scanning lives on the Shopping List page only.
