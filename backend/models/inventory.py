@@ -67,6 +67,43 @@ class InventoryItemCreate(BaseModel):
     aliases: Optional[List[str]] = None  # English transliterations of regional names
 
 
+def compute_stock_level(current_stock, monthly_quantity) -> str:
+    """Derive stock_level from how much is left against the monthly need.
+
+    Must stay in step with calculateStockStatus() in the frontend's
+    lib/inventoryUtils.js — the Inventory screen computes the label on the fly
+    from these same two numbers, while the shopping list reads the stored
+    `stock_level` field. When the two disagree the restock loop silently
+    breaks: an item at 3g of a 200g monthly need displayed as "low" on
+    Inventory but carried a stored "full", so the shopping list concluded
+    there was nothing to buy and never offered it.
+
+    The receipt path used to hardcode "full" on every item it touched,
+    whatever the quantity, which is how that state arose.
+    """
+    try:
+        current = float(current_stock or 0)
+    except (TypeError, ValueError):
+        current = 0.0
+    try:
+        monthly = float(monthly_quantity or 0)
+    except (TypeError, ValueError):
+        monthly = 0.0
+
+    if monthly <= 0:
+        # No target to measure against: anything on hand counts as stocked.
+        return "full" if current > 0 else "empty"
+
+    pct = (current / monthly) * 100
+    if pct <= 0:
+        return "empty"
+    if pct <= 25:
+        return "low"
+    if pct <= 75:
+        return "half"
+    return "full"
+
+
 # Default monthly quantities by category
 DEFAULT_MONTHLY_QUANTITIES = {
     'grains': {'quantity': 5, 'unit': 'kg', 'step': 1000},
@@ -82,5 +119,31 @@ DEFAULT_MONTHLY_QUANTITIES = {
     'fasting': {'quantity': 500, 'unit': 'g', 'step': 100},
     'household': {'quantity': 1, 'unit': 'pcs', 'step': 1},
     'cleaning': {'quantity': 1, 'unit': 'pcs', 'step': 1},
+    # Present in the frontend's table but missing here, so medicine had no
+    # default to fall back on when an item had no monthly_quantity set.
+    'medicine': {'quantity': 1, 'unit': 'pcs', 'step': 1},
     'other': {'quantity': 1, 'unit': 'kg', 'step': 250}
 }
+
+
+def default_monthly_base_units(category: str):
+    """Category default monthly quantity, converted to BASE units (g/ml/pcs).
+
+    DEFAULT_MONTHLY_QUANTITIES is expressed in display units and mixes them:
+    grains is 5 kg while pulses is 500 g. `current_stock` is always in base
+    units, so comparing it against the raw `quantity` would read grains as
+    5 grams and call a nearly-empty sack "full".
+
+    The dict itself is left alone because GET /inventory/monthly-defaults
+    serves it verbatim; the conversion lives here instead.
+    """
+    entry = DEFAULT_MONTHLY_QUANTITIES.get((category or "other").lower())
+    if not entry:
+        return None
+    qty = entry.get("quantity")
+    if qty is None:
+        return None
+    unit = (entry.get("unit") or "").lower()
+    if unit in ("kg", "l"):
+        return qty * 1000
+    return qty

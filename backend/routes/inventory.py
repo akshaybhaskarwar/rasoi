@@ -10,7 +10,10 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
 
-from models.inventory import InventoryItem, InventoryItemCreate, DEFAULT_MONTHLY_QUANTITIES
+from models.inventory import (
+    InventoryItem, InventoryItemCreate, DEFAULT_MONTHLY_QUANTITIES,
+    compute_stock_level, default_monthly_base_units,
+)
 from models.prices import price_from_receipt_row
 
 logger = logging.getLogger(__name__)
@@ -244,26 +247,73 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         return items
 
     @inventory_router.put("/inventory/{item_id}")
-    async def update_inventory_item(item_id: str, updates: Dict[str, Any]):
-        """Update inventory item"""
-        result = await db.inventory.update_one(
-            {"id": item_id},
-            {"$set": updates}
+    async def update_inventory_item(
+        item_id: str,
+        updates: Dict[str, Any],
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Update inventory item.
+
+        Scoped to the caller's active household: previously this endpoint took
+        no credentials at all, so anyone holding an item id could modify any
+        kitchen's inventory.
+
+        `stock_level` is always recomputed here and any client-supplied value
+        is discarded. It is derived from current_stock vs monthly_quantity, and
+        letting callers set it independently is what allowed the two to drift —
+        an item at 3g of a 200g need carrying a stored "full" is invisible to
+        the shopping list. Recomputing server-side means no caller can create
+        an inconsistent row, including the ones that forget (setMonthlyQuantity
+        changes the denominator without touching the level).
+        """
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        if not household_id:
+            raise HTTPException(status_code=400, detail="No active household")
+
+        existing = await db.inventory.find_one(
+            {"id": item_id, "household_id": household_id}, {"_id": 0}
         )
-        
-        if result.modified_count == 0:
+        if not existing:
             raise HTTPException(status_code=404, detail="Item not found")
-        
-        return {"message": "Updated successfully"}
+
+        updates = dict(updates or {})
+        updates.pop("stock_level", None)
+        # Never let a client move a row between households.
+        updates.pop("household_id", None)
+        updates.pop("id", None)
+
+        stock = updates.get("current_stock", existing.get("current_stock"))
+        monthly = updates.get("monthly_quantity", existing.get("monthly_quantity"))
+        if not monthly:
+            monthly = default_monthly_base_units(
+                updates.get("category", existing.get("category"))
+            )
+        updates["stock_level"] = compute_stock_level(stock, monthly)
+        updates["last_updated_by"] = user.get("id")
+
+        await db.inventory.update_one({"id": item_id}, {"$set": updates})
+        # Not keyed on modified_count: writing identical values is a no-op in
+        # Mongo, and a no-op update is a success, not a missing item.
+        return {"message": "Updated successfully", "stock_level": updates["stock_level"]}
 
     @inventory_router.delete("/inventory/{item_id}")
-    async def delete_inventory_item(item_id: str):
-        """Delete inventory item"""
-        result = await db.inventory.delete_one({"id": item_id})
-        
+    async def delete_inventory_item(
+        item_id: str,
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Delete inventory item, scoped to the caller's active household."""
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        if not household_id:
+            raise HTTPException(status_code=400, detail="No active household")
+
+        result = await db.inventory.delete_one(
+            {"id": item_id, "household_id": household_id}
+        )
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Item not found")
-        
+
         return {"message": "Deleted successfully"}
 
     @inventory_router.get("/inventory/monthly-defaults")
@@ -475,7 +525,12 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                 await db.inventory.update_one(
                     {"id": inv_doc["id"]},
                     {"$set": {
-                        "stock_level": "full",
+                        # Derived, not hardcoded "full". Adding 3g of a 200g
+                        # monthly need does not make an item full, and a
+                        # wrongly-full row is invisible to the shopping list.
+                        "stock_level": compute_stock_level(
+                            new_current, inv_doc.get("monthly_quantity")
+                        ),
                         "current_stock": new_current,
                         "last_updated_by": user.get("id"),
                         "aliases": merged_aliases,
@@ -583,7 +638,10 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
             await db.inventory.update_one(
                 {"id": inv_doc["id"]},
                 {"$set": {
-                    "stock_level": "full",
+                    # See the custom-item branch above: derived, never "full".
+                    "stock_level": compute_stock_level(
+                        new_current, inv_doc.get("monthly_quantity")
+                    ),
                     "current_stock": new_current,
                     "last_updated_by": user.get("id"),
                     "aliases": merged_aliases,
