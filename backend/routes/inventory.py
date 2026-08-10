@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from models.inventory import InventoryItem, InventoryItemCreate, DEFAULT_MONTHLY_QUANTITIES
 from models.prices import price_from_receipt_row
@@ -479,6 +479,8 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                         "current_stock": new_current,
                         "last_updated_by": user.get("id"),
                         "aliases": merged_aliases,
+                        # Lets the month-end reset skip a late-month shop.
+                        "last_purchased_at": datetime.now(timezone.utc).isoformat(),
                     }},
                 )
                 added.append({
@@ -585,6 +587,8 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                     "current_stock": new_current,
                     "last_updated_by": user.get("id"),
                     "aliases": merged_aliases,
+                    # Lets the month-end reset skip a late-month shop.
+                    "last_purchased_at": datetime.now(timezone.utc).isoformat(),
                 }},
             )
             added.append({
@@ -753,5 +757,200 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
             "total_extracted": parsed.get("total"),
             "items": parsed.get("items", []),
         }
+
+    # ---- Month-end reset ----------------------------------------------
+    # "Start new month" empties the household's monthly staples in one
+    # action so they flow onto the shopping list, instead of the user
+    # editing 30+ rows by hand. It's deliberately conservative about what
+    # it touches — every exclusion is reported back so the confirmation
+    # sheet can say what it left alone rather than silently skipping it.
+
+    _RECENT_PURCHASE_DAYS = 7
+
+    async def _collect_month_reset_targets(household_id: str):
+        """Split a household's inventory into reset targets and skip buckets.
+
+        Returns (targets, summary). Only `targets` are mutated; the summary
+        counts drive the confirmation sheet.
+        """
+        now = datetime.now(timezone.utc)
+        today_iso = now.date().isoformat()
+        cutoff = now - timedelta(days=_RECENT_PURCHASE_DAYS)
+
+        def _as_aware(value):
+            """Parse a stored datetime that may be str or datetime, naive or not."""
+            if isinstance(value, str):
+                try:
+                    value = datetime.fromisoformat(value)
+                except ValueError:
+                    return None
+            if not isinstance(value, datetime):
+                return None
+            return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+        # Items ticked off on the shopping list only leave a trace there —
+        # the receipt flow stamps inventory.last_purchased_at directly, so
+        # both signals are consulted below.
+        recent_names = set()
+        bought_rows = await db.shopping_list.find(
+            {"household_id": household_id, "bought_at": {"$ne": None}},
+            {"_id": 0, "name_en": 1, "bought_at": 1},
+        ).to_list(2000)
+        for row in bought_rows:
+            bought_at = _as_aware(row.get("bought_at"))
+            if bought_at and bought_at >= cutoff and row.get("name_en"):
+                recent_names.add(row["name_en"].strip().lower())
+
+        items = await db.inventory.find({"household_id": household_id}, {"_id": 0}).to_list(2000)
+
+        targets = []
+        summary = {
+            "monthly": 0, "yearly": 0, "as_needed": 0,
+            "secret": 0, "snoozed": 0, "recently_bought": 0, "already_empty": 0,
+        }
+
+        for item in items:
+            # Legacy rows predate the field; monthly is the documented default.
+            freq = item.get("purchase_frequency") or "monthly"
+            if freq == "yearly":
+                summary["yearly"] += 1
+                continue
+            if freq == "as_needed":
+                summary["as_needed"] += 1
+                continue
+            if item.get("is_secret_stash"):
+                summary["secret"] += 1
+                continue
+            snoozed_until = item.get("auto_suggest_snoozed_until")
+            if snoozed_until and snoozed_until > today_iso:
+                summary["snoozed"] += 1
+                continue
+
+            name_key = (item.get("name_en") or "").strip().lower()
+            recently = name_key in recent_names
+            if not recently:
+                last_purchased = _as_aware(item.get("last_purchased_at"))
+                recently = bool(last_purchased and last_purchased >= cutoff)
+            if recently:
+                summary["recently_bought"] += 1
+                continue
+
+            if item.get("stock_level") == "empty":
+                # Already empty — resetting is a no-op, so don't count it as
+                # a change or the confirmation sheet overstates the impact.
+                summary["already_empty"] += 1
+                continue
+
+            summary["monthly"] += 1
+            targets.append(item)
+
+        return targets, summary
+
+    @inventory_router.get("/inventory/month-reset/preview")
+    async def preview_month_reset(
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Dry run — what "Start new month" would do, with nothing changed."""
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        if not household_id:
+            raise HTTPException(status_code=400, detail="No active household")
+
+        targets, summary = await _collect_month_reset_targets(household_id)
+        return {
+            "summary": summary,
+            "items": [
+                {
+                    "id": t["id"],
+                    "name_en": t.get("name_en"),
+                    "name_mr": t.get("name_mr"),
+                    "category": t.get("category"),
+                    "stock_level": t.get("stock_level"),
+                }
+                for t in targets
+            ],
+        }
+
+    @inventory_router.post("/inventory/month-reset")
+    async def start_new_month(
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Mark every eligible monthly staple empty.
+
+        The pre-reset stock levels are snapshotted into `month_resets` so the
+        action can be undone from the toast — restoring from the client would
+        mean trusting it with state it could lose on a refresh.
+        """
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+        if not household_id:
+            raise HTTPException(status_code=400, detail="No active household")
+
+        targets, summary = await _collect_month_reset_targets(household_id)
+        if not targets:
+            return {"reset_count": 0, "summary": summary, "undo_token": None}
+
+        undo_token = str(uuid.uuid4())
+        await db.month_resets.insert_one({
+            "id": undo_token,
+            "household_id": household_id,
+            "user_id": user.get("id"),
+            "snapshot": [
+                {
+                    "id": t["id"],
+                    "stock_level": t.get("stock_level"),
+                    "current_stock": t.get("current_stock", 0),
+                }
+                for t in targets
+            ],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "undone": False,
+        })
+
+        await db.inventory.update_many(
+            {"id": {"$in": [t["id"] for t in targets]}},
+            {"$set": {
+                "stock_level": "empty",
+                "current_stock": 0,
+                "last_updated_by": user.get("id"),
+            }},
+        )
+
+        return {
+            "reset_count": len(targets),
+            "summary": summary,
+            "undo_token": undo_token,
+        }
+
+    @inventory_router.post("/inventory/month-reset/{undo_token}/undo")
+    async def undo_month_reset(
+        undo_token: str,
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ):
+        """Restore the stock levels captured by a month reset."""
+        user = await get_user_from_token(credentials)
+        household_id = user.get("active_household")
+
+        log = await db.month_resets.find_one(
+            {"id": undo_token, "household_id": household_id}, {"_id": 0},
+        )
+        if not log:
+            raise HTTPException(status_code=404, detail="Reset not found")
+        if log.get("undone"):
+            return {"restored_count": 0, "message": "Already undone"}
+
+        restored = 0
+        for row in log.get("snapshot", []):
+            result = await db.inventory.update_one(
+                {"id": row["id"], "household_id": household_id},
+                {"$set": {
+                    "stock_level": row.get("stock_level") or "empty",
+                    "current_stock": row.get("current_stock", 0),
+                }},
+            )
+            restored += result.modified_count
+
+        await db.month_resets.update_one({"id": undo_token}, {"$set": {"undone": True}})
+        return {"restored_count": restored}
 
     return inventory_router

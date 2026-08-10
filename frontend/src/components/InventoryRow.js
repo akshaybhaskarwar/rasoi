@@ -26,6 +26,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { IngredientAvatar } from '@/components/IngredientAvatar';
 import { InventoryItemDetails } from '@/components/InventoryItemDetails';
 import { calculateStockStatus, getItemDefaults } from '@/lib/inventoryUtils';
+import { FrequencyPill, FrequencyStrip, getFrequency } from '@/components/FrequencyPicker';
 
 export const InventoryRow = ({
   item,
@@ -42,6 +43,10 @@ export const InventoryRow = ({
   onMonthlyQuantityChange,
   isPendingDelete,
   onDelete,
+  isFrequencyOpen,
+  onToggleFrequency,
+  onFrequencyChange,
+  isFrequencyBusy,
 }) => {
   const { formatQuantity } = useUnits();
   const { language } = useLanguage();
@@ -120,6 +125,16 @@ export const InventoryRow = ({
           </span>
         </button>
 
+        {/* Buying frequency. Monthly is the default for most of the pantry,
+            so it renders as a near-silent outline glyph and only yearly /
+            as-needed get a coloured badge — the eye should catch the
+            exceptions, not re-read "normal" on every row. */}
+        <FrequencyPill
+          value={getFrequency(item)}
+          itemName={item.name_en}
+          onClick={onToggleFrequency}
+        />
+
         {/* ---- D1: inline stepper. One tap = ±one category step. ---- */}
         <div className="flex items-center gap-1 md:gap-1.5 flex-shrink-0">
           <button
@@ -155,6 +170,17 @@ export const InventoryRow = ({
           </button>
         </div>
       </div>
+
+      {/* Frequency picker. A separate, lighter reveal than the full detail
+          block below — the parent keeps them mutually exclusive so the row
+          never shows two open panels at once. */}
+      {isFrequencyOpen && (
+        <FrequencyStrip
+          value={getFrequency(item)}
+          busy={isFrequencyBusy}
+          onSelect={onFrequencyChange}
+        />
+      )}
 
       {/* ---- D2: the full card body, unchanged, unfolded in place ---- */}
       {isExpanded && (

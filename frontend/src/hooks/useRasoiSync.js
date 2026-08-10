@@ -100,12 +100,43 @@ export const useInventory = () => {
     }
   };
 
+  // Month-end reset. The preview is a dry run so the confirmation sheet can
+  // show real counts before anything is emptied; the reset itself returns an
+  // undo token backed by a server-side snapshot, so undo survives a refresh.
+  const previewMonthReset = async () => {
+    const { data } = await axios.get(`${API}/inventory/month-reset/preview`, {
+      headers: getAuthHeaders(),
+    });
+    return data; // { summary, items }
+  };
+
+  const startNewMonth = async () => {
+    const { data } = await axios.post(`${API}/inventory/month-reset`, {}, {
+      headers: getAuthHeaders(),
+    });
+    await fetchInventory();
+    return data; // { reset_count, summary, undo_token }
+  };
+
+  const undoMonthReset = async (undoToken) => {
+    const { data } = await axios.post(
+      `${API}/inventory/month-reset/${undoToken}/undo`,
+      {},
+      { headers: getAuthHeaders() },
+    );
+    await fetchInventory();
+    return data; // { restored_count }
+  };
+
   useEffect(() => {
     fetchInventory();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { inventory, loading, error, fetchInventory, addItem, updateItem, deleteItem };
+  return {
+    inventory, loading, error, fetchInventory, addItem, updateItem, deleteItem,
+    previewMonthReset, startNewMonth, undoMonthReset,
+  };
 };
 
 // Receipt-to-inventory pipeline (PRD-01).

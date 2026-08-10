@@ -32,6 +32,16 @@ class InventoryItem(BaseModel):
     # to show a "custom" badge and (separately) drives the catalog_suggestions
     # admin pipeline for promoting popular custom items into the catalog.
     is_custom: bool = False
+    # How often this household actually buys the item. Drives the
+    # month-end reset: only `monthly` rows are emptied by
+    # POST /inventory/start-new-month. `monthly` is the default because
+    # it's true of the large majority of pantry staples — the UI leaves
+    # monthly rows unlabelled and only badges the exceptions.
+    purchase_frequency: str = "monthly"  # monthly | yearly | as_needed
+    # Last time this item was restocked (receipt scan, or marked bought
+    # on the shopping list). The month-end reset skips anything bought
+    # in the last few days so a late-month shop isn't wiped out.
+    last_purchased_at: Optional[str] = None  # ISO datetime
     # Set by the "Skip this trip" delete intent (PUT /shopping/{id}/snooze).
     # While this date is in the future the shopping UI hides this item from
     # the low-stock "Update N" suggestion. Declared here because the model

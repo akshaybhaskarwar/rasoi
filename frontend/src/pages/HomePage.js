@@ -231,24 +231,36 @@ const HomePage = () => {
       
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-[#FF9933] to-[#FFCC00] rounded-2xl p-6 text-white shadow-lg">
-        <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeMessage')}</h2>
-        <p className="text-white/90">{getLabel('intelligentKitchenCompanion')}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+          {/* Brand logo — sits alongside the welcome copy on wider screens,
+              stacks above it on phones. */}
+          <img
+            src={`${process.env.PUBLIC_URL}/rasoi-sync-logo.png`}
+            alt="Rasoi-Sync"
+            className="w-32 sm:w-40 md:w-48 h-auto flex-shrink-0 self-center sm:self-auto drop-shadow-lg"
+            data-testid="home-logo"
+          />
+          <div className="flex-1 text-center sm:text-left">
+            <h2 className="text-3xl font-bold mb-2">{getLabel('welcomeMessage')}</h2>
+            <p className="text-white/90">{getLabel('intelligentKitchenCompanion')}</p>
 
-        {/* Community-size band — social proof / motivation. Hidden until
-            the fetch resolves AND there are at least 3 families, so early
-            days never read as "you're alone here". */}
-        {publicStats?.families >= 3 && (
-          <div
-            className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium"
-            data-testid="family-count-band"
-          >
-            <Users className="w-4 h-4" />
-            {(motivationText[language] || motivationText.en)(publicStats.families)}
-            {publicStats.meals_planned > 0 && (
-              <span className="opacity-80">· {publicStats.meals_planned}+ meals planned</span>
+            {/* Community-size band — social proof / motivation. Hidden until
+                the fetch resolves AND there are at least 3 families, so early
+                days never read as "you're alone here". */}
+            {publicStats?.families >= 3 && (
+              <div
+                className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium"
+                data-testid="family-count-band"
+              >
+                <Users className="w-4 h-4" />
+                {(motivationText[language] || motivationText.en)(publicStats.families)}
+                {publicStats.meals_planned > 0 && (
+                  <span className="opacity-80">· {publicStats.meals_planned}+ meals planned</span>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Digital Dadi - Festival Reminders & Tips */}
