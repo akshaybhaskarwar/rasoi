@@ -118,21 +118,33 @@ const ShoppingPage = () => {
     );
   };
 
+  // A row is still "to buy" unless it has been marked bought.
+  //
+  // The two purchase paths end differently: marking an item purchased by hand
+  // DELETES the row, while a receipt scan only sets shopping_status='bought'
+  // (inventory.py's update_many). Nothing filtered on that status, so receipt-
+  // crossed-off items stayed on the list looking untouched — the scan appeared
+  // to have done nothing, and tapping "Mark as Purchased" on one of them would
+  // add its quantity to inventory a second time.
+  const isStillToBuy = (item) => item?.shopping_status !== 'bought';
+
   // Filter items by store type and search query
   const filteredList = useMemo(() => {
     return shoppingList.filter(item => {
+      if (!isStillToBuy(item)) return false;
+
       const category = (item.category || '').toLowerCase();
       const isMandi = category === 'vegetables' || category === 'fruits' || category === 'mandi';
       const matchesTab = isMandi ? activeTab === 'mandi' : activeTab === 'grocery';
-      
+
       // Search filter
       const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         item.name_en?.toLowerCase().includes(searchLower) ||
         item.name_mr?.toLowerCase().includes(searchLower) ||
         item.name_hi?.toLowerCase().includes(searchLower) ||
         item.category?.toLowerCase().includes(searchLower);
-      
+
       return matchesTab && matchesSearch;
     });
   }, [shoppingList, activeTab, searchQuery]);
@@ -147,13 +159,16 @@ const ShoppingPage = () => {
     }, {});
   }, [filteredList]);
 
-  // Get counts
+  // Tab counts use the same to-buy test as the list, so the badge can never
+  // promise more items than the tab actually shows.
   const groceryCount = shoppingList.filter(item => {
+    if (!isStillToBuy(item)) return false;
     const category = (item.category || '').toLowerCase();
     return category !== 'vegetables' && category !== 'fruits' && category !== 'mandi';
   }).length;
-  
+
   const mandiCount = shoppingList.filter(item => {
+    if (!isStillToBuy(item)) return false;
     const category = (item.category || '').toLowerCase();
     return category === 'vegetables' || category === 'fruits' || category === 'mandi';
   }).length;
@@ -529,7 +544,7 @@ const ShoppingPage = () => {
               <ShoppingBag className="w-7 h-7 text-orange-500" />
               {getLabel('shopping')}
             </h1>
-            <p className="text-gray-500 text-sm">{shoppingList.length} items total</p>
+            <p className="text-gray-500 text-sm">{groceryCount + mandiCount} items total</p>
           </div>
           <div className="flex gap-2">
             {getLowStockCount() > 0 && (
@@ -930,8 +945,9 @@ const ShoppingPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* WhatsApp FAB - Mobile */}
-      {shoppingList.length > 0 && (
+      {/* WhatsApp FAB - Mobile. Hidden once nothing is left to buy, since the
+          shared message is built from the same to-buy rows. */}
+      {(groceryCount + mandiCount) > 0 && (
         <button
           onClick={() => window.open(`https://wa.me/?text=${generateWhatsAppMessage()}`, '_blank')}
           className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full shadow-lg flex items-center justify-center z-[90]"
