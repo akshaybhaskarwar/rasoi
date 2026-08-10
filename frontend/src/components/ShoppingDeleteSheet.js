@@ -55,7 +55,7 @@ export const ShoppingDeleteSheet = ({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end justify-center"
+      className="fixed inset-0 z-[120] flex items-end justify-center sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="shopping-delete-sheet-title"
@@ -72,7 +72,7 @@ export const ShoppingDeleteSheet = ({
 
       {/* Bottom sheet */}
       <div
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-200"
+        className="sheet-viewport relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle (decorative — not actually draggable). */}
@@ -188,7 +188,7 @@ export const ShoppingDeleteSheet = ({
         </div>
 
         {/* Safe-area bottom padding for iPhone home indicator. */}
-        <div className="h-4 sm:h-2" />
+        <div className="sheet-safe-bottom h-4 sm:h-2" />
       </div>
     </div>
   );

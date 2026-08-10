@@ -43,7 +43,7 @@ export const MonthResetSheet = ({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end justify-center"
+      className="fixed inset-0 z-[120] flex items-end justify-center sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="month-reset-title"
@@ -57,7 +57,10 @@ export const MonthResetSheet = ({
         tabIndex={-1}
       />
 
-      <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-200 max-h-[88vh] flex flex-col">
+      {/* Bottom sheet on phones, centred dialog on desktop — a full-height
+          bottom-anchored panel on a wide screen pushes its own footer past
+          the fold. */}
+      <div className="sheet-viewport relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom duration-200 flex flex-col overflow-hidden">
         <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
@@ -174,7 +177,7 @@ export const MonthResetSheet = ({
           )}
         </div>
 
-        <div className="p-4 pt-2 border-t border-gray-100 flex-shrink-0 space-y-2">
+        <div className="sheet-safe-bottom p-4 pt-2 border-t border-gray-100 flex-shrink-0 space-y-2">
           {isReviewing ? (
             <button
               type="button"
@@ -205,8 +208,6 @@ export const MonthResetSheet = ({
             Cancel
           </button>
         </div>
-
-        <div className="h-2" />
       </div>
     </div>
   );

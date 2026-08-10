@@ -38,9 +38,12 @@ export const DualContextHeader = ({ onLanguageChange }) => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full masala-gradient flex items-center justify-center text-white font-bold text-sm">
-              RS
-            </div>
+            <img
+              src={`${process.env.PUBLIC_URL}/rasoi-sync-icon.png`}
+              alt=""
+              className="w-8 h-8 object-contain"
+              data-testid="header-logo-mobile"
+            />
             <span className="font-bold text-lg text-gray-800">{getLabel('appName')}</span>
           </div>
           
@@ -102,9 +105,12 @@ export const DualContextHeader = ({ onLanguageChange }) => {
         <div className="flex items-center justify-between">
           {/* Logo & Title */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full masala-gradient flex items-center justify-center text-white font-bold text-lg">
-              RS
-            </div>
+            <img
+              src={`${process.env.PUBLIC_URL}/rasoi-sync-icon.png`}
+              alt=""
+              className="w-10 h-10 object-contain"
+              data-testid="header-logo-desktop"
+            />
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{getLabel('appName')}</h1>
               <p className="text-xs text-gray-500">{getLabel('appTagline')}</p>

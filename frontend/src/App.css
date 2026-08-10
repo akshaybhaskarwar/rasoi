@@ -76,3 +76,23 @@ code, pre {
 .bottom-nav-shadow {
   box-shadow: 0 -4px 20px -2px rgba(0, 0, 0, 0.1);
 }
+
+/* Bottom-sheet sizing.
+   `vh` on mobile browsers measures the *large* viewport — it ignores the
+   address bar, so an 85vh sheet can extend past what's actually on screen
+   and bury its own footer. `dvh` tracks the visible area, with the vh rule
+   left as the fallback for browsers that don't support it. */
+.sheet-viewport {
+  max-height: 85vh;
+}
+
+@supports (height: 100dvh) {
+  .sheet-viewport {
+    max-height: 85dvh;
+  }
+}
+
+/* Keeps the action buttons clear of the iPhone home indicator. */
+.sheet-safe-bottom {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
