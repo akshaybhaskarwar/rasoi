@@ -49,7 +49,7 @@ export const InventoryRow = ({
   isFrequencyBusy,
 }) => {
   const { formatQuantity } = useUnits();
-  const { language } = useLanguage();
+  const { language, getLabel } = useLanguage();
 
   const defaults = getItemDefaults(item);
   const baseUnit = item.monthly_unit || defaults.unit;
@@ -105,7 +105,11 @@ export const InventoryRow = ({
                   : status.value === 'half' ? 'text-[#B8860B] font-medium'
                   : 'text-green-700 font-medium'
                 }>
-                  {status.label.toLowerCase()}
+                  {/* Localized: the meta line is the one place the stock
+                      word appears on every row, and it was the lone English
+                      word in a Marathi/Hindi UI. toLowerCase is a no-op for
+                      Devanagari. */}
+                  {getLabel(status.value).toLowerCase()}
                 </span>
               </span>
               {/* Lock and the custom badge sit on the meta line, not beside

@@ -3,12 +3,14 @@
  *
  * Two pieces, deliberately kept apart from InventoryItemDetails:
  *
- *   FrequencyPill  — the collapsed indicator. `monthly` is the default for
- *                    the large majority of pantry rows, so it renders as a
- *                    near-silent outline icon; only `yearly` and
- *                    `as_needed` get a coloured badge. Decorating every
- *                    monthly row would mean 60 rows of noise to say
- *                    "normal" and would bury the handful that differ.
+ *   FrequencyPill  — the collapsed indicator. All three frequencies render
+ *                    as small text chips in the UI language: an abstract
+ *                    repeat glyph tested as unreadable (users couldn't say
+ *                    what it meant, and at outline-gray it vanished next to
+ *                    the disabled stepper button). Monthly — the default
+ *                    for most of the pantry — stays visually quiet (gray,
+ *                    outline-only) so the coloured yearly / as-needed
+ *                    chips still read as the exceptions.
  *   FrequencyStrip — the three-way picker revealed under the row (list) or
  *                    inside the card (grid) when the pill is tapped.
  *
@@ -17,44 +19,32 @@
  * expanded list row AND the grid card, so putting the picker in it would
  * show the control twice to list users.
  */
-import { Repeat } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const FREQUENCY_OPTIONS = [
-  { value: 'monthly', label: 'Monthly', hint: 'Refilled by "Start new month"' },
-  { value: 'yearly', label: 'Yearly', hint: 'Bought once a year, in bulk' },
-  { value: 'as_needed', label: 'As needed', hint: 'Never auto-refilled' },
+  { value: 'monthly', labelKey: 'freqMonthly', hint: 'Pre-ticked in Plan restock' },
+  { value: 'yearly', labelKey: 'freqYearly', hint: 'Bought once a year, in bulk' },
+  { value: 'as_needed', labelKey: 'freqAsNeeded', hint: 'Never pre-ticked' },
 ];
 
 /** Normalise legacy rows, which predate the field. */
 export const getFrequency = (item) => item?.purchase_frequency || 'monthly';
 
+const PILL_TONES = {
+  monthly: 'border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50',
+  yearly: 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+  as_needed: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+};
+
 /**
- * Collapsed indicator. Tap target is a full 44px square/pill — the visual
- * glyph is smaller, but anything less than 44 is a miss-tap on a phone.
+ * Collapsed indicator. Tap target is a full 44px-tall pill — the visual
+ * chip is smaller, but anything less than 44 is a miss-tap on a phone.
  */
 export const FrequencyPill = ({ value, onClick, itemName }) => {
+  const { getLabel } = useLanguage();
   const frequency = value || 'monthly';
-  const label = frequency === 'yearly' ? 'once a year'
-    : frequency === 'as_needed' ? 'as needed'
-    : 'every month';
-
-  if (frequency === 'monthly') {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        aria-label={`Buying frequency for ${itemName}: ${label}. Change`}
-        data-testid="frequency-pill"
-        className="w-8 h-11 flex items-center justify-center rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors flex-shrink-0"
-      >
-        <Repeat className="w-4 h-4" />
-      </button>
-    );
-  }
-
-  const tone = frequency === 'yearly'
-    ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-    : 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+  const option = FREQUENCY_OPTIONS.find((o) => o.value === frequency) || FREQUENCY_OPTIONS[0];
+  const label = getLabel(option.labelKey);
 
   return (
     <button
@@ -62,15 +52,20 @@ export const FrequencyPill = ({ value, onClick, itemName }) => {
       onClick={onClick}
       aria-label={`Buying frequency for ${itemName}: ${label}. Change`}
       data-testid="frequency-pill"
-      className={`h-11 px-2 flex items-center rounded-full text-[11px] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${tone}`}
+      className="h-11 flex items-center flex-shrink-0"
     >
-      {frequency === 'yearly' ? '1 / yr' : 'as needed'}
+      {/* The 44px hit area is the button; the visible chip stays small so
+          the row doesn't grow a tall box between name and stepper. */}
+      <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium whitespace-nowrap transition-colors ${PILL_TONES[frequency]}`}>
+        {label}
+      </span>
     </button>
   );
 };
 
 /** The three-way picker. Selecting closes it via the parent's onSelect. */
 export const FrequencyStrip = ({ value, onSelect, busy = false }) => {
+  const { getLabel } = useLanguage();
   const current = value || 'monthly';
   return (
     <div
@@ -101,7 +96,7 @@ export const FrequencyStrip = ({ value, onSelect, busy = false }) => {
                 : 'border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
-            {option.label}
+            {getLabel(option.labelKey)}
           </button>
         );
       })}

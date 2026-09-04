@@ -816,20 +816,24 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
             "items": parsed.get("items", []),
         }
 
-    # ---- Month-end reset ----------------------------------------------
-    # "Start new month" empties the household's monthly staples in one
-    # action so they flow onto the shopping list, instead of the user
-    # editing 30+ rows by hand. It's deliberately conservative about what
-    # it touches — every exclusion is reported back so the confirmation
-    # sheet can say what it left alone rather than silently skipping it.
+    # ---- Restock planner (month-end reset) -----------------------------
+    # "Plan restock" empties the selected staples in one action so they
+    # flow onto the shopping list, instead of the user editing 30+ rows by
+    # hand. The preview classifies every non-secret item — the planner
+    # sheet groups them by frequency and lets the user tick/untick — and
+    # the reset takes the ticked ids. Pre-ticks are conservative: only
+    # monthly items with no skip reason, and every exclusion carries its
+    # reason so the sheet can show it instead of silently skipping.
 
     _RECENT_PURCHASE_DAYS = 7
 
-    async def _collect_month_reset_targets(household_id: str):
-        """Split a household's inventory into reset targets and skip buckets.
+    async def _collect_restock_candidates(household_id: str):
+        """Classify a household's inventory for the restock planner.
 
-        Returns (targets, summary). Only `targets` are mutated; the summary
-        counts drive the confirmation sheet.
+        Returns (candidates, summary). Each candidate carries its buying
+        frequency, a skip ``reason`` (or None), and ``suggested`` — whether
+        the planner pre-ticks it. Nothing is mutated. Secret-stash items
+        never appear: the planner is shared household UI.
         """
         now = datetime.now(timezone.utc)
         today_iso = now.date().isoformat()
@@ -861,79 +865,93 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
 
         items = await db.inventory.find({"household_id": household_id}, {"_id": 0}).to_list(2000)
 
-        targets = []
+        candidates = []
         summary = {
             "monthly": 0, "yearly": 0, "as_needed": 0,
             "secret": 0, "snoozed": 0, "recently_bought": 0, "already_empty": 0,
         }
 
         for item in items:
-            # Legacy rows predate the field; monthly is the documented default.
-            freq = item.get("purchase_frequency") or "monthly"
-            if freq == "yearly":
-                summary["yearly"] += 1
-                continue
-            if freq == "as_needed":
-                summary["as_needed"] += 1
-                continue
             if item.get("is_secret_stash"):
                 summary["secret"] += 1
                 continue
+
+            # Legacy rows predate the field; monthly is the documented default.
+            freq = item.get("purchase_frequency") or "monthly"
+
+            # already_empty outranks the other reasons: marking an empty row
+            # empty is a no-op whatever else is true, and the planner
+            # disables its checkbox on that reason.
+            reason = None
             snoozed_until = item.get("auto_suggest_snoozed_until")
-            if snoozed_until and snoozed_until > today_iso:
-                summary["snoozed"] += 1
-                continue
-
-            name_key = (item.get("name_en") or "").strip().lower()
-            recently = name_key in recent_names
-            if not recently:
-                last_purchased = _as_aware(item.get("last_purchased_at"))
-                recently = bool(last_purchased and last_purchased >= cutoff)
-            if recently:
-                summary["recently_bought"] += 1
-                continue
-
             if item.get("stock_level") == "empty":
-                # Already empty — resetting is a no-op, so don't count it as
-                # a change or the confirmation sheet overstates the impact.
-                summary["already_empty"] += 1
-                continue
+                reason = "already_empty"
+            elif snoozed_until and snoozed_until > today_iso:
+                reason = "snoozed"
+            else:
+                name_key = (item.get("name_en") or "").strip().lower()
+                recently = name_key in recent_names
+                if not recently:
+                    last_purchased = _as_aware(item.get("last_purchased_at"))
+                    recently = bool(last_purchased and last_purchased >= cutoff)
+                if recently:
+                    reason = "recently_bought"
 
-            summary["monthly"] += 1
-            targets.append(item)
+            if freq == "yearly":
+                summary["yearly"] += 1
+            elif freq == "as_needed":
+                summary["as_needed"] += 1
+            elif reason is not None:
+                summary[reason] += 1
+            else:
+                summary["monthly"] += 1
 
-        return targets, summary
+            candidates.append({
+                "id": item["id"],
+                "name_en": item.get("name_en"),
+                "name_hi": item.get("name_hi"),
+                "name_mr": item.get("name_mr"),
+                "category": item.get("category"),
+                "stock_level": item.get("stock_level"),
+                "current_stock": item.get("current_stock", 0),
+                "frequency": freq,
+                "reason": reason,
+                "suggested": freq == "monthly" and reason is None,
+            })
+
+        return candidates, summary
 
     @inventory_router.get("/inventory/month-reset/preview")
     async def preview_month_reset(
         credentials: HTTPAuthorizationCredentials = Depends(security),
     ):
-        """Dry run — what "Start new month" would do, with nothing changed."""
+        """Dry run — every plannable item with its frequency and pre-tick."""
         user = await get_user_from_token(credentials)
         household_id = user.get("active_household")
         if not household_id:
             raise HTTPException(status_code=400, detail="No active household")
 
-        targets, summary = await _collect_month_reset_targets(household_id)
-        return {
-            "summary": summary,
-            "items": [
-                {
-                    "id": t["id"],
-                    "name_en": t.get("name_en"),
-                    "name_mr": t.get("name_mr"),
-                    "category": t.get("category"),
-                    "stock_level": t.get("stock_level"),
-                }
-                for t in targets
-            ],
-        }
+        candidates, summary = await _collect_restock_candidates(household_id)
+        items = [
+            {k: v for k, v in c.items() if k != "current_stock"}
+            for c in candidates
+        ]
+        return {"summary": summary, "items": items}
+
+    class MonthResetRequest(BaseModel):
+        """Optional body for POST /inventory/month-reset.
+
+        `item_ids` is the planner's ticked selection. Omitted (legacy
+        clients) means "everything the planner would pre-tick".
+        """
+        item_ids: Optional[List[str]] = None
 
     @inventory_router.post("/inventory/month-reset")
     async def start_new_month(
+        payload: Optional[MonthResetRequest] = None,
         credentials: HTTPAuthorizationCredentials = Depends(security),
     ):
-        """Mark every eligible monthly staple empty.
+        """Mark the selected staples empty.
 
         The pre-reset stock levels are snapshotted into `month_resets` so the
         action can be undone from the toast — restoring from the client would
@@ -944,7 +962,20 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         if not household_id:
             raise HTTPException(status_code=400, detail="No active household")
 
-        targets, summary = await _collect_month_reset_targets(household_id)
+        candidates, summary = await _collect_restock_candidates(household_id)
+        selected_ids = payload.item_ids if payload else None
+        if selected_ids is None:
+            targets = [c for c in candidates if c["suggested"]]
+        else:
+            # Only ids the preview offered can be reset — that scopes the
+            # write to the household and keeps secret-stash rows out even if
+            # a client sends their ids. already_empty rows are dropped: the
+            # write would be a no-op and would pad reset_count.
+            wanted = set(selected_ids)
+            targets = [
+                c for c in candidates
+                if c["id"] in wanted and c["reason"] != "already_empty"
+            ]
         if not targets:
             return {"reset_count": 0, "summary": summary, "undo_token": None}
 

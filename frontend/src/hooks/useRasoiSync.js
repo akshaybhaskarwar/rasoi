@@ -110,8 +110,11 @@ export const useInventory = () => {
     return data; // { summary, items }
   };
 
-  const startNewMonth = async () => {
-    const { data } = await axios.post(`${API}/inventory/month-reset`, {}, {
+  // `itemIds` is the planner's ticked selection; omitting it falls back to
+  // the server default (everything the preview pre-ticks).
+  const startNewMonth = async (itemIds) => {
+    const body = Array.isArray(itemIds) ? { item_ids: itemIds } : {};
+    const { data } = await axios.post(`${API}/inventory/month-reset`, body, {
       headers: getAuthHeaders(),
     });
     await fetchInventory();

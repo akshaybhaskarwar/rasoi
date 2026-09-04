@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useInventory } from '@/hooks/useRasoiSync';
 import { useLanguage } from '@/contexts/LanguageContext';
 // useUnits no longer called directly on InventoryPage (the editor uses it internally).
-import { Search, Lock, Package2, Sparkles, AlertTriangle, LayoutGrid, List, CalendarClock, ChevronRight } from 'lucide-react';
+import { Search, Lock, Package2, Sparkles, AlertTriangle, LayoutGrid, List, ListChecks, CalendarClock, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import { IngredientAvatar } from '@/components/IngredientAvatar';
 import { InventoryItemDetails } from '@/components/InventoryItemDetails';
 import { InventoryRow } from '@/components/InventoryRow';
 import { FrequencyPill, FrequencyStrip, getFrequency } from '@/components/FrequencyPicker';
-import { MonthResetSheet } from '@/components/MonthResetSheet';
+import { RestockPlannerSheet } from '@/components/RestockPlannerSheet';
 import {
   CATEGORIES,
   DEFAULT_MONTHLY,
@@ -83,12 +83,11 @@ const InventoryPage = () => {
   const [expandedMode, setExpandedMode] = useState(null); // 'details' | 'frequency' | null
   const [frequencyBusyId, setFrequencyBusyId] = useState(null);
 
-  // Month-end reset. The banner is the seasonal prompt; the sheet is also
-  // reachable year-round from the filter card, since the reset is manual.
+  // Restock planner. The banner is the seasonal prompt; the sheet is also
+  // reachable year-round from the entry card, since the reset is manual.
   const [monthResetOpen, setMonthResetOpen] = useState(false);
   const [monthResetPreview, setMonthResetPreview] = useState(null);
   const [monthResetBusy, setMonthResetBusy] = useState(false);
-  const [isReviewingReset, setIsReviewingReset] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(() => {
     try {
       // Dismissal lasts the rest of the cycle, not forever.
@@ -153,7 +152,6 @@ const InventoryPage = () => {
 
   const openMonthReset = async () => {
     setMonthResetOpen(true);
-    setIsReviewingReset(false);
     setMonthResetPreview(null);
     try {
       setMonthResetPreview(await previewMonthReset());
@@ -163,8 +161,9 @@ const InventoryPage = () => {
     }
   };
 
-  // Changing a frequency from inside the Review list is permanent, not just
-  // for this reset — so the preview is refetched to keep the counts honest.
+  // Changing a frequency from inside the planner is permanent, not just for
+  // this reset — so the preview is refetched to keep the tabs honest. The
+  // sheet keeps the user's ticks across the refresh.
   const handleResetReviewFrequencyChange = async (item, frequency) => {
     setFrequencyBusyId(item.id);
     try {
@@ -178,21 +177,20 @@ const InventoryPage = () => {
     }
   };
 
-  const confirmMonthReset = async () => {
+  const confirmMonthReset = async (selectedIds) => {
     setMonthResetBusy(true);
     try {
-      const result = await startNewMonth();
+      const result = await startNewMonth(selectedIds);
       setMonthResetOpen(false);
-      setIsReviewingReset(false);
       dismissBanner();
-      toast.success(`${result.reset_count} staples marked empty`, {
-        description: 'Add them to your shopping list from the Update button.',
+      toast.success(getLabel('markedEmptyToast', { n: result.reset_count }), {
+        description: getLabel('goesToShoppingList'),
         action: result.undo_token ? {
-          label: 'Undo',
+          label: getLabel('undoLabel'),
           onClick: async () => {
             try {
               await undoMonthReset(result.undo_token);
-              toast.success('Stock levels restored');
+              toast.success(getLabel('stockRestored'));
             } catch {
               toast.error('Could not undo');
             }
@@ -201,7 +199,7 @@ const InventoryPage = () => {
         duration: 8000,
       });
     } catch (error) {
-      toast.error('Could not start a new month', {
+      toast.error('Could not mark items empty', {
         description: error?.response?.data?.detail || error.message,
       });
     } finally {
@@ -404,9 +402,9 @@ const InventoryPage = () => {
             <div className="flex items-start gap-3">
               <CalendarClock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-blue-900 text-sm">New month coming up</p>
+                <p className="font-semibold text-blue-900 text-sm">{getLabel('monthEndTitle')}</p>
                 <p className="text-xs text-blue-800 mt-0.5">
-                  Mark your monthly staples as finished so they land on your shopping list.
+                  {getLabel('monthEndHint')}
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button
@@ -415,7 +413,7 @@ const InventoryPage = () => {
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                     data-testid="month-reset-banner-start"
                   >
-                    Start new month
+                    {getLabel('planRestock')}
                   </Button>
                   <Button
                     onClick={dismissBanner}
@@ -423,7 +421,7 @@ const InventoryPage = () => {
                     variant="outline"
                     className="border-blue-300 text-blue-700 hover:bg-blue-100"
                   >
-                    Not now
+                    {getLabel('notNow')}
                   </Button>
                 </div>
               </div>
@@ -519,18 +517,18 @@ const InventoryPage = () => {
         </Select>
       </div>
 
-      {/* Year-round entry point for the reset. The banner only appears near
-          month end, but the action is manual — someone who dismissed it, or
-          who shops mid-month, still needs a way in. Kept deliberately quiet
-          so it doesn't compete with the daily controls above. */}
+      {/* Year-round entry point for the planner. The banner only appears
+          near month end, but the action is manual — someone who dismissed
+          it, or who shops mid-month, still needs a way in. Kept deliberately
+          quiet so it doesn't compete with the daily controls above. */}
       <button
         type="button"
         onClick={openMonthReset}
         data-testid="month-reset-entry"
         className="w-full flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-gray-100 shadow-sm text-left hover:bg-gray-50 transition-colors"
       >
-        <CalendarClock className="w-4 h-4 text-gray-500 flex-shrink-0" />
-        <span className="flex-1 text-sm text-gray-600">Start new month</span>
+        <ListChecks className="w-4 h-4 text-gray-500 flex-shrink-0" />
+        <span className="flex-1 text-sm text-gray-600">{getLabel('planRestock')}</span>
         <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
       </button>
 
@@ -808,16 +806,13 @@ const InventoryPage = () => {
         onItemScanned={handleScannedItem}
       />
 
-      <MonthResetSheet
+      <RestockPlannerSheet
         open={monthResetOpen}
         preview={monthResetPreview}
-        isReviewing={isReviewingReset}
-        onToggleReview={() => setIsReviewingReset((v) => !v)}
         onConfirm={confirmMonthReset}
         onClose={() => {
           if (monthResetBusy) return;
           setMonthResetOpen(false);
-          setIsReviewingReset(false);
         }}
         busy={monthResetBusy}
         frequencyBusyId={frequencyBusyId}
