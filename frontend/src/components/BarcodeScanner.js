@@ -80,21 +80,28 @@ export const BarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
     }
   };
 
-  // Capture photo from video
+  // Capture photo from video, downscaled before upload. A raw phone frame
+  // is ~12MP → a 3MB+ base64 body that took the OCR round trip past the
+  // proxy timeout on mobile networks. 1600px is plenty for packaging text
+  // (the receipt scanner uses 1800px for full pages).
+  const CAPTURE_MAX_DIM = 1600;
+
   const capturePhoto = () => {
     if (!videoRef.current) return null;
-    
+
+    const { videoWidth, videoHeight } = videoRef.current;
+    const scale = Math.min(1, CAPTURE_MAX_DIM / Math.max(videoWidth, videoHeight));
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    canvas.width = Math.round(videoWidth * scale);
+    canvas.height = Math.round(videoHeight * scale);
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoRef.current, 0, 0);
-    
-    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
     setCapturedImage(imageData);
     stopCamera();
     setScanning(false);
-    
+
     return canvas;
   };
 
