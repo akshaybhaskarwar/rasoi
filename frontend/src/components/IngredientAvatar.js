@@ -5,14 +5,15 @@
  * and you had to *read* the list instead of scanning it. This renders a
  * tinted tile with a glyph resolved through a deliberate fallback chain:
  *
+ *   0. keyword match on the custom SVG set      → shape+colour icon
+ *      (IngredientIcons — staples that share one emoji, e.g. every dal is 🫘)
  *   1. keyword match on the item name/aliases  → specific ingredient emoji
  *   2. the item's category emoji (CATEGORIES)   → always present
  *   3. first letter monogram                    → only if category is junk
  *
  * The chain matters more than the map's completeness: receipt-scanned custom
  * items and any newly added catalog entry fall through to the category emoji
- * and still look intentional. That's also the seam where a real SVG sprite
- * would slot in later as step 0 — no call-site changes needed.
+ * and still look intentional.
  *
  * Order is significant. Earlier keys win, so put specific terms before the
  * generic ones they contain ('mustard oil' before 'oil', 'coconut' before
@@ -24,6 +25,7 @@
  * word-boundary regexes instead. A trailing "s" is tolerated so "Dates" and
  * "Almonds" still match 'date' and 'almond'.
  */
+import { resolveIngredientIcon } from '@/components/IngredientIcons';
 
 const INGREDIENT_EMOJI = [
   // --- oils & ghee (before the bare 'oil'/'ghee' catch-alls) ---
@@ -157,8 +159,8 @@ export const resolveIngredientGlyph = (item, categoryInfo) => {
 };
 
 const SIZES = {
-  sm: { box: 'w-9 h-9 rounded-[10px]', glyph: 'text-lg', mono: 'text-sm' },
-  md: { box: 'w-12 h-12 rounded-xl', glyph: 'text-2xl', mono: 'text-lg' },
+  sm: { box: 'w-9 h-9 rounded-[10px]', glyph: 'text-lg', mono: 'text-sm', iconPx: 26 },
+  md: { box: 'w-12 h-12 rounded-xl', glyph: 'text-2xl', mono: 'text-lg', iconPx: 34 },
 };
 
 export const IngredientAvatar = ({
@@ -167,9 +169,13 @@ export const IngredientAvatar = ({
   size = 'sm',
   className = '',
 }) => {
-  const { glyph, kind } = resolveIngredientGlyph(item, categoryInfo);
   const dims = SIZES[size] || SIZES.sm;
   const tint = categoryInfo?.tile || 'bg-gray-100';
+
+  const Icon = resolveIngredientIcon(item);
+  const { glyph, kind } = Icon
+    ? { glyph: null, kind: 'icon' }
+    : resolveIngredientGlyph(item, categoryInfo);
 
   return (
     <div
@@ -180,9 +186,13 @@ export const IngredientAvatar = ({
       data-testid={`ingredient-avatar-${item?.id}`}
       data-glyph-kind={kind}
     >
-      <span className={kind === 'monogram' ? `${dims.mono} font-bold text-gray-500` : `${dims.glyph} leading-none`}>
-        {glyph}
-      </span>
+      {Icon ? (
+        <Icon px={dims.iconPx} />
+      ) : (
+        <span className={kind === 'monogram' ? `${dims.mono} font-bold text-gray-500` : `${dims.glyph} leading-none`}>
+          {glyph}
+        </span>
+      )}
     </div>
   );
 };
