@@ -221,6 +221,81 @@ const RavaIcon = ({ px }) => (
   </Svg>
 );
 
+const OilIcon = ({ px }) => (
+  <Svg px={px}>
+    <rect x="14.5" y="3" width="7" height="3.6" rx="1.2" fill="#8F6128" />
+    <rect x="15.5" y="6.6" width="5" height="4.4" fill="#FBF3D8" stroke="#B8860B" strokeWidth="1.1" />
+    <rect x="10.5" y="10.5" width="15" height="22" rx="4.5" fill="#FBF3D8" stroke="#B8860B" strokeWidth="1.2" />
+    <rect x="12.5" y="16" width="11" height="14.5" rx="3.2" fill="#F2C14E" />
+    <line x1="15" y1="18.5" x2="15" y2="27.5" stroke="#FBF3D8" strokeWidth="1.4" strokeLinecap="round" />
+  </Svg>
+);
+
+const DhaniaSeed = ({ cx, cy }) => (
+  <g transform={`translate(${cx} ${cy})`}>
+    <circle r="3.6" fill="#C4A75B" stroke="#8A6F33" strokeWidth="1" />
+    <path d="M-1.4-3q-1.6 3 0 6M1.4-3q1.6 3 0 6" fill="none" stroke="#8A6F33" strokeWidth="0.8" />
+  </g>
+);
+
+const DhaniaIcon = ({ px }) => (
+  <Svg px={px}>
+    <DhaniaSeed cx={11} cy={10} />
+    <DhaniaSeed cx={24} cy={9} />
+    <DhaniaSeed cx={8} cy={22} />
+    <DhaniaSeed cx={19} cy={19} />
+    <DhaniaSeed cx={28} cy={22} />
+    <DhaniaSeed cx={15} cy={29} />
+  </Svg>
+);
+
+const DhaniaPowderIcon = ({ px }) => (
+  <Svg px={px}>
+    <path d="M4 29c1-8 7-12 13-12s12 4 13 12z" fill="#C9A653" stroke="#97742E" strokeWidth="1.2" />
+    <DhaniaSeed cx={24} cy={9} />
+    <DhaniaSeed cx={30} cy={14} />
+  </Svg>
+);
+
+const ElaichiIcon = ({ px }) => (
+  <Svg px={px}>
+    <g fill="#9DBE72" stroke="#5F7F3B" strokeWidth="1.1">
+      <ellipse cx="12" cy="10" rx="7.5" ry="3.6" transform="rotate(-20 12 10)" />
+      <ellipse cx="25" cy="16" rx="7.5" ry="3.6" transform="rotate(16 25 16)" />
+      <ellipse cx="14" cy="26" rx="7.5" ry="3.6" transform="rotate(-6 14 26)" />
+    </g>
+    <g stroke="#5F7F3B" strokeWidth="0.9" strokeLinecap="round" fill="none">
+      <line x1="5.5" y1="12.4" x2="18.5" y2="7.6" />
+      <line x1="18" y1="14" x2="32" y2="18" />
+      <line x1="7" y1="26.7" x2="21" y2="25.3" />
+    </g>
+  </Svg>
+);
+
+const VaraiIcon = ({ px }) => (
+  <Svg px={px}>
+    <g fill="#EADFC2" stroke="#B7A87E" strokeWidth="0.9">
+      <circle cx="10" cy="9" r="2.4" />
+      <circle cx="18" cy="7" r="2.4" />
+      <circle cx="26" cy="10" r="2.4" />
+      <circle cx="7" cy="17" r="2.4" />
+      <circle cx="14.5" cy="15" r="2.4" />
+      <circle cx="22" cy="17" r="2.4" />
+      <circle cx="29.5" cy="18" r="2.4" />
+      <circle cx="11" cy="24" r="2.4" />
+      <circle cx="18.5" cy="23" r="2.4" />
+      <circle cx="26" cy="26" r="2.4" />
+      <circle cx="15" cy="30" r="2.4" />
+      <circle cx="22" cy="30.5" r="2.4" />
+    </g>
+    <g fill="#CBBC93">
+      <circle cx="9.4" cy="8.4" r="0.8" />
+      <circle cx="21.4" cy="16.4" r="0.8" />
+      <circle cx="14.4" cy="29.4" r="0.8" />
+    </g>
+  </Svg>
+);
+
 const RajmaIcon = ({ px }) => (
   <Svg px={px}>
     <g fill="#8E2F35" stroke="#5E1B20" strokeWidth="1.1">
@@ -259,6 +334,22 @@ const INGREDIENT_ICONS = [
   ['jeera', JeeraIcon], ['cumin', JeeraIcon],
   ['mustard oil', null],
   ['mohari', MustardIcon], ['mustard', MustardIcon],
+  // powder before seeds; fresh leaves (kothimbir) stay with the 🌿 emoji
+  ['coriander leaves', null], ['coriander leaf', null], ['kothimbir', null],
+  ['coriander powder', DhaniaPowderIcon], ['dhania powder', DhaniaPowderIcon],
+  ['coriander', DhaniaIcon], ['dhania', DhaniaIcon],
+  // the icon is the green pod — black cardamom falls through
+  ['black cardamom', null], ['badi elaichi', null],
+  ['elaichi', ElaichiIcon], ['cardamom', ElaichiIcon],
+  ['velchi', ElaichiIcon], ['veldoda', ElaichiIcon],
+
+  // oils — only the generic bottle; named oils (coconut, olive, groundnut)
+  // keep their specific emoji
+  ['cooking oil', OilIcon], ['refined oil', OilIcon], ['sunflower oil', OilIcon],
+
+  // fasting grains
+  ['varai', VaraiIcon], ['vari', VaraiIcon], ['bhagar', VaraiIcon],
+  ['barnyard millet', VaraiIcon],
 
   // flours — everything was 🌾
   ['atta', AttaIcon], ['wheat flour', AttaIcon],
