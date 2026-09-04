@@ -19,7 +19,7 @@ import ReceiptScanButton from '@/components/ReceiptScanButton';
 import { ShoppingDeleteSheet } from '@/components/ShoppingDeleteSheet';
 import { LastPaidLine } from '@/components/LastPaidLine';
 import { IngredientAvatar } from '@/components/IngredientAvatar';
-import { getCategoryInfo } from '@/lib/inventoryUtils';
+import { getCategoryInfo, getItemDefaults } from '@/lib/inventoryUtils';
 import { PricePromptSheet } from '@/components/PricePromptSheet';
 import { useLastPrices, usablePrice } from '@/hooks/useLastPrices';
 import { toast } from 'sonner';
@@ -59,7 +59,7 @@ const ShoppingPage = () => {
   } = useShoppingList();
   const { inventory, addItem: addInventoryItem, updateItem: updateInventoryItem, fetchInventory } = useInventory();
   const { language, getLabel } = useLanguage();
-  const { getShoppingOptions, getDefaultQuantity: getDefaultQty, parseDisplayToMetric } = useUnits();
+  const { getShoppingOptions, getDefaultQuantity: getDefaultQty, parseDisplayToMetric, formatQuantity } = useUnits();
 
   // Local wrappers that match old function signatures
   const getQuantityOptions = (category) => getShoppingOptions(category).options;
@@ -208,7 +208,15 @@ const ShoppingPage = () => {
         );
 
         if (!alreadyInList) {
-          const defaultQty = getDefaultQuantity(item.category);
+          // The item's own monthly need is the buy amount — the category
+          // default ("1 kg" for grains) is only the fallback for rows that
+          // never set one. Inventory stores the need numerically in base
+          // units while shopping rows carry a display string, hence the
+          // formatting hop.
+          const monthlyUnit = item.monthly_unit || getItemDefaults(item).unit;
+          const defaultQty =
+            (item.monthly_quantity && formatQuantity(item.monthly_quantity, monthlyUnit)) ||
+            getDefaultQuantity(item.category);
           await addItem({
             name_en: item.name_en,
             name_mr: item.name_mr,
