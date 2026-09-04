@@ -914,6 +914,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                 "category": item.get("category"),
                 "stock_level": item.get("stock_level"),
                 "current_stock": item.get("current_stock", 0),
+                "expiry_date": item.get("expiry_date"),
                 "frequency": freq,
                 "reason": reason,
                 "suggested": freq == "monthly" and reason is None,
@@ -933,7 +934,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
 
         candidates, summary = await _collect_restock_candidates(household_id)
         items = [
-            {k: v for k, v in c.items() if k != "current_stock"}
+            {k: v for k, v in c.items() if k not in ("current_stock", "expiry_date")}
             for c in candidates
         ]
         return {"summary": summary, "items": items}
@@ -989,6 +990,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                     "id": t["id"],
                     "stock_level": t.get("stock_level"),
                     "current_stock": t.get("current_stock", 0),
+                    "expiry_date": t.get("expiry_date"),
                 }
                 for t in targets
             ],
@@ -1001,6 +1003,10 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
             {"$set": {
                 "stock_level": "empty",
                 "current_stock": 0,
+                # The expiry date belonged to the stock that was just used
+                # up — leaving it made an emptied item warn "Expired N days
+                # ago" until the next purchase overwrote it.
+                "expiry_date": None,
                 "last_updated_by": user.get("id"),
             }},
         )
@@ -1035,6 +1041,7 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
                 {"$set": {
                     "stock_level": row.get("stock_level") or "empty",
                     "current_stock": row.get("current_stock", 0),
+                    "expiry_date": row.get("expiry_date"),
                 }},
             )
             restored += result.modified_count
