@@ -2,12 +2,16 @@
  * IngredientIcons — hand-drawn SVG glyphs for staples the emoji set can't
  * tell apart.
  *
- * Every dal shares 🫘, so six pulse rows in a category looked identical and
- * the user had to read each name. These icons encode the two things a cook
- * actually recognises a dal by — shape and colour: toor's yellow split
- * discs, moong's small green cylinders, chana's beaked brown seeds,
- * masoor's orange discs, urad's black grain with the white hilum stripe,
- * rajma's kidney shape.
+ * Every dal shares 🫘, most flours share 🌾, and jeera/mohari/hing share 🟤,
+ * so whole runs of rows looked identical and the user had to read each
+ * name. These icons encode the two things a cook actually recognises a
+ * staple by — shape and colour: toor's yellow split discs, moong's small
+ * green cylinders, chana's beaked brown seeds, masoor's orange discs,
+ * urad's black grain with the white hilum stripe, rajma's kidney shape;
+ * haldi's orange mound with the root, jeera's ridged crescents, mohari's
+ * dark round seeds; and the flour mounds told apart by their garnish —
+ * atta's wheat sprig, besan's chana seeds, rava's visible granules,
+ * maida's plain pale peak.
  *
  * This is step 0 of IngredientAvatar's fallback chain: matched here → SVG;
  * otherwise the emoji map, category emoji, and monogram behave as before,
@@ -113,6 +117,110 @@ const UradIcon = ({ px }) => (
   </Svg>
 );
 
+const HaldiIcon = ({ px }) => (
+  <Svg px={px}>
+    <path d="M5 28c1-8.5 7-13 13-13s12 4.5 13 13z" fill="#EBA92E" stroke="#B57B12" strokeWidth="1.2" />
+    <g fill="#D98E26" stroke="#A5680F" strokeWidth="1.1">
+      <rect x="17" y="4.5" width="13" height="5.4" rx="2.7" transform="rotate(22 23.5 7)" />
+      <circle cx="28.5" cy="11" r="2.2" />
+    </g>
+    <g fill="#B57B12">
+      <circle cx="9" cy="12" r="1.1" />
+      <circle cx="13" cy="9" r="1.1" />
+    </g>
+  </Svg>
+);
+
+const JeeraIcon = ({ px }) => (
+  <Svg px={px}>
+    <g fill="#A9743C" stroke="#7A4E1F" strokeWidth="1">
+      <ellipse cx="11" cy="10" rx="5.5" ry="2" transform="rotate(-24 11 10)" />
+      <ellipse cx="25" cy="9" rx="5.5" ry="2" transform="rotate(18 25 9)" />
+      <ellipse cx="8" cy="20" rx="5.5" ry="2" transform="rotate(12 8 20)" />
+      <ellipse cx="21" cy="19" rx="5.5" ry="2" transform="rotate(-16 21 19)" />
+      <ellipse cx="29" cy="26" rx="5.5" ry="2" transform="rotate(24 29 26)" />
+      <ellipse cx="14" cy="28" rx="5.5" ry="2" transform="rotate(-8 14 28)" />
+    </g>
+    <g stroke="#E5C79A" strokeWidth="0.9" strokeLinecap="round">
+      <line x1="7.5" y1="11.6" x2="14.5" y2="8.4" />
+      <line x1="21.5" y1="8" x2="28.5" y2="10" />
+      <line x1="4.5" y1="19.4" x2="11.5" y2="20.6" />
+      <line x1="17.5" y1="20" x2="24.5" y2="18" />
+      <line x1="25.5" y1="24.6" x2="32.5" y2="27.4" />
+      <line x1="10.5" y1="28.4" x2="17.5" y2="27.6" />
+    </g>
+  </Svg>
+);
+
+const MustardIcon = ({ px }) => (
+  <Svg px={px}>
+    <g fill="#4A2E1A" stroke="#33200F" strokeWidth="0.9">
+      <circle cx="10" cy="10" r="3.2" />
+      <circle cx="20" cy="7.5" r="3.2" />
+      <circle cx="29" cy="12" r="3.2" />
+      <circle cx="7" cy="19" r="3.2" />
+      <circle cx="16.5" cy="17" r="3.2" />
+      <circle cx="26" cy="21" r="3.2" />
+      <circle cx="12" cy="27" r="3.2" />
+      <circle cx="21.5" cy="28" r="3.2" />
+    </g>
+    <g fill="#8B5A2B">
+      <circle cx="9" cy="9" r="1" />
+      <circle cx="15.5" cy="16" r="1" />
+      <circle cx="25" cy="20" r="1" />
+      <circle cx="11" cy="26" r="1" />
+    </g>
+  </Svg>
+);
+
+const AttaIcon = ({ px }) => (
+  <Svg px={px}>
+    <path d="M4 29c1-8 7-12 14-12s13 4 14 12z" fill="#D9B98A" stroke="#A67F4E" strokeWidth="1.2" />
+    <line x1="18" y1="16" x2="18" y2="7" stroke="#A67F4E" strokeWidth="1.3" strokeLinecap="round" />
+    <g fill="#C29A54" stroke="#8F6A2E" strokeWidth="0.9">
+      <ellipse cx="14.8" cy="10" rx="3" ry="1.7" transform="rotate(-38 14.8 10)" />
+      <ellipse cx="21.2" cy="10" rx="3" ry="1.7" transform="rotate(38 21.2 10)" />
+      <ellipse cx="15.4" cy="6" rx="3" ry="1.7" transform="rotate(-38 15.4 6)" />
+      <ellipse cx="20.6" cy="6" rx="3" ry="1.7" transform="rotate(38 20.6 6)" />
+    </g>
+  </Svg>
+);
+
+const MaidaIcon = ({ px }) => (
+  <Svg px={px}>
+    <path d="M4 29c1-7.5 6.5-11 14-11s13 3.5 14 11z" fill="#F5F1E8" stroke="#C9BFA8" strokeWidth="1.2" />
+    <path d="M12 19c1-4.5 4-7 6-7s5 2.5 6 7" fill="#F5F1E8" stroke="#C9BFA8" strokeWidth="1.2" />
+  </Svg>
+);
+
+const BesanIcon = ({ px }) => (
+  <Svg px={px}>
+    <path d="M4 29c1-8 7-12 13-12s12 4 13 12z" fill="#EFC75E" stroke="#B8902A" strokeWidth="1.2" />
+    <g fill="#C79155" stroke="#8F6128" strokeWidth="1">
+      <circle cx="25" cy="9" r="4.4" />
+      <circle cx="23" cy="5.8" r="1.9" />
+      <circle cx="31" cy="14" r="3.6" />
+      <circle cx="29.4" cy="11.3" r="1.6" />
+    </g>
+  </Svg>
+);
+
+const RavaIcon = ({ px }) => (
+  <Svg px={px}>
+    <path d="M4 29c1-8 7-12 14-12s13 4 13 12z" fill="#EFE3C8" stroke="#B79F6E" strokeWidth="1.2" />
+    <g fill="#C9A96B">
+      <circle cx="11" cy="24" r="1.2" />
+      <circle cx="16" cy="21" r="1.2" />
+      <circle cx="21" cy="24.5" r="1.2" />
+      <circle cx="26" cy="22" r="1.2" />
+      <circle cx="14" cy="27" r="1.2" />
+      <circle cx="24" cy="27.5" r="1.2" />
+      <circle cx="19" cy="18.5" r="1.2" />
+      <circle cx="29" cy="26" r="1.2" />
+    </g>
+  </Svg>
+);
+
 const RajmaIcon = ({ px }) => (
   <Svg px={px}>
     <g fill="#8E2F35" stroke="#5E1B20" strokeWidth="1.1">
@@ -131,9 +239,13 @@ const RajmaIcon = ({ px }) => (
 );
 
 // Order is significant, same as the emoji map: specific keys must come
-// before generic ones they contain. Keywords cover the English names plus
-// the Hindi/Marathi romanisations that show up in names and aliases.
+// before generic ones they contain. A null icon is an exclusion — it stops
+// the scan and hands the item back to the emoji chain, so 'mustard oil'
+// keeps its oil emoji instead of getting mustard seeds. Keywords cover the
+// English names plus the Hindi/Marathi romanisations that show up in names
+// and aliases.
 const INGREDIENT_ICONS = [
+  // pulses
   ['toor', ToorIcon], ['tur', ToorIcon], ['arhar', ToorIcon],
   ['moong', MoongIcon], ['mung', MoongIcon],
   ['chana', ChanaIcon], ['chole', ChanaIcon], ['chickpea', ChanaIcon],
@@ -141,6 +253,19 @@ const INGREDIENT_ICONS = [
   ['masoor', MasoorIcon], ['masur', MasoorIcon],
   ['urad', UradIcon], ['udid', UradIcon],
   ['rajma', RajmaIcon], ['kidney bean', RajmaIcon],
+
+  // spices — the 🟡/🟤 crowd
+  ['haldi', HaldiIcon], ['turmeric', HaldiIcon],
+  ['jeera', JeeraIcon], ['cumin', JeeraIcon],
+  ['mustard oil', null],
+  ['mohari', MustardIcon], ['mustard', MustardIcon],
+
+  // flours — everything was 🌾
+  ['atta', AttaIcon], ['wheat flour', AttaIcon],
+  ['maida', MaidaIcon],
+  ['besan', BesanIcon], ['gram flour', BesanIcon],
+  ['rava', RavaIcon], ['suji', RavaIcon], ['sooji', RavaIcon],
+  ['semolina', RavaIcon],
 ];
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -152,7 +277,8 @@ const COMPILED = INGREDIENT_ICONS.map(([key, Icon]) => [
 /**
  * Return the icon component for an item, or null when the emoji chain
  * should take over. Matches on the lowercased English name plus aliases,
- * mirroring resolveIngredientGlyph.
+ * mirroring resolveIngredientGlyph. The first hit wins even when its icon
+ * is null — that's how the exclusion entries work.
  */
 export const resolveIngredientIcon = (item) => {
   const haystack = [item?.name_en, ...(item?.aliases || [])]
