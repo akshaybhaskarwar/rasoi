@@ -219,6 +219,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
   // is dumped at the top of a 46-row list and has to find their place again.
   const dialogScrollRef = useRef(null);
   const savedScrollRef = useRef(null);
+  const editedRowRef = useRef(null);
 
   const [stage, setStage] = useState('idle'); // idle | confirming
   // Seconds since the scan started, driving the progress copy below.
@@ -254,11 +255,13 @@ const ReceiptScanButton = ({ onSuccess }) => {
     return () => clearInterval(id);
   }, [parsing]);
 
-  // Remember where the list was scrolled before the first overlay opens;
-  // switching catalog -> add-as-new keeps the original position.
-  const rememberScroll = () => {
+  // Remember where the list was scrolled (and which row is being edited)
+  // before the first overlay opens; switching catalog -> add-as-new keeps
+  // the original position.
+  const rememberScroll = (rowId) => {
     if (catalogOpen === null && customAddOpen === null && dialogScrollRef.current) {
       savedScrollRef.current = dialogScrollRef.current.scrollTop;
+      editedRowRef.current = rowId ?? null;
     }
   };
 
@@ -267,10 +270,26 @@ const ReceiptScanButton = ({ onSuccess }) => {
     if (!el) return;
     if (catalogOpen !== null || customAddOpen !== null) {
       el.scrollTop = 0;
-    } else if (savedScrollRef.current != null) {
-      el.scrollTop = savedScrollRef.current;
-      savedScrollRef.current = null;
+      return;
     }
+    if (savedScrollRef.current == null) return;
+    const saved = savedScrollRef.current;
+    const rowId = editedRowRef.current;
+    savedScrollRef.current = null;
+    editedRowRef.current = null;
+    // A synchronous restore here gets overridden: when the overlay (whose
+    // search input holds focus) unmounts, Radix's focus trap re-focuses the
+    // dialog and the browser scrolls that element into view — after this
+    // effect. Two frames later runs after that dance, and anchoring on the
+    // edited row beats a pixel offset because the row's rendered height may
+    // have changed with its new name.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const rowEl = rowId != null
+        ? el.querySelector(`[data-receipt-row="${rowId}"]`)
+        : null;
+      if (rowEl) rowEl.scrollIntoView({ block: 'center' });
+      else el.scrollTop = saved;
+    }));
   }, [catalogOpen, customAddOpen]);
 
   const handlePickFile = () => {
@@ -466,7 +485,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
   const openCustomAddForRow = (rowId, { prefillName } = {}) => {
     const row = rows.find(r => r._row_id === rowId);
     if (!row) return;
-    rememberScroll();
+    rememberScroll(rowId);
     setCatalogOpen(null);
     setCustomAddOpen({
       rowId,
@@ -658,6 +677,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
               return (
                 <div
                   key={row._row_id}
+                  data-receipt-row={row._row_id}
                   className={`border-2 rounded-lg p-3 transition-all ${
                     isAdded ? style.color : 'bg-gray-50 border-gray-200 opacity-60'
                   }`}
@@ -677,7 +697,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
                                 </Badge>
                               )}
                               <button
-                                onClick={() => { rememberScroll(); setCatalogOpen(row._row_id); }}
+                                onClick={() => { rememberScroll(row._row_id); setCatalogOpen(row._row_id); }}
                                 className="text-xs text-blue-600 underline"
                               >
                                 change
@@ -686,7 +706,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
                           ) : (
                             <span className="flex flex-wrap gap-2">
                               <button
-                                onClick={() => { rememberScroll(); setCatalogOpen(row._row_id); }}
+                                onClick={() => { rememberScroll(row._row_id); setCatalogOpen(row._row_id); }}
                                 className="text-blue-600 underline text-sm"
                                 data-testid={`pick-catalog-${row._row_id}`}
                               >
