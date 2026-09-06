@@ -212,6 +212,13 @@ const ReceiptScanButton = ({ onSuccess }) => {
   const { shoppingList, fetchShoppingList } = useShoppingList();
   const { getLabel } = useLanguage();
   const fileInputRef = useRef(null);
+  // The confirm dialog is the scroll container. The catalog/custom-add
+  // overlays render absolutely at the TOP of its scrolled content, so
+  // opening one from a row far down the list must jump to the top (or the
+  // overlay opens off-screen) — and closing it must jump back, or the user
+  // is dumped at the top of a 46-row list and has to find their place again.
+  const dialogScrollRef = useRef(null);
+  const savedScrollRef = useRef(null);
 
   const [stage, setStage] = useState('idle'); // idle | confirming
   // Seconds since the scan started, driving the progress copy below.
@@ -246,6 +253,25 @@ const ReceiptScanButton = ({ onSuccess }) => {
     const id = setInterval(() => setScanSeconds((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [parsing]);
+
+  // Remember where the list was scrolled before the first overlay opens;
+  // switching catalog -> add-as-new keeps the original position.
+  const rememberScroll = () => {
+    if (catalogOpen === null && customAddOpen === null && dialogScrollRef.current) {
+      savedScrollRef.current = dialogScrollRef.current.scrollTop;
+    }
+  };
+
+  useEffect(() => {
+    const el = dialogScrollRef.current;
+    if (!el) return;
+    if (catalogOpen !== null || customAddOpen !== null) {
+      el.scrollTop = 0;
+    } else if (savedScrollRef.current != null) {
+      el.scrollTop = savedScrollRef.current;
+      savedScrollRef.current = null;
+    }
+  }, [catalogOpen, customAddOpen]);
 
   const handlePickFile = () => {
     fileInputRef.current?.click();
@@ -292,6 +318,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
     setCatalogOpen(null);
     setCustomAddOpen(null);
     setOptedOutShoppingIds(new Set());
+    savedScrollRef.current = null;
   };
 
   // Pair each row to its shopping-list match (if any). Recomputed when the
@@ -439,6 +466,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
   const openCustomAddForRow = (rowId, { prefillName } = {}) => {
     const row = rows.find(r => r._row_id === rowId);
     if (!row) return;
+    rememberScroll();
     setCatalogOpen(null);
     setCustomAddOpen({
       rowId,
@@ -526,6 +554,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
         onOpenChange={(o) => { if (!o) handleClose(); }}
       >
         <DialogContent
+          ref={dialogScrollRef}
           // NOTE: Do NOT add `relative` here — it would override Radix's
           // `position: fixed` and break the centered modal layout. The inline
           // catalog overlay below uses `absolute inset-0` and is correctly
@@ -648,7 +677,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
                                 </Badge>
                               )}
                               <button
-                                onClick={() => setCatalogOpen(row._row_id)}
+                                onClick={() => { rememberScroll(); setCatalogOpen(row._row_id); }}
                                 className="text-xs text-blue-600 underline"
                               >
                                 change
@@ -657,7 +686,7 @@ const ReceiptScanButton = ({ onSuccess }) => {
                           ) : (
                             <span className="flex flex-wrap gap-2">
                               <button
-                                onClick={() => setCatalogOpen(row._row_id)}
+                                onClick={() => { rememberScroll(); setCatalogOpen(row._row_id); }}
                                 className="text-blue-600 underline text-sm"
                                 data-testid={`pick-catalog-${row._row_id}`}
                               >

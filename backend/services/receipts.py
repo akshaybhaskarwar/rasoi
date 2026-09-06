@@ -122,11 +122,26 @@ Return STRICT JSON (no prose, no markdown fences):
       "qty": <number>,
       "unit": "<UT|K|G|L|other>",
       "rate": <number>,
-      "amount": <number>
+      "amount": <number>,
+      "pack_size": <number|null>,
+      "pack_unit": "<G|K|ML|L|null>"
     }
   ],
   "total": <number — from the line with 'Total:'>
 }
+
+pack_size / pack_unit: shops bill packaged goods per packet (unit UT) and
+print the pack's weight or volume INSIDE the item name. Report that size
+here, converted from Devanagari digits (०१२३४५६७८९) if needed:
+  "खजुर सिडलेस ब्लॅक ५००"   -> pack_size 500, pack_unit "G"
+  "खारीक साखरी २५० ग्राम"    -> pack_size 250, pack_unit "G"
+  "पोहा पेकिंग १ किलो"        -> pack_size 1,   pack_unit "K"
+  "सर्फ लिक्वी २ लीटर"        -> pack_size 2,   pack_unit "L"
+A bare trailing number 100-999 in a grocery item name means grams. Report
+qty/unit/rate/amount EXACTLY as printed on the receipt — do not multiply
+or convert them yourself; the pack size is combined in code later. Use
+null for both fields when the name carries no pack size (loose goods,
+counted items like coconuts or soap bars with no weight).
 
 Confidence guide:
   high      = catalog entry is clearly the same item (printed name matches
@@ -343,6 +358,43 @@ class ReceiptIngestionService:
                 item["_fuzzy_score"] = score
         return parsed
 
+    def _apply_pack_sizes(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
+        """Fold a pack size printed in the item name into qty/unit/rate.
+
+        A shop bills "खजुर सिडलेस ब्लॅक ५००" as 2 UT @ ₹130 — but inventory
+        stock is grams, so writing qty 2 added 2g of dates instead of 1000g.
+        The model only *extracts* the printed size (pack_size/pack_unit); the
+        arithmetic happens here where it is deterministic:
+
+          qty  -> packs × pack_size, in pack_unit
+          rate -> amount / new qty, so rate × qty still reconciles with the
+                  printed amount (the confirm screen's mismatch warning and
+                  the price-history guard both check that identity, and the
+                  per-g rate is what makes price history comparable in ₹/kg)
+        """
+        for item in parsed.get("items", []) or []:
+            unit = (item.get("unit") or "").strip().upper()
+            p_unit = (item.get("pack_unit") or "").strip().upper()
+            if unit != "UT" or p_unit not in ("G", "K", "ML", "L"):
+                continue
+            try:
+                packs = float(item.get("qty") or 0)
+                size = float(item.get("pack_size") or 0)
+            except (TypeError, ValueError):
+                continue
+            if packs <= 0 or size <= 0:
+                continue
+            qty = packs * size
+            item["qty"] = round(qty, 3)
+            item["unit"] = p_unit
+            amount = item.get("amount")
+            item["rate"] = (
+                round(amount / qty, 4)
+                if isinstance(amount, (int, float)) and amount > 0
+                else None
+            )
+        return parsed
+
     # ------------------------------- public ----------------------------------
 
     async def process_receipt(self, image_bytes: bytes) -> Dict[str, Any]:
@@ -385,5 +437,6 @@ class ReceiptIngestionService:
             raise ReceiptIngestionError("Claude did not return the expected JSON shape")
 
         parsed = self._apply_fuzzy_fallback(parsed)
+        parsed = self._apply_pack_sizes(parsed)
         parsed["_raw_ocr_text"] = ocr_text
         return parsed
