@@ -39,7 +39,7 @@ const CONFIDENCE_STYLES = {
 // cameras produce 4-8 MB images; we drop to ~500 KB while keeping enough
 // resolution that the OCR is unaffected. Critical for mobile networks and
 // to stay well under any reverse-proxy upload caps.
-const MAX_DIM = 1800;       // pixels — receipt text remains crisp at this width
+const MAX_DIM = 1800;       // pixels, applied to the SHORT side — see encodeAt
 const JPEG_QUALITY = 0.85;  // ~5x smaller than full-quality, no OCR loss
 
 // Hard ceiling for the base64 payload we will send.
@@ -63,8 +63,13 @@ const QUALITY_LADDER = [JPEG_QUALITY, 0.7, 0.55, 0.45];
 const DIM_LADDER = [MAX_DIM, 1500, 1200];
 
 const encodeAt = (img, dim, quality) => {
-  const longest = Math.max(img.width, img.height);
-  const scale = longest > dim ? dim / longest : 1;
+  // The cap applies to the SHORT side. Receipts are tall and narrow, and
+  // capping the longest side scaled a long bill by its LENGTH — a 1200×4800
+  // photo became 450×1800, shrinking every character below what OCR can
+  // read. The short side is the text width, so capping it keeps letters the
+  // same size no matter how long the bill is.
+  const shortest = Math.min(img.width, img.height);
+  const scale = shortest > dim ? dim / shortest : 1;
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(img.width * scale);
   canvas.height = Math.round(img.height * scale);
@@ -501,12 +506,16 @@ const ReceiptScanButton = ({ onSuccess }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Hidden input — opens device camera on mobile, file picker on desktop */}
+      {/* Hidden input. No `capture` attribute on purpose: with it, Android
+          jumps straight into the camera and there is NO way to pick an
+          already-taken photo. Without it, both platforms offer the choice
+          natively — Android shows its camera/gallery chooser, iOS shows
+          Take Photo / Photo Library — at the cost of one extra tap for the
+          camera path. */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFileChange}
         className="hidden"
         data-testid="receipt-file-input"

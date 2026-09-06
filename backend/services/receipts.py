@@ -279,7 +279,10 @@ class ReceiptIngestionService:
             client = self._get_anthropic_client()
             msg = client.messages.create(
                 model=self._anthropic_model,
-                max_tokens=4096,
+                # A big kirana bill runs 60+ line items at ~80 output tokens
+                # each; the old 4096 cap truncated the JSON mid-array and the
+                # scan died with "Claude did not return JSON".
+                max_tokens=16384,
                 temperature=0,
                 messages=[{
                     "role": "user",
@@ -295,6 +298,13 @@ class ReceiptIngestionService:
                     ],
                 }],
             )
+            if getattr(msg, "stop_reason", None) == "max_tokens":
+                # Truncated output is guaranteed-broken JSON; say what
+                # actually happened instead of letting the decoder guess.
+                raise ReceiptIngestionError(
+                    "This bill has too many lines to read in one scan — "
+                    "please scan it in two halves"
+                )
             text = "".join(b.text for b in msg.content if hasattr(b, "text"))
             cleaned = text.strip().lstrip("`").rstrip("`")
             if cleaned.startswith("json"):
