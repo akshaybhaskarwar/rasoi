@@ -103,7 +103,7 @@ export const PricePromptSheet = ({ item, open, onClose, onSaved }) => {
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose?.(); }}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
         <SheetHeader className="text-left">
           <SheetTitle>What did you pay?</SheetTitle>
           <SheetDescription>
@@ -111,7 +111,7 @@ export const PricePromptSheet = ({ item, open, onClose, onSaved }) => {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="py-4 space-y-4 pb-24">
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <label className="text-xs font-medium text-gray-600">Total paid (₹)</label>
