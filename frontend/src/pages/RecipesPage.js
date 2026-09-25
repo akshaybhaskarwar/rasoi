@@ -93,7 +93,7 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
   };
   
   return (
-    <div className="max-h-[85vh] overflow-y-auto">
+    <div>
       {/* Header with Photo */}
       <div className="relative h-48 bg-gradient-to-br from-orange-100 to-amber-50 -mx-6 -mt-6 mb-4">
         {photoData ? (
@@ -814,7 +814,7 @@ const RecipesPage = () => {
       
       {/* Recipe Detail Dialog */}
       <Dialog open={!!selectedRecipe} onOpenChange={() => setSelectedRecipe(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden p-6">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6">
           <RecipeDetailView
             recipe={selectedRecipe}
             onClose={() => setSelectedRecipe(null)}
