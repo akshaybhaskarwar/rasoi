@@ -35,6 +35,12 @@ class RecipeStep(BaseModel):
     instruction: str
     duration_minutes: Optional[int] = None  # Optional cooking time for step
 
+class VideoLink(BaseModel):
+    """Video link (YouTube or Instagram)"""
+    type: str  # "youtube" or "instagram"
+    url: str
+    title: Optional[str] = None
+
 class RecipeCreate(BaseModel):
     """Model for creating a new recipe"""
     title: str
@@ -47,6 +53,7 @@ class RecipeCreate(BaseModel):
     prep_time_minutes: Optional[int] = None
     cook_time_minutes: Optional[int] = None
     photo_base64: Optional[str] = None  # Base64 encoded image
+    video_links: Optional[List[VideoLink]] = []  # YouTube/Instagram video links
     is_published: bool = False  # Publish to community
 
 class RecipeUpdate(BaseModel):
@@ -61,6 +68,7 @@ class RecipeUpdate(BaseModel):
     prep_time_minutes: Optional[int] = None
     cook_time_minutes: Optional[int] = None
     photo_base64: Optional[str] = None
+    video_links: Optional[List[VideoLink]] = None
     is_published: Optional[bool] = None
 
 class StockStatus(BaseModel):
@@ -329,6 +337,10 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
         instructions = [step.dict() for step in recipe.instructions]
         
         # Create recipe document
+        video_links = []
+        if recipe.video_links:
+            video_links = [{"type": v.type, "url": v.url, "title": v.title} for v in recipe.video_links]
+
         recipe_doc = {
             "id": recipe_id,
             "household_id": household_id,
@@ -345,6 +357,7 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
             "prep_time_minutes": recipe.prep_time_minutes,
             "cook_time_minutes": recipe.cook_time_minutes,
             "photo_url": None,  # Will be set if photo uploaded
+            "video_links": video_links,  # Store video links
             "is_published": recipe.is_published,
             "likes": 0,
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -676,6 +689,10 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
                     update_doc["ingredients"] = processed
                 elif field == "instructions":
                     update_doc["instructions"] = [s if isinstance(s, dict) else s.dict() for s in value]
+                elif field == "video_links":
+                    # Process video links
+                    processed_links = [{"type": v.type, "url": v.url, "title": v.title} if hasattr(v, 'type') else v for v in value]
+                    update_doc["video_links"] = processed_links
                 elif field == "photo_base64" and value:
                     update_doc["photo_base64"] = value
                     update_doc["photo_url"] = f"data:image/jpeg;base64,{value[:100]}..."
@@ -696,20 +713,26 @@ def create_recipe_routes(db, decode_token, google_translate_api, notify_househol
         recipe_id: str,
         credentials: HTTPAuthorizationCredentials = Depends(security)
     ):
-        """Delete a recipe"""
+        """Delete a recipe - only the creator can delete it"""
         user = await get_user_from_token(credentials)
+        user_id = user.get("id")
         household_id = user.get("active_household")
-        
+
         recipe = await db.user_recipes.find_one({"id": recipe_id})
-        
+
         if not recipe:
             raise HTTPException(status_code=404, detail="Recipe not found")
-        
-        if recipe["household_id"] != household_id:
+
+        # Check that user is in the same household
+        if recipe.get("household_id") != household_id:
             raise HTTPException(status_code=403, detail="Can only delete your household's recipes")
-        
+
+        # Check that user is the creator of this recipe
+        if recipe.get("created_by") != user_id:
+            raise HTTPException(status_code=403, detail="Only the recipe creator can delete it")
+
         await db.user_recipes.delete_one({"id": recipe_id})
-        
+
         return {"message": f"Recipe '{recipe['title']}' deleted"}
     
     @recipe_router.post("/{recipe_id}/like")

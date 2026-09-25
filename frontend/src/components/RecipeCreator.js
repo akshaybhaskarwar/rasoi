@@ -321,6 +321,7 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
     is_published: editRecipe?.is_published || false,
     ingredients: editRecipe?.ingredients || [{ ingredient_name: '', quantity: '', unit: 'g' }],
     instructions: editRecipe?.instructions || [{ step_number: 1, instruction: '' }],
+    video_links: editRecipe?.video_links || [],
     photo_base64: null
   });
   
@@ -426,7 +427,26 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
     newSteps[index].instruction = value;
     setRecipe({ ...recipe, instructions: newSteps });
   };
-  
+
+  // Add/remove video links
+  const addVideoLink = () => {
+    setRecipe({
+      ...recipe,
+      video_links: [...(recipe.video_links || []), { type: 'youtube', url: '', title: '' }]
+    });
+  };
+
+  const removeVideoLink = (index) => {
+    const newLinks = recipe.video_links.filter((_, i) => i !== index);
+    setRecipe({ ...recipe, video_links: newLinks });
+  };
+
+  const updateVideoLink = (index, field, value) => {
+    const newLinks = [...(recipe.video_links || [])];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setRecipe({ ...recipe, video_links: newLinks });
+  };
+
   // Photo upload
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
@@ -605,7 +625,69 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
           </div>
         </div>
       </div>
-      
+
+      {/* Video Links */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <Label className="text-sm font-medium">Video Links (Optional)</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={addVideoLink}
+            className="text-xs"
+          >
+            <Plus className="w-3 h-3 mr-1" /> Add Video
+          </Button>
+        </div>
+        <div className="space-y-3">
+          {recipe.video_links?.map((link, index) => (
+            <div key={index} className="flex gap-2 items-end bg-gray-50 p-3 rounded-lg">
+              <div className="flex-1">
+                <Label className="text-xs text-gray-600">Type</Label>
+                <Select value={link.type} onValueChange={(value) => updateVideoLink(index, 'type', value)}>
+                  <SelectTrigger className="h-8 text-xs mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-[2]">
+                <Label className="text-xs text-gray-600">URL</Label>
+                <Input
+                  type="url"
+                  placeholder={link.type === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://instagram.com/p/...'}
+                  value={link.url}
+                  onChange={(e) => updateVideoLink(index, 'url', e.target.value)}
+                  className="h-8 text-xs mt-1"
+                />
+              </div>
+              <div className="flex-1">
+                <Label className="text-xs text-gray-600">Title (Optional)</Label>
+                <Input
+                  placeholder="e.g., Chef Demo"
+                  value={link.title}
+                  onChange={(e) => updateVideoLink(index, 'title', e.target.value)}
+                  className="h-8 text-xs mt-1"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => removeVideoLink(index)}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="w-4 h-4 text-red-500" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Photo Upload */}
       <div>
         <Label className="text-sm font-medium">Photo</Label>

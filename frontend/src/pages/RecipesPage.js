@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { 
-  ChefHat, Plus, Search, Filter, Heart, ShoppingCart, 
-  Clock, Users, BookOpen, Globe, Home, X, ArrowLeft, Edit, Youtube, Link2, Calendar, Play
+import {
+  ChefHat, Plus, Search, Filter, Heart, ShoppingCart,
+  Clock, Users, BookOpen, Globe, Home, X, ArrowLeft, Edit, Youtube, Link2, Calendar, Play, Trash2, Instagram
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,10 +52,11 @@ const StockStatusBadge = ({ status }) => {
 };
 
 // Recipe Detail View
-const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, onAddToPlanner, isOwnRecipe = false }) => {
+const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, onAddToPlanner, onDelete, isOwnRecipe = false }) => {
   const { language } = useLanguage();
   const [photoData, setPhotoData] = useState(null);
   const [loadingPhoto, setLoadingPhoto] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   useEffect(() => {
     const fetchPhoto = async () => {
@@ -127,13 +128,23 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
         )}
         <div className="absolute top-4 right-4 flex gap-2">
           {isOwnRecipe && (
-            <button
-              onClick={() => onEdit?.(recipe)}
-              className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-50 transition-colors"
-              data-testid="edit-recipe-btn"
-            >
-              <Edit className="w-4 h-4 text-orange-600" />
-            </button>
+            <>
+              <button
+                onClick={() => onEdit?.(recipe)}
+                className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-50 transition-colors"
+                data-testid="edit-recipe-btn"
+              >
+                <Edit className="w-4 h-4 text-orange-600" />
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-red-50 transition-colors"
+                data-testid="delete-recipe-btn"
+                title="Delete recipe"
+              >
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </button>
+            </>
           )}
           <button
             onClick={onClose}
@@ -142,6 +153,38 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        {showDeleteConfirm && (
+          <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Recipe?</DialogTitle>
+              </DialogHeader>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete "{recipe.title}"? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    await onDelete?.(recipe.id);
+                    setShowDeleteConfirm(false);
+                    onClose();
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
       
       {/* Title & Meta */}
@@ -217,8 +260,30 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
             ))}
           </div>
         )}
+
+        {/* Video Links */}
+        {recipe.video_links?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {recipe.video_links.map((link, idx) => {
+              const Icon = link.type === 'youtube' ? Youtube : Instagram;
+              const bgClass = link.type === 'youtube' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-pink-50 text-pink-600 border-pink-200';
+              return (
+                <a
+                  key={idx}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border hover:opacity-80 transition-opacity ${bgClass}`}
+                >
+                  <Icon className="w-3 h-3" />
+                  {link.title || link.type.charAt(0).toUpperCase() + link.type.slice(1)}
+                </a>
+              );
+            })}
+          </div>
+        )}
       </div>
-      
+
       {/* Ingredients */}
       <div className="mt-6">
         <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -461,7 +526,27 @@ const RecipesPage = () => {
       toast.error('Failed to like recipe');
     }
   };
-  
+
+  // Handle recipe deletion
+  const handleDeleteRecipe = async (recipeId) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      await axios.delete(
+        `${API}/api/recipes/${recipeId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Recipe deleted');
+      fetchRecipes();
+    } catch (error) {
+      console.error('Delete recipe error:', error);
+      if (error.response?.status === 403) {
+        toast.error('Only the recipe creator can delete it');
+      } else {
+        toast.error('Failed to delete recipe');
+      }
+    }
+  };
+
   // Handle recipe created/updated
   const handleRecipeSaved = (savedRecipe) => {
     setShowCreator(false);
@@ -736,6 +821,7 @@ const RecipesPage = () => {
             onAddToShopping={handleAddToShopping}
             onLike={handleLikeRecipe}
             onEdit={handleEditRecipe}
+            onDelete={handleDeleteRecipe}
             onAddToPlanner={(recipe) => {
               setSelectedRecipe(null); // Close detail view
               handleAddToPlanner(recipe);
