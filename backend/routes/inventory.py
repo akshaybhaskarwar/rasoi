@@ -292,6 +292,10 @@ def create_inventory_routes(db, decode_token, translate_service, notify_inventor
         updates["stock_level"] = compute_stock_level(stock, monthly)
         updates["last_updated_by"] = user.get("id")
 
+        # When stock becomes 0, clear the expiry date (the old stock is gone)
+        if stock == 0 or stock == "0" or (isinstance(stock, (int, float)) and stock <= 0):
+            updates["expiry_date"] = None
+
         await db.inventory.update_one({"id": item_id}, {"$set": updates})
         # Not keyed on modified_count: writing identical values is a no-op in
         # Mongo, and a no-op update is a success, not a missing item.
