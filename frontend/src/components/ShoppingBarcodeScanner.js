@@ -244,7 +244,7 @@ export const ShoppingBarcodeScanner = ({ isOpen, onClose, onItemScanned }) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pb-24">
           {/* Error Message */}
           {error && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
