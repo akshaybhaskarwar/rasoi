@@ -529,6 +529,16 @@ export const RecipeCreator = ({ onSuccess, onCancel, editRecipe = null }) => {
       onSuccess?.(response.data);
     } catch (error) {
       console.error('Error saving recipe:', error);
+
+      // Handle expired/invalid token
+      if (error.response?.status === 401) {
+        localStorage.removeItem('auth_token');
+        toast.error('Your session has expired. Please log in again.');
+        // Redirect to login page
+        window.location.href = '/login';
+        return;
+      }
+
       toast.error(error.response?.data?.detail || 'Failed to save recipe');
     } finally {
       setLoading(false);
