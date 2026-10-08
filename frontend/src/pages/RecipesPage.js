@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { RecipePhoto } from '@/components/RecipePhoto';
 import {
   ChefHat, Plus, Search, Filter, Heart, ShoppingCart,
   Clock, Users, BookOpen, Globe, Home, X, ArrowLeft, Edit, Youtube, Link2, Calendar, Play, Trash2, Instagram
@@ -54,30 +55,21 @@ const StockStatusBadge = ({ status }) => {
 // Recipe Detail View
 const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, onAddToPlanner, onDelete, isOwnRecipe = false }) => {
   const { language } = useLanguage();
-  const [photoData, setPhotoData] = useState(null);
-  const [loadingPhoto, setLoadingPhoto] = useState(false);
+  // The photo endpoint now answers with image bytes rather than a base64
+  // JSON field, so RecipePhoto owns the fetch. hasPhoto flips to false only
+  // when it reports the recipe has none, which is what reveals the YouTube
+  // thumbnail / gradient fallback below.
+  const [photoMissing, setPhotoMissing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
+  // A different recipe in the same sheet starts over.
   useEffect(() => {
-    const fetchPhoto = async () => {
-      if (!recipe?.id) return;
-      setLoadingPhoto(true);
-      try {
-        const token = localStorage.getItem('auth_token');
-        const res = await axios.get(`${API}/api/recipes/${recipe.id}/photo`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPhotoData(res.data.photo_base64);
-      } catch (error) {
-        console.log('No photo available');
-      } finally {
-        setLoadingPhoto(false);
-      }
-    };
-    fetchPhoto();
+    setPhotoMissing(false);
   }, [recipe?.id]);
-  
+
   if (!recipe) return null;
+
+  const showPhoto = !!(recipe.has_photo ?? true) && !photoMissing;
 
   const youtubeUrl = recipe.youtube_url || (recipe.youtube_video_id
     ? `https://www.youtube.com/watch?v=${recipe.youtube_video_id}`
@@ -96,11 +88,14 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
     <div>
       {/* Header with Photo */}
       <div className="relative h-48 bg-gradient-to-br from-orange-100 to-amber-50 -mx-6 -mt-6 mb-4">
-        {photoData ? (
-          <img
-            src={`data:image/jpeg;base64,${photoData}`}
+        {showPhoto ? (
+          <RecipePhoto
+            recipeId={recipe.id}
+            version={recipe.updated_at}
             alt={recipe.title}
+            eager
             className="w-full h-full object-cover"
+            onUnavailable={() => setPhotoMissing(true)}
           />
         ) : youtubeThumb && youtubeUrl ? (
           <a
@@ -361,16 +356,21 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
         </div>
       </div>
       
-      {/* Like Button for Published Recipes */}
+      {/* Like Button for Published Recipes. Reflects whether THIS user has
+          already liked it — the button used to look identical before and
+          after, which is part of why the same person tapped it repeatedly. */}
       {recipe.is_published && (
         <div className="mt-6 pt-4 border-t">
           <Button
             onClick={() => onLike?.(recipe)}
             variant="outline"
-            className="w-full"
+            className={`w-full ${recipe.liked_by_me ? 'border-red-300 bg-red-50 text-red-700' : ''}`}
+            data-testid="like-recipe-btn"
           >
-            <Heart className="w-4 h-4 mr-2 text-red-400" />
-            Like this Recipe
+            <Heart
+              className={`w-4 h-4 mr-2 ${recipe.liked_by_me ? 'fill-red-500 text-red-500' : 'text-red-400'}`}
+            />
+            {recipe.liked_by_me ? 'Liked' : 'Like this Recipe'}
           </Button>
         </div>
       )}
@@ -388,6 +388,10 @@ const RecipeDetailView = ({ recipe, onClose, onAddToShopping, onLike, onEdit, on
 // Maharashtrian vegetarian households). Latin keywords match on word
 // boundaries so "egg" can never fire on "eggplant"; Devanagari uses plain
 // substring since Python-style \b doesn't apply cleanly there either way.
+// Tag the Recipes page opens on. Must match an id in the backend's
+// RECIPE_TAGS (backend/recipes.py) — "Quick Breakfast" / झटपट नाश्ता.
+const DEFAULT_TAG = 'quick-breakfast';
+
 const NON_VEG_KEYWORDS_LATIN = [
   'chicken', 'mutton', 'lamb', 'fish', 'prawn', 'prawns', 'shrimp',
   'egg', 'eggs', 'anda', 'meat', 'keema', 'kheema', 'crab', 'squid',
@@ -426,9 +430,28 @@ const RecipesPage = () => {
   const [activeTab, setActiveTab] = useState('household');
   const [recipes, setRecipes] = useState([]);
   const [communityRecipes, setCommunityRecipes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Community is a paged feed, not a capped list: each row carries its photo
+  // inline, so the server hands back one page plus a cursor for the next.
+  // communityTotal comes from the first page only and drives the tab badge —
+  // communityRecipes.length would read "20" and look like the whole feed.
+  const [communityCursor, setCommunityCursor] = useState(null);
+  const [communityTotal, setCommunityTotal] = useState(null);
+  const [loadingMoreCommunity, setLoadingMoreCommunity] = useState(false);
+  // Separate flags: the two tabs load independently now, so a slow community
+  // feed no longer holds back My Kitchen's first paint.
+  const [loadingHousehold, setLoadingHousehold] = useState(true);
+  const [loadingCommunity, setLoadingCommunity] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState(null);
+  // What actually goes to the server. The input updates searchQuery on every
+  // keystroke (so typing stays responsive) but the query is only sent once
+  // typing pauses — "paneer" used to fire six request pairs, each one a full
+  // regex scan of the recipe collection.
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // The page opens on Quick Breakfast rather than All: the common reason to
+  // open Recipes is "what do I cook right now", and an unfiltered list of
+  // everything is the least useful answer to that. Tapping "All" (or the
+  // chip again) clears it.
+  const [selectedTag, setSelectedTag] = useState(DEFAULT_TAG);
   const [tags, setTags] = useState([]);
   const [showCreator, setShowCreator] = useState(false);
   const [showYouTubeSaver, setShowYouTubeSaver] = useState(false);
@@ -448,6 +471,20 @@ const RecipesPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const visibleCommunity = useMemo(() => communityRecipes.filter(dietMatches), [communityRecipes, dietFilter]);
   
+  // Display name of the active tag, for the filtered empty states.
+  const activeTagLabel = (() => {
+    const tag = tags.find((t) => t.id === selectedTag);
+    if (!tag) return '';
+    return language === 'mr' ? tag.label_mr : language === 'hi' ? tag.label_hi : tag.label_en;
+  })();
+
+  // Tags load from their own request, so the label can still be empty when a
+  // filtered empty state renders. Collapsing the gap leaves a sentence that
+  // reads correctly in all three languages ("No recipes yet") instead of one
+  // with a hole in it.
+  const tagEmptyMessage = (key) =>
+    getLabel(key, { tag: activeTagLabel }).replace(/\s{2,}/g, ' ').trim();
+
   // Fetch tags
   useEffect(() => {
     const fetchTags = async () => {
@@ -464,37 +501,104 @@ const RecipesPage = () => {
     fetchTags();
   }, []);
   
-  // Fetch recipes
-  const fetchRecipes = async () => {
-    setLoading(true);
+  // Household and community are fetched separately because they no longer
+  // take the same filters: the tag chips scope My Kitchen only. Keeping one
+  // combined fetch would mean every tag change also reset the community feed
+  // to page 1, throwing away pages the user had already loaded.
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+  });
+
+  const fetchHouseholdRecipes = async () => {
+    setLoadingHousehold(true);
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      // Build query params
       const params = new URLSearchParams();
-      if (searchQuery) params.append('search', searchQuery);
+      if (debouncedSearch) params.append('search', debouncedSearch);
       if (selectedTag) params.append('tag', selectedTag);
-      
-      const [householdRes, communityRes] = await Promise.all([
-        axios.get(`${API}/api/recipes?${params}`, { headers }),
-        axios.get(`${API}/api/recipes/community?${params}`, { headers })
-      ]);
-      
-      setRecipes(householdRes.data.recipes || []);
-      setCommunityRecipes(communityRes.data.recipes || []);
+
+      const res = await axios.get(`${API}/api/recipes?${params}`, { headers: authHeaders() });
+      setRecipes(res.data.recipes || []);
     } catch (error) {
       console.error('Error fetching recipes:', error);
       toast.error('Failed to load recipes');
     } finally {
-      setLoading(false);
+      setLoadingHousehold(false);
+    }
+  };
+
+  // No `tag` param: the community feed is browsed, not filtered by the
+  // chips. Search still applies to both.
+  const fetchCommunityRecipes = async () => {
+    setLoadingCommunity(true);
+    try {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append('search', debouncedSearch);
+
+      const res = await axios.get(`${API}/api/recipes/community?${params}`, {
+        headers: authHeaders()
+      });
+      setCommunityRecipes(res.data.recipes || []);
+      setCommunityCursor(res.data.next_cursor || null);
+      setCommunityTotal(typeof res.data.total === 'number' ? res.data.total : null);
+    } catch (error) {
+      console.error('Error fetching community recipes:', error);
+      toast.error('Failed to load community recipes');
+    } finally {
+      setLoadingCommunity(false);
+    }
+  };
+
+  // Both lists — for the callers that change shared state (a recipe saved,
+  // deleted, or published can appear in either tab).
+  const fetchRecipes = async () => {
+    await Promise.all([fetchHouseholdRecipes(), fetchCommunityRecipes()]);
+  };
+
+  // Append the next page of the community feed. Guarded on the cursor so a
+  // double-tap can't request the same page twice and duplicate cards.
+  const loadMoreCommunity = async () => {
+    if (!communityCursor || loadingMoreCommunity) return;
+    setLoadingMoreCommunity(true);
+    try {
+      const params = new URLSearchParams({ cursor: communityCursor });
+      if (debouncedSearch) params.append('search', debouncedSearch);
+
+      const res = await axios.get(`${API}/api/recipes/community?${params}`, {
+        headers: authHeaders()
+      });
+
+      const page = res.data.recipes || [];
+      // De-dup by id as well as trusting the cursor: a recipe deleted between
+      // pages shifts the window, and a repeated card is the one failure mode
+      // users actually notice.
+      setCommunityRecipes((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...page.filter((r) => !seen.has(r.id))];
+      });
+      setCommunityCursor(res.data.next_cursor || null);
+    } catch (error) {
+      console.error('Error loading more community recipes:', error);
+      toast.error('Failed to load more recipes');
+    } finally {
+      setLoadingMoreCommunity(false);
     }
   };
   
   useEffect(() => {
-    fetchRecipes();
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
+  useEffect(() => {
+    fetchHouseholdRecipes();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedTag]);
+  }, [debouncedSearch, selectedTag]);
+  
+  // Deliberately NOT on selectedTag — see fetchCommunityRecipes.
+  useEffect(() => {
+    fetchCommunityRecipes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
   
   // Add missing to shopping list
   const handleAddToShopping = async (recipe) => {
@@ -511,19 +615,33 @@ const RecipesPage = () => {
     }
   };
   
-  // Like recipe
+  // Like / unlike. One like per user is enforced server-side (a liked_by set
+  // on the recipe); this toggles so a mis-tap is undoable instead of
+  // permanent. Patches the one recipe in place rather than refetching both
+  // lists — a like shouldn't cost a full reload, or reset community paging.
   const handleLikeRecipe = async (recipe) => {
+    const unliking = !!recipe.liked_by_me;
     try {
-      const token = localStorage.getItem('auth_token');
-      await axios.post(
-        `${API}/api/recipes/${recipe.id}/like`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      const url = `${API}/api/recipes/${recipe.id}/like`;
+      const res = unliking
+        ? await axios.delete(url, { headers: authHeaders() })
+        : await axios.post(url, {}, { headers: authHeaders() });
+
+      const patch = { liked_by_me: res.data.liked, likes: res.data.likes };
+      const apply = (list) =>
+        list.map((r) => (r.id === recipe.id ? { ...r, ...patch } : r));
+
+      setRecipes(apply);
+      setCommunityRecipes(apply);
+      // The open detail sheet holds its own copy of the recipe.
+      setSelectedRecipe((prev) =>
+        prev && prev.id === recipe.id ? { ...prev, ...patch } : prev
       );
-      toast.success('Recipe liked! ❤️');
-      fetchRecipes();
+
+      if (!unliking) toast.success('Recipe liked! ❤️');
     } catch (error) {
-      toast.error('Failed to like recipe');
+      console.error('Error liking recipe:', error);
+      toast.error(unliking ? 'Failed to remove like' : 'Failed to like recipe');
     }
   };
 
@@ -658,7 +776,10 @@ const RecipesPage = () => {
           ))}
         </div>
 
-        {/* Tag Filter */}
+        {/* Tag Filter — My Kitchen only. Hidden on the Community tab rather
+            than shown-but-inert: a chip row that visibly does nothing when
+            tapped reads as a broken filter. */}
+        {activeTab === 'household' && (
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setSelectedTag(null)}
@@ -680,6 +801,7 @@ const RecipesPage = () => {
             </button>
           ))}
         </div>
+        )}
       </div>
       
       {/* Tabs */}
@@ -693,17 +815,40 @@ const RecipesPage = () => {
           <TabsTrigger value="community" className="gap-2">
             <Globe className="w-4 h-4" />
             Community
-            {communityRecipes.length > 0 && <Badge variant="secondary" className="ml-1">{communityRecipes.length}</Badge>}
+            {(communityTotal ?? communityRecipes.length) > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {communityTotal ?? communityRecipes.length}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
         
         {/* Household Recipes */}
         <TabsContent value="household">
-          {loading ? (
+          {loadingHousehold ? (
             <div className="text-center py-12">
               <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-gray-500">Loading recipes...</p>
             </div>
+          ) : recipes.length === 0 && selectedTag ? (
+            /* A tag is active by default now, so an empty list usually means
+               "none with this tag" — NOT "you have no recipes". Saying the
+               latter to someone with a full cookbook, next to a "Create
+               First Recipe" button, is the bug this branch exists to avoid. */
+            <Card className="p-12 text-center">
+              <ChefHat className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">
+                {tagEmptyMessage('noTaggedRecipes')}
+              </h3>
+              <Button
+                onClick={() => setSelectedTag(null)}
+                variant="outline"
+                className="mt-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+                data-testid="clear-tag-filter"
+              >
+                {getLabel('showAllRecipes')}
+              </Button>
+            </Card>
           ) : recipes.length === 0 ? (
             <Card className="p-12 text-center">
               <ChefHat className="w-16 h-16 text-gray-200 mx-auto mb-4" />
@@ -739,7 +884,7 @@ const RecipesPage = () => {
         
         {/* Community Recipes */}
         <TabsContent value="community">
-          {loading ? (
+          {loadingCommunity ? (
             <div className="text-center py-12">
               <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-gray-500">Loading community recipes...</p>
@@ -752,24 +897,58 @@ const RecipesPage = () => {
                 Be the first to share a recipe with the community!
               </p>
             </Card>
-          ) : visibleCommunity.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-sm text-gray-500">
-                No {dietFilter === 'veg' ? 'vegetarian' : 'non-veg'} community recipes right now.
-              </p>
-            </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visibleCommunity.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  onView={setSelectedRecipe}
-                  onAddToShopping={handleAddToShopping}
-                  onLike={handleLikeRecipe}
-                />
-              ))}
-            </div>
+            <>
+              {/* The diet filter applies to the page already loaded, so it can
+                  empty the grid while more pages still exist — keep the Load
+                  more button reachable below the empty note rather than
+                  returning early on it. */}
+              {visibleCommunity.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-sm text-gray-500">
+                    No {dietFilter === 'veg' ? 'vegetarian' : 'non-veg'} community recipes on this page.
+                  </p>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {visibleCommunity.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      onView={setSelectedRecipe}
+                      onAddToShopping={handleAddToShopping}
+                      onLike={handleLikeRecipe}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {communityCursor && (
+                <div className="mt-6 text-center">
+                  <Button
+                    onClick={loadMoreCommunity}
+                    disabled={loadingMoreCommunity}
+                    variant="outline"
+                    className="w-full sm:w-auto sm:px-10 h-12 border-orange-300 text-orange-700 hover:bg-orange-50"
+                    data-testid="community-load-more"
+                  >
+                    {loadingMoreCommunity ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mr-2" />
+                        {getLabel('loading')}
+                      </>
+                    ) : (
+                      getLabel('loadMoreRecipes')
+                    )}
+                  </Button>
+                  {communityTotal !== null && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      {communityRecipes.length} / {communityTotal}
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>

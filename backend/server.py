@@ -245,6 +245,19 @@ async def startup_event():
     await db.shopping_list.create_index("household_id")
     await db.meal_plans.create_index("household_id")
 
+    # User recipes. The compound index is what makes the community feed's
+    # cursor pagination a seek instead of a scan: it matches the feed's
+    # filter + sort exactly ({is_published} then created_at desc, id desc),
+    # so Mongo can jump straight to the cursor row and read the next page
+    # off the index. "id" is NOT unique here on purpose — a unique index
+    # would fail to build (and take startup down with it) if any duplicate
+    # ever slipped into the existing collection.
+    await db.user_recipes.create_index("id")
+    await db.user_recipes.create_index("household_id")
+    await db.user_recipes.create_index(
+        [("is_published", 1), ("created_at", -1), ("id", -1)]
+    )
+
     # Shopping suppressions — per-household "skip this trip" snooze
     # records. Looked up by (household_id, name_en_lower) on every
     # auto-add / recipe-missing flow, so the compound index pays

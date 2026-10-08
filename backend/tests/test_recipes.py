@@ -120,6 +120,245 @@ class TestRecipeAuthenticatedEndpoints:
         assert "recipes" in data, "Response should contain 'recipes' key"
         print(f"✓ Got {len(data['recipes'])} community recipes")
 
+    def test_community_feed_is_newest_first(self):
+        """GET /api/recipes/community - feed must be ordered newest-first.
+
+        Regression guard: the feed used to be sorted by likes, which buried a
+        just-published recipe (likes=0) below every recipe that had ever been
+        liked, so publishing appeared to do nothing.
+        """
+        response = self.client.get(f"{BASE_URL}/api/recipes/community", headers=self.headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        created = [r["created_at"] for r in response.json()["recipes"] if r.get("created_at")]
+        assert created == sorted(created, reverse=True), "Community feed is not newest-first"
+        print(f"✓ Community feed newest-first across {len(created)} recipes")
+
+    def test_community_pagination_walks_without_repeats(self):
+        """GET /api/recipes/community?cursor=... - pages must not overlap."""
+        first = self.client.get(
+            f"{BASE_URL}/api/recipes/community?limit=2", headers=self.headers
+        )
+        assert first.status_code == 200, f"Expected 200, got {first.status_code}"
+        page1 = first.json()
+
+        assert "has_more" in page1, "Response should report 'has_more'"
+        assert "total" in page1, "First page should report 'total'"
+        assert len(page1["recipes"]) <= 2, "limit=2 should return at most 2 recipes"
+
+        if not page1.get("next_cursor"):
+            print("✓ Only one page of community recipes — nothing to page through")
+            return
+
+        second = self.client.get(
+            f"{BASE_URL}/api/recipes/community?limit=2&cursor={page1['next_cursor']}",
+            headers=self.headers,
+        )
+        assert second.status_code == 200, f"Expected 200, got {second.status_code}"
+        page2 = second.json()
+
+        ids1 = {r["id"] for r in page1["recipes"]}
+        ids2 = {r["id"] for r in page2["recipes"]}
+        assert not (ids1 & ids2), f"Pages overlap: {ids1 & ids2}"
+        assert page2["total"] is None, "Only the first page should carry 'total'"
+        print(f"✓ Paged {len(ids1)} + {len(ids2)} community recipes with no repeats")
+
+    def test_lists_do_not_ship_photo_bytes(self):
+        """GET /api/recipes + /community - rows carry has_photo, not the photo.
+
+        Regression guard: both lists used to inline every recipe's photo as
+        base64, making a 20-card page a multi-megabyte response.
+        """
+        for path in ("/api/recipes", "/api/recipes/community"):
+            response = self.client.get(f"{BASE_URL}{path}", headers=self.headers)
+            assert response.status_code == 200, f"{path}: got {response.status_code}"
+
+            for recipe in response.json()["recipes"]:
+                assert "photo_base64" not in recipe, f"{path} still inlines photo bytes"
+                assert "has_photo" in recipe, f"{path} row is missing has_photo"
+                assert isinstance(recipe["has_photo"], bool), "has_photo should be a bool"
+
+            size_kb = len(response.content) / 1024
+            print(f"✓ {path}: {size_kb:.1f} KB, no inlined photos")
+
+    def test_photo_endpoint_returns_cacheable_image(self):
+        """GET /api/recipes/{id}/photo - image bytes with a cache header."""
+        listing = self.client.get(f"{BASE_URL}/api/recipes", headers=self.headers)
+        assert listing.status_code == 200
+        with_photo = [r for r in listing.json()["recipes"] if r.get("has_photo")]
+
+        if not with_photo:
+            print("✓ No recipe with a photo in this household — nothing to fetch")
+            return
+
+        recipe = with_photo[0]
+        response = self.client.get(
+            f"{BASE_URL}/api/recipes/{recipe['id']}/photo?v={recipe.get('updated_at', '')}",
+            headers=self.headers,
+        )
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        assert response.headers["content-type"].startswith("image/"), \
+            f"Expected an image, got {response.headers['content-type']}"
+        # JPEG magic number — proves bytes, not a base64 string.
+        assert response.content[:2] == b"\xff\xd8", "Body is not raw JPEG bytes"
+
+        cache_control = response.headers.get("cache-control", "")
+        assert "max-age" in cache_control, f"Photo is not cacheable: {cache_control!r}"
+        # Never "public": this path also serves unpublished household photos
+        # and the deployment sits behind a shared cache.
+        assert "public" not in cache_control, f"Photo cache must not be public: {cache_control!r}"
+        print(f"✓ Photo: {len(response.content) / 1024:.1f} KB, {cache_control}")
+
+    def test_search_survives_regex_metacharacters(self):
+        """GET /api/recipes?search=... - user text is literal, not a pattern.
+
+        Regression guard: search text went into $regex unescaped, so typing a
+        bracket produced an invalid expression and a 500.
+        """
+        for term in ["(", "*", "[", "a)b", "+", "C++", "100% (approx)"]:
+            for path in ("/api/recipes", "/api/recipes/community"):
+                response = self.client.get(
+                    f"{BASE_URL}{path}",
+                    params={"search": term},
+                    headers=self.headers,
+                )
+                assert response.status_code == 200, \
+                    f"{path} search={term!r} returned {response.status_code}"
+        print("✓ Regex metacharacters in search return 200, not 500")
+
+    def test_search_matches_ingredients_in_both_tabs(self):
+        """Household and community search must look at the same fields."""
+        listing = self.client.get(f"{BASE_URL}/api/recipes", headers=self.headers)
+        assert listing.status_code == 200
+
+        ingredient = None
+        for recipe in listing.json()["recipes"]:
+            for ing in recipe.get("ingredients", []):
+                if ing.get("ingredient_name"):
+                    ingredient = ing["ingredient_name"]
+                    break
+            if ingredient:
+                break
+
+        if not ingredient:
+            print("✓ No ingredients available to search for")
+            return
+
+        response = self.client.get(
+            f"{BASE_URL}/api/recipes",
+            params={"search": ingredient},
+            headers=self.headers,
+        )
+        assert response.status_code == 200
+        assert len(response.json()["recipes"]) > 0, \
+            f"Searching an ingredient ({ingredient!r}) found no recipe"
+
+        # Same term must be accepted by the community feed — it used to search
+        # only title and chef_name, so the two tabs disagreed.
+        community = self.client.get(
+            f"{BASE_URL}/api/recipes/community",
+            params={"search": ingredient},
+            headers=self.headers,
+        )
+        assert community.status_code == 200
+        print(f"✓ Ingredient search ({ingredient!r}) works in both tabs")
+
+    def test_like_is_once_per_user(self):
+        """POST /api/recipes/{id}/like - repeated likes from one user count once.
+
+        Regression guard: the endpoint used to $inc the counter on every call,
+        so one person tapping the heart five times added five likes.
+        """
+        feed = self.client.get(f"{BASE_URL}/api/recipes/community", headers=self.headers)
+        assert feed.status_code == 200
+        published = feed.json()["recipes"]
+
+        if not published:
+            print("✓ No published recipe available to like")
+            return
+
+        recipe_id = published[0]["id"]
+        url = f"{BASE_URL}/api/recipes/{recipe_id}/like"
+
+        # Start from a known state so the test is re-runnable.
+        self.client.delete(url, headers=self.headers)
+        baseline = self.client.post(url, headers=self.headers)
+        assert baseline.status_code == 200, f"Expected 200, got {baseline.status_code}"
+        after_first = baseline.json()["likes"]
+        assert baseline.json()["liked"] is True
+
+        for _ in range(4):
+            repeat = self.client.post(url, headers=self.headers)
+            assert repeat.status_code == 200, f"Expected 200, got {repeat.status_code}"
+            assert repeat.json()["liked"] is True
+            assert repeat.json()["likes"] == after_first, (
+                f"Like count moved on a repeat like: {after_first} -> {repeat.json()['likes']}"
+            )
+        print(f"✓ Five likes from one user = one like (count stayed {after_first})")
+
+        # liked_by_me must be visible to the client, and liked_by must not be.
+        detail = self.client.get(f"{BASE_URL}/api/recipes/{recipe_id}", headers=self.headers)
+        assert detail.status_code == 200
+        assert detail.json()["liked_by_me"] is True, "liked_by_me should be true after liking"
+        assert "liked_by" not in detail.json(), "liked_by roster must not be exposed"
+
+        feed_again = self.client.get(f"{BASE_URL}/api/recipes/community", headers=self.headers)
+        row = next(r for r in feed_again.json()["recipes"] if r["id"] == recipe_id)
+        assert row["liked_by_me"] is True, "feed row should report liked_by_me"
+        assert "liked_by" not in row, "feed must not expose the liked_by roster"
+        print("✓ liked_by_me exposed, liked_by roster withheld")
+
+    def test_unlike_is_idempotent_and_never_negative(self):
+        """DELETE /api/recipes/{id}/like - removes one like, floors at zero."""
+        feed = self.client.get(f"{BASE_URL}/api/recipes/community", headers=self.headers)
+        assert feed.status_code == 200
+        published = feed.json()["recipes"]
+
+        if not published:
+            print("✓ No published recipe available to unlike")
+            return
+
+        recipe_id = published[0]["id"]
+        url = f"{BASE_URL}/api/recipes/{recipe_id}/like"
+
+        self.client.post(url, headers=self.headers)
+        liked = self.client.post(url, headers=self.headers).json()["likes"]
+
+        first = self.client.delete(url, headers=self.headers)
+        assert first.status_code == 200, f"Expected 200, got {first.status_code}"
+        assert first.json()["liked"] is False
+        assert first.json()["likes"] == max(0, liked - 1), "Unlike should drop exactly one"
+
+        after = first.json()["likes"]
+        for _ in range(3):
+            repeat = self.client.delete(url, headers=self.headers)
+            assert repeat.status_code == 200
+            assert repeat.json()["liked"] is False
+            assert repeat.json()["likes"] == after, "Repeated unlike changed the count"
+            assert repeat.json()["likes"] >= 0, "Like count went negative"
+        print(f"✓ Unlike is idempotent and non-negative (settled at {after})")
+
+    def test_community_tag_filter_is_optional(self):
+        """GET /api/recipes/community - the feed is browsable without a tag.
+
+        The tag chips scope My Kitchen only, so the community request carries
+        no tag; it must still return the full feed shape.
+        """
+        response = self.client.get(f"{BASE_URL}/api/recipes/community", headers=self.headers)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        data = response.json()
+        assert "recipes" in data and "has_more" in data and "total" in data
+        print(f"✓ Untagged community feed returns {len(data['recipes'])} of {data['total']}")
+
+    def test_community_rejects_bad_cursor(self):
+        """GET /api/recipes/community - a malformed cursor is a 400, not page 1."""
+        response = self.client.get(
+            f"{BASE_URL}/api/recipes/community?cursor=not-a-real-cursor",
+            headers=self.headers,
+        )
+        assert response.status_code == 400, f"Expected 400, got {response.status_code}"
+        print("✓ Malformed cursor rejected with 400")
+
 
 class TestRecipeCRUD:
     """Test Recipe Create, Read, Update, Delete operations"""

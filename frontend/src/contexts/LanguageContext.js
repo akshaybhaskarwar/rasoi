@@ -229,6 +229,10 @@ export const UI_LABELS = {
     planWeekAhead: 'Plan your week ahead',
     communityKitchen: 'Community Kitchen',
     shareWithNeighbors: 'Share with neighbors',
+    loadMoreRecipes: 'Load more recipes',
+    loading: 'Loading...',
+    noTaggedRecipes: 'No {tag} recipes yet',
+    showAllRecipes: 'Show all recipes',
     
     // About - Why sections
     multiLanguage: 'Multi-language',
@@ -498,6 +502,10 @@ export const UI_LABELS = {
     planWeekAhead: 'अपने सप्ताह की योजना पहले से बनाएं',
     communityKitchen: 'समुदाय रसोई',
     shareWithNeighbors: 'पड़ोसियों के साथ साझा करें',
+    loadMoreRecipes: 'और रेसिपी देखें',
+    loading: 'लोड हो रहा है...',
+    noTaggedRecipes: 'अभी कोई {tag} रेसिपी नहीं',
+    showAllRecipes: 'सभी रेसिपी दिखाएं',
     
     // About - Why sections
     multiLanguage: 'बहु-भाषा',
@@ -765,6 +773,10 @@ export const UI_LABELS = {
     planWeekAhead: 'तुमच्या आठवड्याचे आधीच नियोजन करा',
     communityKitchen: 'समुदाय स्वयंपाकघर',
     shareWithNeighbors: 'शेजाऱ्यांसोबत शेअर करा',
+    loadMoreRecipes: 'अधिक पाककृती पहा',
+    loading: 'लोड होत आहे...',
+    noTaggedRecipes: 'अजून {tag} पाककृती नाहीत',
+    showAllRecipes: 'सर्व पाककृती दाखवा',
     
     // About - Why sections
     multiLanguage: 'बहुभाषिक',

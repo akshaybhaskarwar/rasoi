@@ -25,6 +25,8 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import PhotoCropper from './PhotoCropper';
 
+import { RecipePhoto } from '@/components/RecipePhoto';
+
 const API = process.env.REACT_APP_BACKEND_URL;
 
 // Stock status badge component
@@ -113,7 +115,15 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPla
   };
 
   const isYouTubeRecipe = recipe.recipe_type === 'youtube' || recipe.youtube_video_id;
-  const hasPhoto = !!(recipe.photo_base64 || recipe.photo_url || recipe.youtube_thumbnail);
+  // has_photo is a flag from the list endpoint — the photo bytes are no
+  // longer in the list response, RecipePhoto fetches them when the card
+  // scrolls near the viewport. photo_url/youtube_thumbnail are plain remote
+  // URLs (YouTube thumbnails) and still render directly.
+  const remoteThumb = recipe.youtube_thumbnail || recipe.photo_url || null;
+  const hasOwnPhoto = !!(recipe.has_photo || recipe.photo_base64);
+  const [ownPhotoMissing, setOwnPhotoMissing] = useState(false);
+  const showOwnPhoto = hasOwnPhoto && !ownPhotoMissing;
+  const hasPhoto = showOwnPhoto || !!remoteThumb;
   const hero = getRecipeHero(recipe);
   const heroIngredients = (recipe.ingredients || []).slice(0, 3).map(getIngredientDisplay);
   const extraIngredients = Math.max(0, (recipe.ingredients?.length || 0) - heroIngredients.length);
@@ -128,16 +138,19 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPla
           Compact mode (used in dense lists) gets no hero at all by design. */}
       {!compact && hasPhoto && (
         <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center">
-          {recipe.photo_base64 ? (
-            <img
-              src={`data:image/jpeg;base64,${recipe.photo_base64}`}
+          {showOwnPhoto ? (
+            <RecipePhoto
+              recipeId={recipe.id}
+              version={recipe.updated_at}
               alt={recipe.title}
               className="w-full h-full object-cover"
+              onUnavailable={() => setOwnPhotoMissing(true)}
             />
           ) : (
             <img
-              src={recipe.youtube_thumbnail || recipe.photo_url}
+              src={remoteThumb}
               alt={recipe.title}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           )}
@@ -253,7 +266,11 @@ export const RecipeCard = ({ recipe, onView, onAddToShopping, onLike, onAddToPla
             )}
             {recipe.likes > 0 && (
               <span className="flex items-center gap-1">
-                <Heart className="w-3 h-3 text-red-400" />
+                {/* Filled when this user is one of the likers, so the feed
+                    shows at a glance what you have already liked. */}
+                <Heart
+                  className={`w-3 h-3 ${recipe.liked_by_me ? 'fill-red-500 text-red-500' : 'text-red-400'}`}
+                />
                 {recipe.likes}
               </span>
             )}
