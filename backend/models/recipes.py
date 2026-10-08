@@ -2,7 +2,7 @@
 Recipe models for Rasoi-Sync
 """
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime, timezone
 import uuid
 
@@ -24,3 +24,5 @@ class RecipeCreate(BaseModel):
     youtube_url: str
     ingredients: List[str] = []
     author: str = "Anonymous"
+    video_links: Optional[List[Dict[str, str]]] = None  # List of {type: "youtube"|"instagram", url: "..."}
+    photos: Optional[List[str]] = None  # Base64 encoded photos
