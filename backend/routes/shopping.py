@@ -13,6 +13,7 @@ from models.shopping import (
     ShoppingItem, ShoppingItemCreate, ShoppingStatusUpdate, ShoppingSnoozeRequest,
 )
 from models.prices import PriceRecord, normalise_unit
+from models.inventory import restocked_stock_value
 
 
 class ManualPriceEntry(BaseModel):
@@ -327,10 +328,20 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
                 {"_id": 0},
             )
             if inv:
+                # current_stock moves with the level: every screen derives
+                # the badge from current_stock vs the monthly need, so a bare
+                # stock_level="full" left the row reading "Empty" on
+                # Inventory while the shopping list thought it was stocked
+                # and stopped offering it. Only top up a row that is actually
+                # at (or below) empty — never overwrite a real count.
+                restocked = max(
+                    inv.get("current_stock") or 0, restocked_stock_value(inv)
+                )
                 await db.inventory.update_one(
                     {"id": inv["id"]},
                     {"$set": {
                         "stock_level": "full",
+                        "current_stock": restocked,
                         "last_updated_by": user.get("id") if user else None,
                         # Clear any prior snooze — the user explicitly
                         # said they have it now.
@@ -488,9 +499,19 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
             })
             
             if existing:
+                # See already-have-it above: stock_level and current_stock
+                # have to move together or the item reads empty everywhere
+                # that derives the badge, yet never returns to the list.
                 await db.inventory.update_one(
                     {"id": existing["id"]},
-                    {"$set": {"stock_level": "full", "last_updated_by": user_id}}
+                    {"$set": {
+                        "stock_level": "full",
+                        "current_stock": max(
+                            existing.get("current_stock") or 0,
+                            restocked_stock_value(existing),
+                        ),
+                        "last_updated_by": user_id,
+                    }}
                 )
                 result["inventory_action"] = "updated_existing"
             else:
@@ -502,6 +523,9 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
                     "name_mr": item.get("name_mr"),
                     "category": item.get("category", "other"),
                     "stock_level": "full",
+                    "current_stock": restocked_stock_value(
+                        {"category": item.get("category", "other")}
+                    ),
                     "unit": "kg",
                     "last_updated_by": user_id,
                     "created_at": datetime.now(timezone.utc)

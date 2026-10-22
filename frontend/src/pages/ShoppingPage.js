@@ -19,7 +19,7 @@ import ReceiptScanButton from '@/components/ReceiptScanButton';
 import { ShoppingDeleteSheet } from '@/components/ShoppingDeleteSheet';
 import { LastPaidLine } from '@/components/LastPaidLine';
 import { IngredientAvatar } from '@/components/IngredientAvatar';
-import { getCategoryInfo, getItemDefaults } from '@/lib/inventoryUtils';
+import { getCategoryInfo, getItemDefaults, getCalculatedStockLevel } from '@/lib/inventoryUtils';
 import { PricePromptSheet } from '@/components/PricePromptSheet';
 import { useLastPrices, usablePrice } from '@/hooks/useLastPrices';
 import { toast } from 'sonner';
@@ -181,10 +181,18 @@ const ShoppingPage = () => {
   // without the user having to do anything.
   const getLowStockItems = () => {
     const today = new Date().toISOString().slice(0, 10);
-    return inventory.filter(item =>
-      (item.stock_level === 'low' || item.stock_level === 'empty') &&
-      !(item.auto_suggest_snoozed_until && item.auto_suggest_snoozed_until > today)
-    );
+    return inventory.filter(item => {
+      // Derived from current_stock vs the monthly need, exactly as the
+      // Inventory screen's badge does. Reading the STORED stock_level here
+      // is what hid empty items from this suggestion: "already have it" and
+      // "mark bought" stamp stock_level='full' without touching
+      // current_stock, so an item the user then used up sat at 0 pcs showing
+      // "empty" on Inventory while the shopping list still believed it was
+      // full and never offered it again.
+      const level = getCalculatedStockLevel(item);
+      return (level === 'low' || level === 'empty') &&
+        !(item.auto_suggest_snoozed_until && item.auto_suggest_snoozed_until > today);
+    });
   };
 
   const getLowStockCount = () => {
@@ -223,7 +231,7 @@ const ShoppingPage = () => {
             category: item.category,
             quantity: '-',
             store_type: item.category === 'vegetables' || item.category === 'fruits' ? 'mandi' : 'grocery',
-            stock_level: item.stock_level,
+            stock_level: getCalculatedStockLevel(item),
             monthly_quantity: defaultQty,
             // Mark as auto-suggested so deleting this row opens the
             // intent sheet ("already have it" / "skip") rather than a

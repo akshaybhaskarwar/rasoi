@@ -147,3 +147,26 @@ def default_monthly_base_units(category: str):
     if unit in ("kg", "l"):
         return qty * 1000
     return qty
+
+
+def restocked_stock_value(item: dict) -> int:
+    """`current_stock` (base units) that means "this shelf is full again".
+
+    Paths that restock an item without knowing the amount bought — "already
+    have it" on the shopping list, and marking a row purchased — used to set
+    `stock_level: "full"` on its own. `current_stock` stayed at 0, and since
+    every screen derives the level from current_stock vs the monthly need,
+    the item still read "Empty" on Inventory while the stored field said
+    full. The shopping list, which filtered on the stored field, then never
+    offered the item again. Writing both keeps the two in step.
+    """
+    monthly = item.get("monthly_quantity")
+    if not monthly:
+        monthly = default_monthly_base_units(item.get("category"))
+    try:
+        monthly = int(monthly or 0)
+    except (TypeError, ValueError):
+        monthly = 0
+    # Unknown category with no monthly need: any positive stock reads "full"
+    # (compute_stock_level's no-target branch), so 1 is enough.
+    return monthly if monthly > 0 else 1
