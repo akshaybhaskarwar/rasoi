@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useInventory } from '@/hooks/useRasoiSync';
+import { useLastPrices, priceFor } from '@/hooks/useLastPrices';
 import { useLanguage } from '@/contexts/LanguageContext';
 // useUnits no longer called directly on InventoryPage (the editor uses it internally).
 import { Search, Lock, Package2, Sparkles, AlertTriangle, LayoutGrid, List, ListChecks, CalendarClock, ChevronRight } from 'lucide-react';
@@ -17,6 +18,7 @@ import { InventoryItemDetails } from '@/components/InventoryItemDetails';
 import { InventoryRow } from '@/components/InventoryRow';
 import { FrequencyPill, FrequencyStrip, getFrequency } from '@/components/FrequencyPicker';
 import { RestockPlannerSheet } from '@/components/RestockPlannerSheet';
+import { PriceCaption } from '@/components/PriceHistory';
 import {
   CATEGORIES,
   DEFAULT_MONTHLY,
@@ -51,6 +53,11 @@ const InventoryPage = () => {
     previewMonthReset, startNewMonth, undoMonthReset,
   } = useInventory();
   const { language, getLabel } = useLanguage();
+  // What the household last paid, for the monthly-shop decision this screen
+  // leads into. One request for the whole pantry, and failures are swallowed
+  // inside the hook — inventory has to work identically with no price history,
+  // which is every household's first month.
+  const { prices } = useLastPrices();
   // formatQuantity/Minus/Plus moved into StockQuantityEditor.
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -692,6 +699,7 @@ const InventoryPage = () => {
                         onMonthlyQuantityChange={(newQty) => setMonthlyQuantity(item, newQty)}
                         isPendingDelete={pendingDeleteId === item.id}
                         onDelete={() => handleDelete(item.id, item.name_en)}
+                        price={priceFor(prices, item)}
                       />
                     ))}
                   </div>
@@ -738,6 +746,10 @@ const InventoryPage = () => {
                                       custom
                                     </Badge>
                                   )}
+                                  {/* Same caption as the list row, so the two
+                                      views answer "what did this cost" the
+                                      same way. */}
+                                  <PriceCaption price={priceFor(prices, item)} />
                                 </div>
                               </div>
                             </div>
@@ -769,6 +781,7 @@ const InventoryPage = () => {
 
                           <InventoryItemDetails
                             item={item}
+                            price={priceFor(prices, item)}
                             isEditingExpiry={editingExpiryItemId === item.id}
                             newExpiryDate={newExpiryDate}
                             onNewExpiryDateChange={setNewExpiryDate}

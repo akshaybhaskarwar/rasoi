@@ -550,10 +550,17 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
     async def get_last_prices(
         credentials: HTTPAuthorizationCredentials = Depends(security)
     ):
-        """Latest recorded price per item for the household.
+        """Latest recorded price per item for the household, plus the one before it.
 
         Returns one map for the whole list rather than a lookup per row — a
         shopping list of 30 items would otherwise be 30 requests.
+
+        Each entry carries `previous`: the purchase before the latest one, so
+        a client can render "₹149/kg, up 12%" without a second request. A bare
+        rate answers "what does this cost"; the pair answers "is this getting
+        more expensive", which is the question someone asks while planning the
+        next month's shop. The series has always been there (price_history is
+        append-only) — this just stops throwing all but the last row away.
 
         The client is given `bought_on` alongside the rate and decides how to
         present staleness. A rate from last year is worse than showing nothing,
@@ -580,13 +587,26 @@ def create_shopping_routes(db, decode_token, translate_service, notify_shopping_
             name = row.get("canonical_name")
             if not name:
                 continue
-            prices[name.lower()] = {
+            key = name.lower()
+            entry = {
                 "rate": row.get("rate"),
                 "unit_basis": row.get("unit_basis"),
                 "vendor": row.get("vendor"),
                 "bought_on": row.get("bought_on"),
                 "source": row.get("source"),
             }
+            # The row this one displaces becomes the comparison point. Copied
+            # field by field so a chain of `previous` inside `previous` can't
+            # build up as the cursor walks a long history.
+            prior = prices.get(key)
+            if prior and prior.get("rate"):
+                entry["previous"] = {
+                    "rate": prior.get("rate"),
+                    "unit_basis": prior.get("unit_basis"),
+                    "vendor": prior.get("vendor"),
+                    "bought_on": prior.get("bought_on"),
+                }
+            prices[key] = entry
         return {"prices": prices, "count": len(prices)}
 
     @shopping_router.post("/shopping/price")

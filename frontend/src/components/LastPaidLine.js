@@ -15,26 +15,12 @@
  *  - hide the date. A rate without a date reads as current; the date is what
  *    lets someone judge whether it still means anything.
  */
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-const formatDate = (iso) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
-};
-
-// Trim trailing zeros — ₹45.50 reads better as ₹45.5, ₹33.00 as ₹33.
-const formatRate = (rate) => {
-  const n = Number(rate);
-  if (!Number.isFinite(n)) return null;
-  return n % 1 === 0 ? String(n) : String(Number(n.toFixed(2)));
-};
+import { formatPriceDate, formatRate } from '@/lib/priceFormat';
 
 export const LastPaidLine = ({ price, className = '' }) => {
   if (!price?.rate) return null;
   const rate = formatRate(price.rate);
-  const when = formatDate(price.bought_on);
+  const when = formatPriceDate(price.bought_on);
   if (!rate) return null;
 
   // One line, truncated — never wrapped. The name column on this row is

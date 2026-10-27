@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StockQuantityEditor } from '@/components/StockQuantityEditor';
 import { calculateStockStatus, getExpiryStatus, getItemDefaults } from '@/lib/inventoryUtils';
+import { PriceHistoryPanel } from '@/components/PriceHistory';
 
 export const InventoryItemDetails = ({
   item,
@@ -28,10 +29,12 @@ export const InventoryItemDetails = ({
   onMonthlyQuantityChange,
   isPendingDelete,
   onDelete,
+  price,
 }) => {
   const defaults = getItemDefaults(item);
   const baseUnit = item.monthly_unit || defaults.unit;
   const step = defaults.step;
+  const monthlyNeed = item.monthly_quantity || defaults.quantity;
 
   return (
     <>
@@ -141,13 +144,18 @@ export const InventoryItemDetails = ({
         </div>
       )}
 
+      {/* What this item cost last time. Sits above the editors because it is
+          reference rather than a control — and because it is the context for
+          the Monthly Need editor below it: "5 kg at ₹149 is ₹745 a month" is
+          the thought that makes someone change the target. */}
+      <PriceHistoryPanel price={price} monthlyNeed={monthlyNeed} baseUnit={baseUnit} />
+
       {/* Stock Level Display - Now Dynamic */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">Stock Level</span>
           {(() => {
             const currentStock = item.current_stock || 0;
-            const monthlyNeed = item.monthly_quantity || defaults.quantity;
             const calculatedStatus = calculateStockStatus(currentStock, monthlyNeed);
             return (
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${calculatedStatus.color}`}>

@@ -27,6 +27,7 @@ import { IngredientAvatar } from '@/components/IngredientAvatar';
 import { InventoryItemDetails } from '@/components/InventoryItemDetails';
 import { calculateStockStatus, getItemDefaults } from '@/lib/inventoryUtils';
 import { FrequencyPill, FrequencyStrip, getFrequency } from '@/components/FrequencyPicker';
+import { PriceCaption } from '@/components/PriceHistory';
 
 export const InventoryRow = ({
   item,
@@ -47,6 +48,7 @@ export const InventoryRow = ({
   onToggleFrequency,
   onFrequencyChange,
   isFrequencyBusy,
+  price,
 }) => {
   const { formatQuantity } = useUnits();
   const { language, getLabel } = useLanguage();
@@ -125,6 +127,13 @@ export const InventoryRow = ({
                   custom
                 </Badge>
               )}
+              {/* What this cost last time, for the monthly-shop decision.
+                  Deliberately a sibling of the truncating span above rather
+                  than inside it: when the line is squeezed the regional name
+                  should give way, not the number the user came to compare.
+                  Absent entirely when there is no recent price, so a kitchen
+                  that never scans receipts sees the row it has today. */}
+              <PriceCaption price={price} className="flex-shrink-0" />
             </span>
           </span>
         </button>
@@ -191,6 +200,7 @@ export const InventoryRow = ({
         <div className="px-3 pb-3 pt-1" data-testid={`inventory-row-details-${item.id}`}>
           <InventoryItemDetails
             item={item}
+            price={price}
             isEditingExpiry={isEditingExpiry}
             newExpiryDate={newExpiryDate}
             onNewExpiryDateChange={onNewExpiryDateChange}
