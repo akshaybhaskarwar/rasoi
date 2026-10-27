@@ -127,13 +127,6 @@ export const InventoryRow = ({
                   custom
                 </Badge>
               )}
-              {/* What this cost last time, for the monthly-shop decision.
-                  Deliberately a sibling of the truncating span above rather
-                  than inside it: when the line is squeezed the regional name
-                  should give way, not the number the user came to compare.
-                  Absent entirely when there is no recent price, so a kitchen
-                  that never scans receipts sees the row it has today. */}
-              <PriceCaption price={price} className="flex-shrink-0" />
             </span>
           </span>
         </button>
@@ -183,6 +176,27 @@ export const InventoryRow = ({
           </button>
         </div>
       </div>
+
+      {/* What this cost last time, for the monthly-shop decision.
+          Its own line, not the meta line beside the name. The meta line looked
+          like the cheaper home — no extra row height — but at 375px the name
+          column shares ~140px with the frequency pill, and "As needed" is the
+          widest of the three labels. A row whose meta line has no slack to
+          give (a short stock word and a `custom` badge, both unshrinkable)
+          therefore overflowed its column, and the pill — a later sibling —
+          painted straight over the price.
+          Full width under the name has no such competition, and costs height
+          only on rows that actually have a recent price. */}
+      {price?.rate && !price.stale && (
+        <div className="flex pr-3 pb-1.5 -mt-1" data-testid={`row-price-${item.id}`}>
+          {/* Spacer matching the avatar + its gap, so the price aligns under
+              the name rather than under the avatar. Mirrors the padding of
+              the row above instead of restating it as a pl-* value that would
+              silently stop matching if that gap ever changed. */}
+          <span className="w-9 ml-3 mr-2.5 md:mr-3 flex-shrink-0" aria-hidden="true" />
+          <PriceCaption price={price} />
+        </div>
+      )}
 
       {/* Frequency picker. A separate, lighter reveal than the full detail
           block below — the parent keeps them mutually exclusive so the row

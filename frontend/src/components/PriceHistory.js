@@ -37,9 +37,15 @@ const changeSentence = (change) => {
 /**
  * The compact caption for a list row or card.
  *
- * Sits on the existing meta line rather than adding a third line: the row's
- * height is set by its 40px stepper, and a line per price would have made
- * priced and unpriced rows different heights down the whole list.
+ * Takes its own line under the item name in the list view. It first went on
+ * the meta line beside the name, to avoid giving priced rows a different
+ * height from unpriced ones — but at 375px that line is contested by the
+ * `custom` badge and the frequency pill ("As needed" being the widest label),
+ * and on a row with nothing left to truncate the price overflowed and the
+ * pill painted over it. Height is the cheaper thing to spend.
+ *
+ * The grid card places it inline instead; that container wraps, so it has the
+ * room the list row does not.
  */
 export const PriceCaption = ({ price, className = '' }) => {
   if (!price?.rate || price.stale) return null;
